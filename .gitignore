@@ -1,4 +1,4 @@
-HELP.md
+back/HELP.md
 .gradle
 build/
 !gradle/wrapper/gradle-wrapper.jar
@@ -39,3 +39,5 @@ out/
 .env
 
 CLAUDE.md
+db_dev.mv.db
+db_dev.trace.db
