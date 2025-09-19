@@ -44,7 +44,6 @@ public class Comment extends BaseEntity {
                 .news(news)
                 .content(content)
                 .build();
-        news.addComment(comment);
 
         return comment;
     }
