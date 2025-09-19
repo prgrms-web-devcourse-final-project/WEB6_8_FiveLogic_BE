@@ -43,6 +43,16 @@ public class Video extends BaseEntity {
     }
 
     public static Video create(String uuid, String transcodingResults, String originalPath, String originalFileName, Integer duration, Long fileSize) {
+        if (uuid == null || uuid.isBlank()) {
+            throw new IllegalArgumentException("uuid cannot be null or empty");
+        }
+        if (originalPath == null || originalPath.isBlank()) {
+            throw new IllegalArgumentException("originalPath cannot be null or empty");
+        }
+        if (originalFileName == null || originalFileName.isBlank()) {
+            throw new IllegalArgumentException("originalFileName cannot be null or empty");
+        }
+
         return Video.builder()
                 .uuid(uuid)
                 .transcodingResults(transcodingResults)
