@@ -1,12 +1,10 @@
 package com.back.domain.news.news.entity;
 
 import com.back.domain.file.entity.Video;
+import com.back.domain.member.member.entity.Member;
 import com.back.domain.news.comment.entity.Comment;
 import com.back.global.jpa.BaseEntity;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,6 +17,8 @@ import java.util.List;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class News extends BaseEntity {
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Member member;
     private String title;
     @OneToOne
     private Video video;
@@ -28,15 +28,20 @@ public class News extends BaseEntity {
     private Integer likes;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private News(String title, Video video, String content, List<Comment> comment,  Integer likes) {
+    private News(Member member, String title, Video video, String content, List<Comment> comment, Integer likes) {
+        this.member = member;
         this.title = title;
         this.video = video;
         this.content = content;
         this.comment = comment;
+
         this.likes = likes;
     }
 
-    public static News create(String title, Video video, String content) {
+    public static News create(Member member, String title, Video video, String content) {
+        if (member == null) {
+            throw new IllegalArgumentException("Member cannot be null");
+        }
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException("Title cannot be null or empty");
         }
@@ -47,6 +52,7 @@ public class News extends BaseEntity {
             throw new IllegalArgumentException("Content cannot be null or empty");
         }
         return News.builder()
+                .member(member)
                 .title(title)
                 .video(video)
                 .content(content)
