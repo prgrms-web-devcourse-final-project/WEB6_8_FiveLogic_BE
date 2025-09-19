@@ -35,6 +35,15 @@ public class News extends BaseEntity {
     }
 
     public static News create(String title, Video video, String content) {
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException("Title cannot be null or empty");
+        }
+        if (video == null) {
+            throw new IllegalArgumentException("Video cannot be null");
+        }
+        if (content == null || content.isBlank()) {
+            throw new IllegalArgumentException("Content cannot be null or empty");
+        }
         return News.builder()
                 .title(title)
                 .video(video)
