@@ -39,10 +39,25 @@ public class Comment extends BaseEntity {
     }
 
     public static Comment create(Member member, News news, String content) {
-        return Comment.builder()
+        Comment comment = Comment.builder()
                 .member(member)
                 .news(news)
                 .content(content)
                 .build();
+        news.addComment(comment);
+
+        return comment;
+    }
+
+    public Comment update(String content) {
+        if (content == null || content.isBlank()) {
+            throw new IllegalArgumentException("Content cannot be null or empty");
+        }
+        this.content = content;
+        return this;
+    }
+
+    public void remove() {
+        this.news.removeComment(this);
     }
 }
