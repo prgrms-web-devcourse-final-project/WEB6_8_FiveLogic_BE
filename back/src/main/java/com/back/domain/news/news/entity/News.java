@@ -24,7 +24,7 @@ public class News extends BaseEntity {
     private String content;
     @OneToMany(mappedBy = "news", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comment;
-    private Integer likes = 0;
+    private Integer likes;
 
     @Builder(access = AccessLevel.PRIVATE)
     private News(String title, Video video, String content, Integer likes) {
