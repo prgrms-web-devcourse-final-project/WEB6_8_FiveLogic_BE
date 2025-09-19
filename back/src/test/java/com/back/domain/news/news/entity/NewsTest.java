@@ -25,7 +25,7 @@ class NewsTest {
         assertThat(news.getVideo()).isEqualTo(video);
         assertThat(news.getContent()).isEqualTo(content);
         assertThat(news.getComment().size()).isEqualTo(0);
-        assertThat(news.getLikes()).isEqualTo(0);
+        assertThat(news.getLikes().size()).isEqualTo(0);
     }
 
     @Test
