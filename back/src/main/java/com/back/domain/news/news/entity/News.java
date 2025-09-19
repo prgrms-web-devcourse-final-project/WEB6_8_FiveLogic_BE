@@ -23,18 +23,20 @@ public class News extends BaseEntity {
     private String content;
     @OneToMany(mappedBy = "news", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comment;
+    private Integer likes = 0;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private News(String title, String content, List<Comment> comment) {
+    private News(String title, String content, Integer likes) {
         this.title = title;
         this.content = content;
-        this.comment = comment;
+        this.likes = likes;
     }
 
     public static News create(String title, String content) {
         return News.builder()
                 .title(title)
                 .content(content)
+                .likes(0)
                 .build();
     }
 }
