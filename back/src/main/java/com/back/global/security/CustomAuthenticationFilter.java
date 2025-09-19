@@ -11,6 +11,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -22,7 +23,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class CustomAuthenticationFilter extends OncePerRequestFilter {
@@ -36,6 +37,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         try {
             work(request, response, filterChain);
         } catch (Exception e) {
+            log.error("CustomAuthenticationFilter에서 예외 발생: ", e);
             RsData<Void> rsData = new RsData<>("401-1", "인증 오류가 발생했습니다.");
             response.setContentType("application/json;charset=UTF-8");
             response.setStatus(rsData.statusCode());
@@ -47,7 +49,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
     private void work(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // 인증이 필요없는 API 요청이라면 패스
-        if (List.of("/auth/login", "/auth/signup", "auth/refresh", "/h2-console").contains(request.getRequestURI()) ||
+        if (List.of("/auth/login", "/auth/signup", "/auth/refresh", "/h2-console").contains(request.getRequestURI()) ||
                 request.getRequestURI().startsWith("/h2-console/") ||
                 request.getRequestURI().startsWith("/swagger-ui/") ||
                 request.getRequestURI().startsWith("/v3/api-docs/") ||
@@ -56,7 +58,6 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 쿠키에서 토큰 추출
         String accessToken = rq.getCookieValue("accessToken", "");
 
         if (accessToken.isBlank()) {

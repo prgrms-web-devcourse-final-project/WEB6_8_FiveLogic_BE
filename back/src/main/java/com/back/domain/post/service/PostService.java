@@ -34,14 +34,14 @@ public class PostService {
         Post.PostType postType;
 
         switch(postTypeStr) {
-            case "informationPost":
-                postType = Post.PostType.INFORMATION_POST;
+            case "INFORMATIONPOST":
+                postType = Post.PostType.INFORMATIONPOST;
                 break;
-            case "practicePost":
-                postType = Post.PostType.PRACTICE_POST;
+            case "PRACTICEPOST":
+                postType = Post.PostType.PRACTICEPOST;
                 break;
-            case "questionPost":
-                postType = Post.PostType.QUESTION_POST;
+            case "QUESTIONPOST":
+                postType = Post.PostType.QUESTIONPOST;
                 break;
             default:
                 throw new IllegalArgumentException("Invalid post type: " + postTypeStr);

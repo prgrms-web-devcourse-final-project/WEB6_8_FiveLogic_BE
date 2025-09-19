@@ -21,9 +21,9 @@ public class Post extends BaseEntity {
     private PostType postType;
 
     public enum PostType {
-        INFORMATION_POST,
-        PRACTICE_POST,
-        QUESTION_POST
+        INFORMATIONPOST,
+        PRACTICEPOST,
+        QUESTIONPOST
     }
 
     private int viewCount;

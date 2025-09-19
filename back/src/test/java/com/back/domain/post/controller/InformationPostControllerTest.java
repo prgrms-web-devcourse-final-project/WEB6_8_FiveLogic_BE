@@ -1,8 +1,11 @@
 package com.back.domain.post.controller;
 
+import com.back.domain.member.member.entity.Member;
+import com.back.domain.member.member.service.MemberService;
 import com.back.domain.post.entity.Post;
 import com.back.domain.post.service.PostService;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +31,15 @@ public class InformationPostControllerTest {
     private PostService postService;
 
     @Autowired
+    private MemberService memberService;
+
+    @Autowired
     private MockMvc mvc;
+
+    @BeforeEach
+    void setUp() {
+        memberService.join("user1", "사용자1", "password123", Member.Role.MENTEE);
+    }
 
     @Test
     @DisplayName("게시글 생성")
@@ -39,14 +50,16 @@ public class InformationPostControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
-                                            "memberId": 123,
-                                            "postType": "informationPost",
+                                            "memberId": 1,
+                                            "postType": "INFORMATIONPOST",
                                             "title": "테스트 제목",
                                             "content": "테스트 내용"
                                         }
                                         """.stripIndent())
                 )
                 .andDo(print());
+
+        Member member = new Member();
 
         // 실제 생성된 게시글 조회 (실제 DB에서)
         Post createdPost = postService.findByid(1L);

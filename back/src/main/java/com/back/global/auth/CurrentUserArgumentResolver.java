@@ -39,20 +39,17 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
             log.warn("인증 정보 없음");
             return null;
         }
-
+        Object principal = authentication.getPrincipal();
         log.info("Principal 타입: {}", authentication.getPrincipal().getClass().getSimpleName());
-
+        log.info("Principal 값: {}", principal);
 
         SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
-
-
         Long memberId = securityUser.getId();
         log.info("Member ID: {}", memberId);
 
 
 
         Member member = memberRepository.findById(memberId).orElse(null);
-
         log.info("Member 조회 결과: {}", member != null ? "성공" : "실패");
 
 
