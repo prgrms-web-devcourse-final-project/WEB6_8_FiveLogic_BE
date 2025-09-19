@@ -12,6 +12,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -27,10 +28,11 @@ public class News extends BaseEntity {
     private Integer likes;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private News(String title, Video video, String content, Integer likes) {
+    private News(String title, Video video, String content, List<Comment> comment,  Integer likes) {
         this.title = title;
         this.video = video;
         this.content = content;
+        this.comment = comment;
         this.likes = likes;
     }
 
@@ -48,6 +50,7 @@ public class News extends BaseEntity {
                 .title(title)
                 .video(video)
                 .content(content)
+                .comment(new ArrayList<>())
                 .likes(0)
                 .build();
     }
