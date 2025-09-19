@@ -44,7 +44,6 @@ public class Like extends BaseEntity {
                 .member(member)
                 .news(news)
                 .build();
-        news.getLikes().add(like);
         return like;
     }
 }
