@@ -24,6 +24,15 @@ public class Comment extends BaseEntity {
 
     @Builder(access = AccessLevel.PRIVATE)
     private Comment(Member member, News news, String content) {
+        if (member == null) {
+            throw new IllegalArgumentException("Member cannot be null");
+        }
+        if (news == null) {
+            throw new IllegalArgumentException("News cannot be null");
+        }
+        if (content == null || content.isBlank()) {
+            throw new IllegalArgumentException("Content cannot be null or empty");
+        }
         this.member = member;
         this.news = news;
         this.content = content;
