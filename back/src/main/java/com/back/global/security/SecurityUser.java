@@ -9,13 +9,13 @@ import java.util.Collection;
 
 public class SecurityUser extends User {
     @Getter
-    private long id;
+    private Long id;
 
     @Getter
     private String name;
 
     public SecurityUser(
-            long id,
+            Long id,
             String username,
             String password,
             String name,
