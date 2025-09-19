@@ -15,7 +15,10 @@ public class AuthTokenService {
     @Value("${custom.accessToken.expirationSeconds}")
     private int accessTokenExpirationSeconds;
 
-    String genAccessToken(Member member) {
+    @Value("${custom.refreshToken.expirationSeconds}")
+    private int refreshTokenExpirationSeconds;
+
+    public String genAccessToken(Member member) {
         String email = member.getEmail();
         String name = member.getName();
         String role = member.getRole().name();
@@ -36,5 +39,28 @@ public class AuthTokenService {
         String role = (String) parsedPayload.get("role");
 
         return Map.of("email", email, "name", name, "role", role);
+    }
+
+    public String genRefreshToken(Member member) {
+        String email = member.getEmail();
+        String name = member.getName();
+        String role = member.getRole().name();
+
+        return Ut.jwt.toString(
+                jwtSecretKey,
+                refreshTokenExpirationSeconds,
+                Map.of("email", email, "name", name, "role", role, "type", "refresh")
+        );
+    }
+
+    public boolean isRefreshToken(String token) {
+        Map<String, Object> payload = Ut.jwt.payload(jwtSecretKey, token);
+        if (payload == null) return false;
+
+        return "refresh".equals(payload.get("type"));
+    }
+
+    public boolean isValidToken(String token) {
+        return Ut.jwt.payload(jwtSecretKey, token) != null;
     }
 }

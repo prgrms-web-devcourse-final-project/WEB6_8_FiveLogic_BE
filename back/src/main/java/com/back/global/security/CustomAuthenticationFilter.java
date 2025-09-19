@@ -36,6 +36,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         try {
             work(request, response, filterChain);
         } catch (Exception e) {
+            logger.error("Authentication filter error for request: " + request.getRequestURI() + ", Exception type: " + e.getClass().getSimpleName() + ", Message: " + e.getMessage(), e);
             RsData<Void> rsData = new RsData<>("401-1", "인증 오류가 발생했습니다.");
             response.setContentType("application/json;charset=UTF-8");
             response.setStatus(rsData.statusCode());
@@ -47,7 +48,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
     private void work(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // 인증이 필요없는 API 요청이라면 패스
-        if (List.of("/auth/login", "/auth/signup", "/h2-console").contains(request.getRequestURI()) ||
+        if (List.of("/auth/login", "/auth/signup", "/auth/refresh", "/h2-console").contains(request.getRequestURI()) ||
                 request.getRequestURI().startsWith("/h2-console/")) {
             filterChain.doFilter(request, response);
             return;
@@ -65,8 +66,30 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         Map<String, Object> payload = memberService.payload(accessToken);
 
         if (payload == null) {
-            filterChain.doFilter(request, response);
-            return;
+            // Access token이 만료되었을 때 refresh token으로 갱신 시도
+            String refreshToken = rq.getCookieValue("refreshToken", "");
+            if (!refreshToken.isBlank() && memberService.isValidToken(refreshToken) && memberService.isRefreshToken(refreshToken)) {
+                // Refresh token에서 사용자 정보 추출
+                Map<String, Object> refreshPayload = memberService.payload(refreshToken);
+                if (refreshPayload != null) {
+                    String email = (String) refreshPayload.get("email");
+                    Optional<Member> memberOpt = memberService.findByEmail(email);
+                    if (memberOpt.isPresent()) {
+                        Member member = memberOpt.get();
+                        // 새로운 access token 생성 및 설정
+                        String newAccessToken = memberService.genAccessToken(member);
+                        rq.setCookie("accessToken", newAccessToken);
+
+                        // 새 토큰으로 다시 payload 추출
+                        payload = memberService.payload(newAccessToken);
+                    }
+                }
+            }
+
+            if (payload == null) {
+                filterChain.doFilter(request, response);
+                return;
+            }
         }
 
         String email = (String) payload.get("email");
