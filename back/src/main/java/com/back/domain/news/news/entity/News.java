@@ -69,6 +69,10 @@ public class News extends BaseEntity {
         this.likes.add(like);
     }
 
+    /**
+     * 좋아요를 취소할 수 있게 해야할까요?
+     */
+    @Deprecated(forRemoval = true)
     public void unLike(Like like) {
         if (!this.likes.contains(like)) {
             throw new IllegalStateException("좋아요를 누르지 않은 뉴스입니다.");
