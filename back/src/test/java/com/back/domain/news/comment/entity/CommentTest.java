@@ -69,4 +69,39 @@ class CommentTest {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }
     }
+
+    @Test
+    @DisplayName("댓글 내용을 수정할 수 있다.")
+    void commentUpdateTest() {
+        Member member = MemberFixture.createDefault();
+        News news = NewsFixture.createDefault();
+        String content = "This is a sample comment content.";
+        Comment comment = Comment.create(member, news, content);
+
+        String newContent = "This is the updated comment content.";
+        comment.update(newContent);
+
+        assertThat(comment.getContent()).isEqualTo(newContent);
+    }
+
+    @Test
+    @DisplayName("댓글 수정 시 내용이 null 혹은 공백인 경우 예외를 반환한다.")
+    void commentUpdateTestWithInvalidContent() {
+        Member member = MemberFixture.createDefault();
+        News news = NewsFixture.createDefault();
+        String content = "This is a sample comment content.";
+        Comment comment = Comment.create(member, news, content);
+
+        try {
+            comment.update(null);
+        } catch (Exception e) {
+            assertThat(e).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        try {
+            comment.update("");
+        } catch (Exception e) {
+            assertThat(e).isInstanceOf(IllegalArgumentException.class);
+        }
+    }
 }
