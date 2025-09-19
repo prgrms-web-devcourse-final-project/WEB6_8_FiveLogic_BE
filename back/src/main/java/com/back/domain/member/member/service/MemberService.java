@@ -37,4 +37,16 @@ public class MemberService {
     public Map<String, Object> payload(String accessToken) {
         return authTokenService.payload(accessToken);
     }
+
+    public String genRefreshToken(Member member) {
+        return authTokenService.genRefreshToken(member);
+    }
+
+    public boolean isValidToken(String token) {
+        return authTokenService.isValidToken(token);
+    }
+
+    public boolean isRefreshToken(String token) {
+        return authTokenService.isRefreshToken(token);
+    }
 }
