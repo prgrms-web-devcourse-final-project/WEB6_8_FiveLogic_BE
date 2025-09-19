@@ -1,6 +1,6 @@
-package com.back.domain.Post.dto;
+package com.back.domain.post.dto;
 
-import com.back.domain.Post.entity.Post;
+import com.back.domain.post.entity.Post;
 import lombok.Data;
 
 import java.time.LocalDateTime;

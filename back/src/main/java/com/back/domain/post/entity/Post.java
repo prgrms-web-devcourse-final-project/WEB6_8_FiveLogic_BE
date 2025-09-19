@@ -1,7 +1,9 @@
-package com.back.domain.Post.entity;
+package com.back.domain.post.entity;
 
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,11 +17,17 @@ public class Post extends BaseEntity {
     private String content;
     private String authorName;
 
-    private enum postType {
-        informationPost, practicePost, questionPost
+    @Enumerated(EnumType.STRING)
+    private PostType postType;
+
+    public enum PostType {
+        INFORMATION_POST,
+        PRACTICE_POST,
+        QUESTION_POST
     }
 
     private int viewCount;
 
     private int liked;
+
 }
