@@ -55,8 +55,4 @@ public class Comment extends BaseEntity {
         this.content = content;
         return this;
     }
-
-    public void remove() {
-        this.news.removeComment(this);
-    }
 }
