@@ -1,8 +1,8 @@
 package com.back.domain.news.comment.entity;
 
 
-import com.back.domain.fixture.MemberFixture;
-import com.back.domain.fixture.NewsFixture;
+import com.back.fixture.MemberFixture;
+import com.back.fixture.NewsFixture;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.news.news.entity.News;
 import org.junit.jupiter.api.DisplayName;

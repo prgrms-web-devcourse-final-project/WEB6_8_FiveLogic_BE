@@ -1,4 +1,4 @@
-package com.back.domain.fixture;
+package com.back.fixture;
 
 import com.back.domain.file.entity.Video;
 import com.back.domain.member.member.entity.Member;

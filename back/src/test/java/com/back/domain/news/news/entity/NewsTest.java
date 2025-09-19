@@ -1,8 +1,8 @@
 package com.back.domain.news.news.entity;
 
 import com.back.domain.file.entity.Video;
-import com.back.domain.fixture.MemberFixture;
-import com.back.domain.fixture.VideoFixture;
+import com.back.fixture.MemberFixture;
+import com.back.fixture.VideoFixture;
 import com.back.domain.member.member.entity.Member;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
