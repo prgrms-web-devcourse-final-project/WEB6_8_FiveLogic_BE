@@ -29,6 +29,11 @@ public class VideoService {
         return videoRepository.save(video);
     }
 
+    public Video findByUuid(String uuid) {
+        return videoRepository.findByUuid(uuid)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 비디오입니다."));
+    }
+
     public URL generateUploadUrl(String bucket, String objectKey) {
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucket)
