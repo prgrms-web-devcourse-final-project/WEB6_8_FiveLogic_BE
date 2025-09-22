@@ -22,30 +22,37 @@ public class MemberService {
     private final MenteeRepository menteeRepository;
 
     @Transactional
-    public Member join(String email, String name, String password, Member.Role role) {
+    public Member joinMentee(String email, String name, String password, String interestedField) {
         memberRepository.findByEmail(email).ifPresent(
                 member -> {
                     throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
                 }
         );
 
-        Member member = new Member(email, password, name, role);
+        Member member = new Member(email, password, name, Member.Role.MENTEE);
         Member savedMember = memberRepository.save(member);
 
-        // 역할에 따라 해당 테이블에 추가
-        switch (role) {
-            case MENTOR -> {
-                Mentor mentor = new Mentor(savedMember, null, null, null);
-                mentorRepository.save(mentor);
-            }
-            case MENTEE -> {
-                Mentee mentee = new Mentee(savedMember, null);
-                menteeRepository.save(mentee);
-            }
-            case ADMIN -> {
-                // 관리자는 별도 테이블 없음
-            }
-        }
+        // TODO: interestedField를 jobId로 매핑하는 로직 필요
+        Mentee mentee = new Mentee(savedMember, null);
+        menteeRepository.save(mentee);
+
+        return savedMember;
+    }
+
+    @Transactional
+    public Member joinMentor(String email, String name, String password, String career, Integer careerYears) {
+        memberRepository.findByEmail(email).ifPresent(
+                member -> {
+                    throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+                }
+        );
+
+        Member member = new Member(email, password, name, Member.Role.MENTOR);
+        Member savedMember = memberRepository.save(member);
+
+        // TODO: career를 jobId로 매핑하는 로직 필요
+        Mentor mentor = new Mentor(savedMember, null, null, careerYears);
+        mentorRepository.save(mentor);
 
         return savedMember;
     }

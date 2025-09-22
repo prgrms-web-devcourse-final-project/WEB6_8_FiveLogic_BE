@@ -2,6 +2,8 @@ package com.back.domain.member.member.controller;
 
 import com.back.domain.member.member.dto.LoginRequest;
 import com.back.domain.member.member.dto.SignupRequest;
+import com.back.domain.member.member.dto.MenteeSignupRequest;
+import com.back.domain.member.member.dto.MentorSignupRequest;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
 import com.back.global.rq.Rq;
@@ -19,16 +21,32 @@ public class MemberController {
     private final MemberService memberService;
     private final Rq rq;
 
-    @PostMapping("/signup")
-    public RsData<Void> signup(@RequestBody SignupRequest request) {
+    @PostMapping("/signup/mentee")
+    public RsData<Void> signupMentee(@RequestBody MenteeSignupRequest request) {
         try {
-            Member member = memberService.join(
-                request.getEmail(), 
-                request.getName(), 
-                request.getPassword(), 
-                request.getRole()
+            Member member = memberService.joinMentee(
+                request.email(),
+                request.name(),
+                request.password(),
+                request.interestedField()
             );
-            return new RsData<>("200-1", "회원가입 성공");
+            return new RsData<>("200-1", "멘티 회원가입 성공");
+        } catch (IllegalArgumentException e) {
+            return new RsData<>("400-1", e.getMessage());
+        }
+    }
+
+    @PostMapping("/signup/mentor")
+    public RsData<Void> signupMentor(@RequestBody MentorSignupRequest request) {
+        try {
+            Member member = memberService.joinMentor(
+                request.email(),
+                request.name(),
+                request.password(),
+                request.career(),
+                request.careerYears()
+            );
+            return new RsData<>("200-1", "멘토 회원가입 성공");
         } catch (IllegalArgumentException e) {
             return new RsData<>("400-1", e.getMessage());
         }
