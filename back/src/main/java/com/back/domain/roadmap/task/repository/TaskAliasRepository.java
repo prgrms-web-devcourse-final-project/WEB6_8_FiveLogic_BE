@@ -9,5 +9,6 @@ import java.util.Optional;
 public interface TaskAliasRepository extends JpaRepository<TaskAlias, Long> {
     Optional<TaskAlias> findByName(String name);
     Optional<TaskAlias> findByNameIgnoreCase(String name);
+    List<TaskAlias> findByNameContainingIgnoreCase(String keyword);
     List<TaskAlias> findByTaskIsNull(); // pending 상태인 alias 조회
 }

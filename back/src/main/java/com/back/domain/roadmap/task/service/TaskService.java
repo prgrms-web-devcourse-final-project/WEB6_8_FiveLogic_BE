@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,23 +40,24 @@ public class TaskService {
         return taskRepository.findAll();
     }
 
-    // 사용자 입력값으로 표준 Task 찾기 또는 새로운 TaskAlias 생성
-    public Task findOrCreateTask(String input){
-        // 1. 정확한 이름 매칭 (대소문자 구분 없음)
-        Optional<Task> exactMatch = taskRepository.findByNameIgnoreCase(input);
-        if(exactMatch.isPresent()){
-            return exactMatch.get();
-        }
+    // 사용자가 입력한 키워드로 표준 Task 찾기 또는 새로운 TaskAlias 생성
+    public List<Task> searchByKeyword(String keyword){
 
-        // 2. Alias 매칭 (대소문자 구분 없음)
-        Optional<TaskAlias> aliasMatch = taskAliasRepository.findByNameIgnoreCase(input);
-        if(aliasMatch.isPresent() && aliasMatch.get().getTask() != null) {
-            return aliasMatch.get().getTask();
-        }
+        // 1. 표준 Task 이름 직접 검색
+        List<Task> directMatches = taskRepository.findByNameContainingIgnoreCase(keyword);
+        List<Task> results = new ArrayList<>(directMatches);
 
-        // 3. 매칭 실패 시 pending 상태로 Alias 생성
-        createPendingAlias(input);
-        return null; // 표준 Task가 없으므로 null 반환
+        // 2. TaskAlias 검색
+        List<TaskAlias> aliasMatches = taskAliasRepository.findByNameContainingIgnoreCase(keyword);
+        aliasMatches.stream()
+                .filter(alias -> alias.getTask() != null) // pending 상태의 alias 제외
+                .filter(alias -> directMatches.stream()
+                        .noneMatch(task -> task.getId().equals(alias.getTask().getId()))) // Task 검색 결과와 중복되는 값 제거
+                .forEach(alias ->
+                        results.add(alias.getTask())
+                );
+
+        return results;
     }
 
     @Transactional
