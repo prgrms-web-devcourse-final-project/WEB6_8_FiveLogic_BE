@@ -31,9 +31,12 @@ public class NewsService {
         return newsRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("뉴스를 찾을 수 없습니다."));
     }
 
-    public void updateNews(News news, String title, Video video, String content) {
+    public News updateNews(Member member, News news, String title, Video video, String content) {
+        if (!(member.getRole()== Member.Role.ADMIN)) {
+            throw new SecurityException("수정 권한이 없습니다.");
+        }
         news.update(title, video, content);
-        newsRepository.save(news);
+        return newsRepository.save(news);
     }
 
     public void deleteNews(News news) {
