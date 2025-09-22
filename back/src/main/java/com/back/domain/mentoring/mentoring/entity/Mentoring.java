@@ -15,7 +15,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 public class Mentoring extends BaseEntity {
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mentor_id")
     private Mentor mentor;
 
@@ -39,5 +39,16 @@ public class Mentoring extends BaseEntity {
         this.bio = bio;
         this.tags = tags != null ? tags : new ArrayList<>();
         this.thumb = thumb;
+    }
+
+    public void update(String title, String bio, List<String> tags, String thumb) {
+        this.title = title;
+        this.bio = bio;
+        this.tags = tags != null ? tags : new ArrayList<>();
+        this.thumb = thumb;
+    }
+
+    public boolean isOwner(Mentor mentor) {
+        return this.mentor.equals(mentor);
     }
 }

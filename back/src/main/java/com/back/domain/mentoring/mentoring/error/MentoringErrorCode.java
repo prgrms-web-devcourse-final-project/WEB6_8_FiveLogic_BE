@@ -7,6 +7,10 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum MentoringErrorCode implements ErrorCode {
+
+    // 403
+    FORBIDDEN_NOT_OWNER("403-1", "해당 멘토링에 대한 권한이 없습니다."),
+
     // 404
     NOT_FOUND_MENTOR("404-1", "멘토를 찾을 수 없습니다."),
     NOT_FOUND_MENTORING("404-2", "멘토링을 찾을 수 없습니다."),

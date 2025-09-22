@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-public record MentoringCreateRequest(
+public record MentoringRequest(
     @Schema(description = "멘토링 제목")
     @NotNull @Size(max = 100)
     String title,

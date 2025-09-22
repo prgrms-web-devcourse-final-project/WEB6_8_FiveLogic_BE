@@ -5,8 +5,8 @@ import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.member.mentor.repository.MentorRepository;
 import com.back.domain.mentoring.mentoring.dto.MentorDto;
 import com.back.domain.mentoring.mentoring.dto.MentoringDetailDto;
-import com.back.domain.mentoring.mentoring.dto.request.MentoringCreateRequest;
-import com.back.domain.mentoring.mentoring.dto.response.MentoringCreateResponse;
+import com.back.domain.mentoring.mentoring.dto.request.MentoringRequest;
+import com.back.domain.mentoring.mentoring.dto.response.MentoringResponse;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
@@ -21,13 +21,14 @@ public class MentoringService {
     private final MentoringRepository mentoringRepository;
     private final MentorRepository mentorRepository;
 
+
     public Mentoring getLastestMentoring() {
         return mentoringRepository.findTopByOrderByIdDesc()
             .orElseThrow(() -> new ServiceException(MentoringErrorCode.NOT_FOUND_MENTORING));
     }
 
     @Transactional
-    public MentoringCreateResponse createMentoring(MentoringCreateRequest reqDto, Member member) {
+    public MentoringResponse createMentoring(MentoringRequest reqDto, Member member) {
         Mentor mentor = getMentor(member);
 
         // 멘토당 멘토링 1개 제한 체크 (추후 1:N 변경 시 제거 필요)
@@ -45,12 +46,26 @@ public class MentoringService {
 
         mentoringRepository.save(mentoring);
 
-        return new MentoringCreateResponse(
+        return new MentoringResponse(
             MentoringDetailDto.from(mentoring),
             MentorDto.from(mentor)
         );
     }
 
+    @Transactional
+    public MentoringResponse updateMentoring(Long mentoringId, MentoringRequest reqDto, Member member) {
+        Mentor mentor = getMentor(member);
+        Mentoring mentoring = getMentoring(mentoringId);
+
+        validateOwner(mentoring, mentor);
+
+        mentoring.update(reqDto.title(), reqDto.bio(), reqDto.tags(), reqDto.thumb());
+
+        return new MentoringResponse(
+            MentoringDetailDto.from(mentoring),
+            MentorDto.from(mentor)
+        );
+    }
 
 
     // ===== 헬퍼 메서드 =====
@@ -58,5 +73,18 @@ public class MentoringService {
     private Mentor getMentor(Member member) {
         return mentorRepository.findByMemberId(member.getId())
             .orElseThrow(() -> new ServiceException(MentoringErrorCode.NOT_FOUND_MENTOR));
+    }
+
+    private Mentoring getMentoring(Long mentoringId) {
+        return mentoringRepository.findById(mentoringId)
+            .orElseThrow(() -> new ServiceException(MentoringErrorCode.NOT_FOUND_MENTORING));
+    }
+
+    // ===== 유효성 검사 =====
+
+    private void validateOwner(Mentoring mentoring, Mentor mentor) {
+        if (!mentoring.isOwner(mentor)) {
+            throw new ServiceException(MentoringErrorCode.FORBIDDEN_NOT_OWNER);
+        }
     }
 }
