@@ -7,7 +7,7 @@ public class MemberFixture {
     private String password = "password123";
     private String name = "Test User";
     private Member.Role role = Member.Role.MENTEE;
-    private Integer id = null;
+    private Long id = null;
 
     private static MemberFixture builder() {
         return new MemberFixture();
@@ -15,6 +15,24 @@ public class MemberFixture {
 
     public static Member createDefault() {
         return builder().build();
+    }
+
+    public static Member create(Long id, String email, String name, String password, Member.Role role) {
+        return builder()
+                .withId(id)
+                .withEmail(email)
+                .withName(name)
+                .withPassword(password)
+                .withRole(role)
+                .build();
+    }
+
+    public static Member create(String email, String name, String password) {
+        return builder()
+                .withEmail(email)
+                .withName(name)
+                .withPassword(password)
+                .build();
     }
 
     public MemberFixture withEmail(String email) {
@@ -37,7 +55,7 @@ public class MemberFixture {
         return this;
     }
 
-    public MemberFixture withId(Integer id) {
+    public MemberFixture withId(Long id) {
         this.id = id;
         return this;
     }
