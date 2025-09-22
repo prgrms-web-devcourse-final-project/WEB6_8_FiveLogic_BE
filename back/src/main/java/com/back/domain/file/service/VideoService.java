@@ -45,7 +45,12 @@ public class VideoService {
                         .signatureDuration(Duration.ofMinutes(30))
                         .putObjectRequest(request));
 
-        return presignedRequest.url();
+        URL url = presignedRequest.url();
+        if (url == null) {
+            throw new RuntimeException("Presigned URL 생성 실패");
+        }
+
+        return url;
     }
 
     public URL generateDownloadUrl(String bucket, String objectKey) {
@@ -59,7 +64,12 @@ public class VideoService {
                         .signatureDuration(Duration.ofHours(1)) // 스트리밍 중 끊기지 않게 충분히
                         .getObjectRequest(request));
 
-        return presignedRequest.url();
+        URL url = presignedRequest.url();
+        if (url == null) {
+            throw new RuntimeException("Presigned URL 생성 실패");
+        }
+
+        return url;
     }
 
     // DASH용 인덱스 + 세그먼트 URL 발급
