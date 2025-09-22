@@ -1,8 +1,42 @@
 package com.back.fixture;
 
 import com.back.domain.member.member.entity.Member;
+import com.back.domain.member.member.repository.MemberRepository;
+import com.back.domain.member.mentor.entity.Mentor;
+import com.back.domain.member.mentor.repository.MentorRepository;
+import com.back.standard.util.Ut;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 
+import java.util.Map;
+import com.back.domain.member.member.repository.MemberRepository;
+import com.back.domain.member.mentor.entity.Mentor;
+import com.back.domain.member.mentor.repository.MentorRepository;
+import com.back.standard.util.Ut;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+
+import java.util.Map;
+
+@Component
 public class MemberFixture {
+    @Autowired
+    private MemberRepository memberRepository;
+    @Autowired private MentorRepository mentorRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
+
+    @Value("${custom.jwt.secretKey}")
+    private String jwtSecretKey;
+
+    @Value("${custom.accessToken.expirationSeconds}")
+    private int accessTokenExpiration;
+
+    private int counter = 0;
+
     private String email = "test@example.com";
     private String password = "password123";
     private String name = "Test User";
@@ -65,5 +99,52 @@ public class MemberFixture {
             return new Member(id, email, name);
         }
         return new Member(email, password, name, role);
+    }
+
+    // ===== Member =====
+
+    public Member createMember(String email, String name, Member.Role role) {
+        Member member = new Member(email, passwordEncoder.encode("password123"), name, role);
+        return memberRepository.save(member);
+    }
+
+    public Member createMentor(String email, String name) {
+        return createMember(email, name, Member.Role.MENTOR);
+    }
+
+    public Member createMentor() {
+        return createMentor("mentor" + (++counter) + "@test.com", "멘토" + counter);
+    }
+
+    public Member createMentee(String email, String name) {
+        return createMember(email, name, Member.Role.MENTEE);
+    }
+
+    public Member createMentee() {
+        return createMentee("mentee" + (++counter) + "@test.com", "멘티" + counter);
+    }
+
+
+    // ===== Mentor =====
+
+    public Mentor createMentorProfile(Member member) {
+        return createMentorProfile(member, 1L, 4.5, 5);
+    }
+
+    public Mentor createMentorProfile(Member member, Long jobId, Double rate, Integer careerYears) {
+        Mentor mentor = new Mentor(member, jobId, rate, careerYears);
+        return mentorRepository.save(mentor);
+    }
+
+
+    // ===== Token =====
+
+    public String getAccessToken(Member member) {
+        return Ut.jwt.toString(jwtSecretKey, accessTokenExpiration, Map.of(
+            "id", member.getId(),
+            "email", member.getEmail(),
+            "name", member.getName(),
+            "role", member.getRole().name()
+        ));
     }
 }
