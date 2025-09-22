@@ -43,6 +43,8 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	implementation ("software.amazon.awssdk:s3:2.25.0")
 }
 
 tasks.withType<Test> {
