@@ -4,10 +4,7 @@ import com.back.domain.file.entity.Video;
 import com.back.domain.file.service.VideoService;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.news.like.service.LikeService;
-import com.back.domain.news.news.dto.NewsCreateRequest;
-import com.back.domain.news.news.dto.NewsCreateResponse;
-import com.back.domain.news.news.dto.NewsGetResponse;
-import com.back.domain.news.news.dto.NewsLikeResponse;
+import com.back.domain.news.news.dto.*;
 import com.back.domain.news.news.entity.News;
 import com.back.domain.news.news.service.NewsService;
 import com.back.global.rq.Rq;
@@ -30,7 +27,7 @@ public class NewsController {
     @PostMapping
     public RsData<NewsCreateResponse> createNews(@RequestBody NewsCreateRequest request) {
         Member member = rq.getActor();
-        Video video = videoService.findByUuid(request.videoUuid());
+        Video video = videoService.getNewsByUuid(request.videoUuid());
         News news = newsService.createNews(member, request.title(), video, request.content());
         NewsCreateResponse response = new NewsCreateResponse(news.getTitle(), news.getVideo().getUuid(), news.getContent(), member.getName());
         return new RsData<>("201", "뉴스가 생성되었습니다.", response);

@@ -33,7 +33,7 @@ public class VideoService {
         return videoRepository.save(video);
     }
 
-    public Video findByUuid(String uuid) {
+    public Video getNewsByUuid(String uuid) {
         return videoRepository.findByUuid(uuid)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 비디오입니다."));
     }

@@ -16,7 +16,6 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -85,24 +84,24 @@ class VideoServiceTest {
 
     @Test
     @DisplayName("uuid로 Video 객체 조회")
-    void findByUuidTest() {
+    void getNewsByUuidTest() {
         String uuid = UUID.randomUUID().toString();
         Video video = VideoFixture.createDefault();
         when(videoRepository.findByUuid(uuid)).thenReturn(java.util.Optional.of(video));
 
-        Video foundVideo = videoService.findByUuid(uuid);
+        Video foundVideo = videoService.getNewsByUuid(uuid);
         assertThat(foundVideo).isNotNull();
         assertThat(foundVideo.getUuid()).isEqualTo(video.getUuid());
     }
 
     @Test
     @DisplayName("존재하지 않는 uuid로 Video 객체 조회 시 예외 발생")
-    void findByUuidNotFoundTest() {
+    void getNewsByUuidNotFoundTest() {
         String uuid = UUID.randomUUID().toString();
         when(videoRepository.findByUuid(uuid)).thenReturn(java.util.Optional.empty());
 
         try {
-            videoService.findByUuid(uuid);
+            videoService.getNewsByUuid(uuid);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
             assertThat(e.getMessage()).isEqualTo("존재하지 않는 비디오입니다.");
