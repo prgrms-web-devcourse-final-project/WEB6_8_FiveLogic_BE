@@ -94,10 +94,37 @@ public class InformationPostControllerTest {
                 .andExpect(handler().handlerType(InformationPostController.class))
                 .andExpect(handler().methodName("createPost"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("게시글이 성공적으로 생성되었습니다. "))
+                .andExpect(jsonPath("$.msg").value("게시글이 성공적으로 생성되었습니다. "))
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.postId").value(createdPost.getId()))
                 .andExpect(jsonPath("$.data.title").value(createdPost.getTitle()));
+    }
+
+    @Test
+    @DisplayName("게시글 생성 실패 (제목 null)")
+    void t6() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/post/infor")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "memberId": 1,
+                                            "postType": "INFORMATIONPOST",
+                                            "title": "",
+                                            "content": "테스트 내용"
+                                        }
+                                        """.stripIndent())
+                )
+                .andDo(print());
+
+
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("createPost"))
+
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.msg").value("title-NotBlank-제목은 null 혹은 공백일 수 없습니다."));
     }
 
     @Test
@@ -141,7 +168,7 @@ public class InformationPostControllerTest {
                 .andExpect(handler().methodName("getAllPost"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.message").value("게시글 다건 조회 성공"))
+                .andExpect(jsonPath("$.msg").value("게시글 다건 조회 성공"))
                 .andExpect(jsonPath("$.data").exists());
     }
 
@@ -159,7 +186,25 @@ public class InformationPostControllerTest {
                 .andExpect(handler().handlerType(InformationPostController.class))
                 .andExpect(handler().methodName("getSinglePost"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("게시글 단건 조회 성공"))
+                .andExpect(jsonPath("$.msg").value("게시글 단건 조회 성공"))
+                .andExpect(jsonPath("$.data.id").value(1L))
+                .andExpect(jsonPath("$.data.title").value("정보글 제목"))
                 .andExpect(jsonPath("$.data").exists());
+    }
+
+    @Test
+    @DisplayName("게시글 단건조회 실패 (유효하지 않은 Id")
+    void t5() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/post/infor/{post_id}", 999L)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("getSinglePost"))
+                .andExpect(jsonPath("$.resultCode").value("400"))
+                .andExpect(jsonPath("$.msg").value("해당 Id의 게시글이 없습니다."));
     }
 }

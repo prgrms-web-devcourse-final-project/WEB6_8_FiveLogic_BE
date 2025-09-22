@@ -10,6 +10,7 @@ import com.back.domain.post.rq.ApiResponse;
 import com.back.domain.post.service.PostService;
 import com.back.global.auth.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,7 @@ public class InformationPostController {
     @Operation(summary = "게시글 생성")
     @PostMapping
     public ResponseEntity<ApiResponse<PostCreateResponse>> createPost(
-            @RequestBody PostCreateRequest postCreateRequest,
+            @Valid @RequestBody PostCreateRequest postCreateRequest,
             @CurrentUser Member member
             ) {
         String authorName = member.getName();
