@@ -11,7 +11,7 @@ import lombok.Setter;
 @Getter @Setter
 @NoArgsConstructor
 public class TaskAlias extends BaseEntity {
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, unique = true)
     private String name; // 사용자가 입력한 Task 이름
 
     @ManyToOne(fetch = FetchType.LAZY)
