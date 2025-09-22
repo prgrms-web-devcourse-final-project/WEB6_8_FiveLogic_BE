@@ -30,4 +30,10 @@ public class LikeService {
         Like like = Like.create(member, news);
         return likeRepository.save(like);
     }
+
+    public long getLikeCount(Long newsId) {
+        News news = newsRepository.findById(newsId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 뉴스를 찾을 수 없습니다."));
+        return likeRepository.countByNews(news);
+    }
 }
