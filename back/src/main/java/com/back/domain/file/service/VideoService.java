@@ -4,8 +4,11 @@ import com.back.domain.file.entity.Video;
 import com.back.domain.file.repository.VideoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
@@ -22,6 +25,7 @@ import java.util.stream.Collectors;
 public class VideoService {
     private final VideoRepository videoRepository;
     private final S3Presigner presigner;
+    private final S3Client s3Client;
 
     public Video createVideo(String transcodingStatus, String originalPath, String originalFilename, Integer duration, Long fileSize) {
         String uuid = UUID.randomUUID().toString();
@@ -34,7 +38,12 @@ public class VideoService {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 비디오입니다."));
     }
 
+    //HeadObjectRequest 고려
     public URL generateUploadUrl(String bucket, String objectKey) {
+        if(!isExist(bucket, objectKey)){
+            throw new RuntimeException("요청한 파일이 존재하지 않습니다: " + objectKey);
+        }
+
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(objectKey)
@@ -54,6 +63,10 @@ public class VideoService {
     }
 
     public URL generateDownloadUrl(String bucket, String objectKey) {
+        if(!isExist(bucket, objectKey)){
+            throw new RuntimeException("요청한 파일이 존재하지 않습니다: " + objectKey);
+        }
+
         GetObjectRequest request = GetObjectRequest.builder()
                 .bucket(bucket)
                 .key(objectKey)
@@ -61,7 +74,7 @@ public class VideoService {
 
         PresignedGetObjectRequest presignedRequest =
                 presigner.presignGetObject(builder -> builder
-                        .signatureDuration(Duration.ofHours(1)) // 스트리밍 중 끊기지 않게 충분히
+                        .signatureDuration(Duration.ofHours(1))
                         .getObjectRequest(request));
 
         URL url = presignedRequest.url();
@@ -84,5 +97,19 @@ public class VideoService {
         // MPD 포함 합쳐서 반환
         segmentUrls.put("mpd", mpdUrl);
         return segmentUrls;
+    }
+
+    public boolean isExist(String bucket, String objectKey) {
+        try {
+            HeadObjectRequest headRequest = HeadObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(objectKey)
+                    .build();
+
+            s3Client.headObject(headRequest);
+            return true;
+        } catch (S3Exception e) {
+            return false;
+        }
     }
 }
