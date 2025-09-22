@@ -17,7 +17,6 @@ import java.util.Optional;
 public class CommentService {
     private final CommentRepository commentRepository;
 
-    @Transactional
     public Comment createComment(Member member, News news, String content) {
         Comment comment = Comment.create(member, news, content);
         return commentRepository.save(comment);
