@@ -18,7 +18,7 @@ public class LikeService {
     private final LikeRepository likeRepository;
     private final NewsRepository newsRepository;
 
-    public void likeNews(Member member, Long newsId) {
+    public Like likeNews(Member member, Long newsId) {
         News news = newsRepository.findById(newsId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 뉴스를 찾을 수 없습니다."));
 
@@ -28,6 +28,6 @@ public class LikeService {
         }
 
         Like like = Like.create(member, news);
-        likeRepository.save(like);
+        return likeRepository.save(like);
     }
 }
