@@ -4,6 +4,7 @@ import com.back.domain.post.dto.PostAllResponse;
 import com.back.domain.post.dto.PostCreateRequest;
 import com.back.domain.post.entity.Post;
 import com.back.domain.post.repository.PostRepository;
+import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -44,7 +45,7 @@ public class PostService {
                 postType = Post.PostType.QUESTIONPOST;
                 break;
             default:
-                throw new IllegalArgumentException("Invalid post type: " + postTypeStr);
+                throw new ServiceException("400-2", "유효하지 않은 PostType입니다.");
         }
 
         post.setPostType(postType);
