@@ -36,7 +36,7 @@ public class NewsController {
     }
 
     @GetMapping("{newsId}")
-    public RsData<NewsGetResponse> getNews(@PathVariable Integer newsId) {
+    public RsData<NewsGetResponse> getNews(@PathVariable Long newsId) {
         News news = newsService.getNewsById(newsId);
         NewsGetResponse response = new NewsGetResponse(news);
         return new RsData<>("200", "뉴스 읽어오기 완료", response);
