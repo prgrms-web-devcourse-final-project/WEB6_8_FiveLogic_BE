@@ -39,7 +39,10 @@ public class NewsService {
         return newsRepository.save(news);
     }
 
-    public void deleteNews(News news) {
+    public void deleteNews(Member member, News news) {
+        if (!(member.getRole()== Member.Role.ADMIN)) {
+            throw new SecurityException("삭제 권한이 없습니다.");
+        }
         newsRepository.delete(news);
     }
 }

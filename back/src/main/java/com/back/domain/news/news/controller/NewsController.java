@@ -81,7 +81,10 @@ public class NewsController {
     }
 
     @DeleteMapping("{newsId}")
-    public void deleteNews() {
-
+    public RsData<?> deleteNews(@PathVariable Long newsId) {
+        Member member = rq.getActor();
+        News news = newsService.getNewsById(newsId);
+        newsService.deleteNews(member, news);
+        return new RsData<>("200", news.getId()+"번 뉴스가 삭제되었습니다.", null);
     }
 }
