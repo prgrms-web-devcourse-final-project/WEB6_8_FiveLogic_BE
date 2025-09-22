@@ -4,6 +4,7 @@ import com.back.domain.member.member.entity.Member;
 import com.back.domain.post.dto.PostAllResponse;
 import com.back.domain.post.dto.PostCreateRequest;
 import com.back.domain.post.dto.PostCreateResponse;
+import com.back.domain.post.dto.PostSingleResponse;
 import com.back.domain.post.entity.Post;
 import com.back.domain.post.rq.ApiResponse;
 import com.back.domain.post.service.PostService;
@@ -38,8 +39,21 @@ public class InformationPostController {
     @Operation(summary = "게시글 다건 조회")
     @GetMapping
     public ResponseEntity<ApiResponse<List<PostAllResponse>>> getAllPost() {
-        List<PostAllResponse> posts = postService.getAllPosts();
-        ApiResponse<List<PostAllResponse>> response = new ApiResponse<>("게시글 조회 성공", posts);
+        List<PostAllResponse> postAllResponse = postService.getAllPostResponse();
+
+
+        ApiResponse<List<PostAllResponse>> response = new ApiResponse<>("게시글 다건 조회 성공", postAllResponse);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "게시글 단건 조회")
+    @GetMapping("/{post_id}")
+    public ResponseEntity<ApiResponse<PostSingleResponse>> getSinglePost(@PathVariable long post_id) {
+        Post post = postService.findById(post_id);
+
+        PostSingleResponse postSingleResponse = new PostSingleResponse(post);
+
+        ApiResponse<PostSingleResponse> response = new ApiResponse<>("게시글 단건 조회 성공", postSingleResponse);
         return ResponseEntity.ok(response);
     }
 }

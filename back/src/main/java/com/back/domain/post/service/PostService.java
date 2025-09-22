@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -17,12 +16,10 @@ public class PostService {
 
     private final PostRepository postRepository;
 
-    public List<PostAllResponse> getAllPosts() {
+    public List<Post> getAllPosts() {
         List<Post> posts = postRepository.findAll();
 
-        return posts.stream()
-                .map(PostAllResponse::new)
-                .collect(Collectors.toList());
+        return posts;
     }
 
 
@@ -55,7 +52,13 @@ public class PostService {
         return post;
     }
 
-    public Post findByid(Long id) {
-        return postRepository.findById(id).get();
+    public Post findById(Long id) {
+        return postRepository.findById(id).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+    }
+
+    public List<PostAllResponse> getAllPostResponse() {
+        return postRepository.findAll().stream()
+                .map(PostAllResponse::new)
+                .toList();
     }
 }

@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -36,6 +37,9 @@ public class InformationPostControllerTest {
 
     @Autowired
     private PostService postService;
+
+//    @MockBean
+//    private PostService postMockService;
 
     @Autowired
     private MemberService memberService;
@@ -84,7 +88,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         // 실제 생성된 게시글 조회 (실제 DB에서)
-        Post createdPost = postService.findByid(1L);
+        Post createdPost = postService.findById(1L);
 
         resultActions
                 .andExpect(handler().handlerType(InformationPostController.class))
@@ -121,4 +125,55 @@ public class InformationPostControllerTest {
                 .andExpect(jsonPath("$.resultCode").value("400-2"))
                 .andExpect(jsonPath("$.msg").value("유효하지 않은 PostType입니다."));
     }
+
+    @Test
+    @DisplayName("게시글 다건조회")
+    void t3() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/post/infor")
+                )
+                .andDo(print());
+
+
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("getAllPost"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.message").value("게시글 다건 조회 성공"))
+                .andExpect(jsonPath("$.data").exists());
+    }
+
+//    @Test
+//    @DisplayName("게시글 단건조회")
+//    void t4() throws Exception {
+//        Post mockPost = new Post();
+//
+//        // 리플렉션으로 ID 설정
+//        Field idField = BaseEntity.class.getDeclaredField("id");
+//        idField.setAccessible(true);
+//        idField.set(mockPost, 1L);
+//
+//        mockPost.setTitle("테스트 제목");
+//        mockPost.setContent("테스트 내용");
+//        mockPost.setAuthorName("테스트유저");
+//        mockPost.setPostType(Post.PostType.INFORMATIONPOST);
+//
+//        when(postService.findById(1L)).thenReturn(mockPost);
+//
+//        ResultActions resultActions = mvc
+//                .perform(
+//                        get("/post/infor/{post_id}", 1L)
+//                )
+//                .andDo(print());
+//
+//
+//        resultActions
+//                .andExpect(handler().handlerType(InformationPostController.class))
+//                .andExpect(handler().methodName("getSinglePost"))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.message").value("게시글 단건 조회 성공"))
+//                .andExpect(jsonPath("$.data").exists());
+//    }
 }
