@@ -8,5 +8,6 @@ import java.util.Optional;
 
 public interface JobAliasRepository extends JpaRepository<JobAlias, Long> {
     Optional<JobAlias> findByName(String name);
+    Optional<JobAlias> findByNameIgnoreCase(String name);
     List<JobAlias> findByJobIsNull(); // pending 상태인 alias 조회
 }
