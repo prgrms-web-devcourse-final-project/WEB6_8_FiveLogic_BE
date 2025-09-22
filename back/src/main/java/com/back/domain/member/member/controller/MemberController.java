@@ -8,6 +8,8 @@ import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,11 +19,13 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Tag(name = "MemberController", description = "회원 컨트롤러")
 public class MemberController {
     private final MemberService memberService;
     private final Rq rq;
 
     @PostMapping("/signup/mentee")
+    @Operation(summary = "멘티 회원가입")
     public RsData<Void> signupMentee(@RequestBody MenteeSignupRequest request) {
         try {
             Member member = memberService.joinMentee(
@@ -37,6 +41,7 @@ public class MemberController {
     }
 
     @PostMapping("/signup/mentor")
+    @Operation(summary = "멘토 회원가입")
     public RsData<Void> signupMentor(@RequestBody MentorSignupRequest request) {
         try {
             Member member = memberService.joinMentor(
@@ -67,10 +72,7 @@ public class MemberController {
 
         Member member = memberOpt.get();
         
-        // TODO: 비밀번호 암호화 후 검증 로직 추가 필요
-        if (!member.getPassword().equals(password)) {
-            return new RsData<>("400-1", "비밀번호가 일치하지 않습니다.");
-        }
+        memberService.checkPassword(member, password);
 
         // JWT 토큰 생성 후 쿠키에 저장
         String accessToken = memberService.genAccessToken(member);

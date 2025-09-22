@@ -6,7 +6,9 @@ import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentee.repository.MenteeRepository;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.member.mentor.repository.MentorRepository;
+import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,7 @@ public class MemberService {
     private final AuthTokenService authTokenService;
     private final MentorRepository mentorRepository;
     private final MenteeRepository menteeRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public Member joinMentee(String email, String name, String password, String interestedField) {
@@ -29,7 +32,7 @@ public class MemberService {
                 }
         );
 
-        Member member = new Member(email, password, name, Member.Role.MENTEE);
+        Member member = new Member(email, passwordEncoder.encode(password), name, Member.Role.MENTEE);
         Member savedMember = memberRepository.save(member);
 
         // TODO: interestedField를 jobId로 매핑하는 로직 필요
@@ -47,7 +50,7 @@ public class MemberService {
                 }
         );
 
-        Member member = new Member(email, password, name, Member.Role.MENTOR);
+        Member member = new Member(email, passwordEncoder.encode(password), name, Member.Role.MENTOR);
         Member savedMember = memberRepository.save(member);
 
         // TODO: career를 jobId로 매핑하는 로직 필요
@@ -79,5 +82,10 @@ public class MemberService {
 
     public boolean isRefreshToken(String token) {
         return authTokenService.isRefreshToken(token);
+    }
+
+    public void checkPassword(Member member, String password) {
+        if (!passwordEncoder.matches(password, member.getPassword()))
+            throw new ServiceException("401-1", "비밀번호가 일치하지 않습니다.");
     }
 }
