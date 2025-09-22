@@ -1,5 +1,6 @@
 package com.back.global.exception;
 
+import com.back.global.error.ErrorCode;
 import com.back.global.rsData.RsData;
 
 public class ServiceException extends RuntimeException {
@@ -10,6 +11,12 @@ public class ServiceException extends RuntimeException {
         super(resultCode + " : " + msg);
         this.resultCode = resultCode;
         this.msg = msg;
+    }
+
+    public ServiceException(ErrorCode errorCode) {
+        super(errorCode.getCode() + " : " + errorCode.getMessage());
+        this.resultCode = errorCode.getCode();
+        this.msg = errorCode.getMessage();
     }
 
     public RsData<Void> getRsData() {
