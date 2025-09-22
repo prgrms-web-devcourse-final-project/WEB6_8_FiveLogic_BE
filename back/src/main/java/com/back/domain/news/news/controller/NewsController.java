@@ -66,12 +66,21 @@ public class NewsController {
         }
     }
 
-    @PutMapping
-    public void modifyNews() {
-
+    @PutMapping("{newsId}")
+    public RsData<NewsUpdateResponse> modifyNews(@RequestBody NewsUpdateRequest request) {
+        Member member = rq.getActor();
+        try {
+            News news = newsService.getNewsById(request.newsId());
+            Video video = videoService.getNewsByUuid(request.videoUuid());
+            News updatedNews = newsService.updateNews(member, news, request.title(), video, request.content());
+            NewsUpdateResponse response = new NewsUpdateResponse(updatedNews);
+            return new RsData<>("200", "뉴스가 수정되었습니다.", response);
+        } catch (IllegalArgumentException e) {
+            return new RsData<>("404", e.getMessage(), null);
+        }
     }
 
-    @DeleteMapping
+    @DeleteMapping("{newsId}")
     public void deleteNews() {
 
     }
