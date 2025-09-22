@@ -7,6 +7,7 @@ import com.back.domain.news.like.service.LikeService;
 import com.back.domain.news.news.dto.NewsCreateRequest;
 import com.back.domain.news.news.dto.NewsCreateResponse;
 import com.back.domain.news.news.dto.NewsGetResponse;
+import com.back.domain.news.news.dto.NewsLikeResponse;
 import com.back.domain.news.news.entity.News;
 import com.back.domain.news.news.service.NewsService;
 import com.back.global.rq.Rq;
@@ -56,9 +57,16 @@ public class NewsController {
         return new RsData<>("200", "뉴스 목록 불러오기 완료", responses);
     }
 
-    @PutMapping
-    public void likeNews() {
-
+    @PutMapping("{newsId}/likes")
+    public RsData<NewsLikeResponse> likeNews(@PathVariable Long newsId) {
+        Member member = rq.getActor();
+        try {
+            likeService.likeNews(member, newsId);
+            NewsLikeResponse response = new NewsLikeResponse(member.getId(), newsId, likeService.getLikeCount(newsId));
+            return new RsData<>("200", "뉴스를 좋아합니다.", response);
+        } catch (IllegalArgumentException e) {
+            return new RsData<>("404", e.getMessage(), null);
+        }
     }
 
     @PutMapping
