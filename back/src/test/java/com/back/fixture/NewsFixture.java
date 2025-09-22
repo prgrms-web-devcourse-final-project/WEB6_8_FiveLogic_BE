@@ -8,7 +8,10 @@ import com.back.domain.news.news.entity.News;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.test.util.ReflectionTestUtils;
+
 public class NewsFixture {
+    private Long id;
     private Member member = MemberFixture.createDefault();
     private String title = "Sample News Title";
     private Video video = VideoFixture.createDefault();
@@ -22,6 +25,17 @@ public class NewsFixture {
 
     public static News createDefault() {
         return builder().build();
+    }
+
+    public static News create(Long id, Member member, String title) {
+        News news = News.create(member, title, VideoFixture.createDefault(), "content");
+        ReflectionTestUtils.setField(news, "id", id);
+        return news;
+    }
+
+    public NewsFixture withId(Long id) {
+        this.id = id;
+        return this;
     }
 
     public NewsFixture withMember(Member member) {

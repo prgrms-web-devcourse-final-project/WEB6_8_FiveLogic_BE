@@ -31,18 +31,25 @@ public class CommentService {
         return commentRepository.findById(commentId);
     }
 
-    public Comment updateComment(Member member, Long commentId, String content) {
+    public Comment updateComment(Member member, News news, Long commentId, String content) {
         Comment comment = getCommentById(commentId).orElseThrow(() -> new IllegalArgumentException("Comment not found"));
         if (!comment.getMember().equals(member)) {
             throw new IllegalArgumentException("You do not have permission to update this comment.");
         }
-        return comment.update(content);
+        if (!comment.getNews().equals(news)) {
+            throw new IllegalArgumentException("This comment does not belong to the given news.");
+        }
+        comment.update(content);
+        return comment;
     }
 
-    public void deleteComment(Member member, Long commentId) {
+    public void deleteComment(Member member, News news, Long commentId) {
         Comment comment = getCommentById(commentId).orElseThrow(() -> new IllegalArgumentException("Comment not found"));
         if (!comment.getMember().equals(member)) {
             throw new IllegalArgumentException("You do not have permission to delete this comment.");
+        }
+        if (!comment.getNews().equals(news)) {
+            throw new IllegalArgumentException("This comment does not belong to the given news.");
         }
         commentRepository.delete(comment);
     }

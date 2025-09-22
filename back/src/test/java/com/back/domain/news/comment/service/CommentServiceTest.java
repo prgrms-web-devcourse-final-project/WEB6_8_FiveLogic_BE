@@ -88,10 +88,9 @@ class CommentServiceTest {
         String updatedContent = "수정된 댓글입니다.";
 
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(existingComment));
-        // when(existingComment.update(updatedContent)).thenReturn(existingComment); // update method is called directly on the entity
 
         // when
-        Comment result = commentService.updateComment(member, commentId, updatedContent);
+        Comment result = commentService.updateComment(member, news, commentId, updatedContent);
 
         // then
         assertThat(result).isNotNull();
@@ -104,6 +103,7 @@ class CommentServiceTest {
     void updateComment_CommentNotFound_ThrowsException() {
         // given
         Member member = MemberFixture.createDefault();
+        News news = NewsFixture.createDefault();
         Long nonExistentCommentId = 999L;
         String updatedContent = "수정된 댓글입니다.";
 
@@ -111,12 +111,11 @@ class CommentServiceTest {
 
         // when & then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            commentService.updateComment(member, nonExistentCommentId, updatedContent);
+            commentService.updateComment(member, news, nonExistentCommentId, updatedContent);
         });
 
         assertThat(exception.getMessage()).isEqualTo("Comment not found");
         verify(commentRepository, times(1)).findById(nonExistentCommentId);
-        verify(commentRepository, never()).save(any(Comment.class));
     }
 
     @Test
@@ -134,12 +133,33 @@ class CommentServiceTest {
 
         // when & then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            commentService.updateComment(otherMember, commentId, updatedContent);
+            commentService.updateComment(otherMember, news, commentId, updatedContent);
         });
 
         assertThat(exception.getMessage()).isEqualTo("You do not have permission to update this comment.");
         verify(commentRepository, times(1)).findById(commentId);
-        verify(commentRepository, never()).save(any(Comment.class));
+    }
+
+    @Test
+    @DisplayName("다른 뉴스의 댓글 수정 시 예외 발생")
+    void updateComment_WrongNews_ThrowsException() {
+        // given
+        Member member = MemberFixture.createDefault();
+        News news1 = NewsFixture.createDefault();
+        News news2 = NewsFixture.create(2L, member, "다른 뉴스");
+        Comment existingComment = Comment.create(member, news1, "기존 댓글");
+        Long commentId = 1L;
+        String updatedContent = "수정된 댓글입니다.";
+
+        when(commentRepository.findById(commentId)).thenReturn(Optional.of(existingComment));
+
+        // when & then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            commentService.updateComment(member, news2, commentId, updatedContent);
+        });
+
+        assertThat(exception.getMessage()).isEqualTo("This comment does not belong to the given news.");
+        verify(commentRepository, times(1)).findById(commentId);
     }
 
     @Test
@@ -155,7 +175,7 @@ class CommentServiceTest {
         doNothing().when(commentRepository).delete(existingComment);
 
         // when
-        commentService.deleteComment(member, commentId);
+        commentService.deleteComment(member, news, commentId);
 
         // then
         verify(commentRepository, times(1)).findById(commentId);
@@ -167,13 +187,14 @@ class CommentServiceTest {
     void deleteComment_CommentNotFound_ThrowsException() {
         // given
         Member member = MemberFixture.createDefault();
+        News news = NewsFixture.createDefault();
         Long nonExistentCommentId = 999L;
 
         when(commentRepository.findById(nonExistentCommentId)).thenReturn(Optional.empty());
 
         // when & then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            commentService.deleteComment(member, nonExistentCommentId);
+            commentService.deleteComment(member, news, nonExistentCommentId);
         });
 
         assertThat(exception.getMessage()).isEqualTo("Comment not found");
@@ -195,10 +216,32 @@ class CommentServiceTest {
 
         // when & then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            commentService.deleteComment(otherMember, commentId);
+            commentService.deleteComment(otherMember, news, commentId);
         });
 
         assertThat(exception.getMessage()).isEqualTo("You do not have permission to delete this comment.");
+        verify(commentRepository, times(1)).findById(commentId);
+        verify(commentRepository, never()).delete(any(Comment.class));
+    }
+
+    @Test
+    @DisplayName("다른 뉴스의 댓글 삭제 시 예외 발생")
+    void deleteComment_WrongNews_ThrowsException() {
+        // given
+        Member member = MemberFixture.createDefault();
+        News news1 = NewsFixture.createDefault();
+        News news2 = NewsFixture.create(2L, member, "다른 뉴스");
+        Comment existingComment = Comment.create(member, news1, "기존 댓글");
+        Long commentId = 1L;
+
+        when(commentRepository.findById(commentId)).thenReturn(Optional.of(existingComment));
+
+        // when & then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            commentService.deleteComment(member, news2, commentId);
+        });
+
+        assertThat(exception.getMessage()).isEqualTo("This comment does not belong to the given news.");
         verify(commentRepository, times(1)).findById(commentId);
         verify(commentRepository, never()).delete(any(Comment.class));
     }

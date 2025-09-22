@@ -46,24 +46,26 @@ public class CommentController {
         return new RsData<>("201", "댓글 생성 완료", commentResponse);
     }
 
-    @PutMapping("/{commentId}") // Updated mapping
+    @PutMapping("/{commentId}")
     public RsData<CommentResponse> updateComment(@PathVariable Long newsId, @PathVariable Long commentId, @RequestBody CommentUpdateRequest request) {
         Member member = rq.getActor();
         if (member == null) {
             return new RsData<>("401", "로그인이 필요합니다.");
         }
-        Comment updatedComment = commentService.updateComment(member, commentId, request.content());
+        News news = newsService.getNewsById(newsId);
+        Comment updatedComment = commentService.updateComment(member, news, commentId, request.content());
         CommentResponse commentResponse = new CommentResponse(updatedComment);
         return new RsData<>("200", "댓글 수정 완료", commentResponse);
     }
 
-    @DeleteMapping("/{commentId}") // Updated mapping
+    @DeleteMapping("/{commentId}")
     public RsData<Void> deleteComment(@PathVariable Long newsId, @PathVariable Long commentId) {
         Member member = rq.getActor();
         if (member == null) {
             return new RsData<>("401", "로그인이 필요합니다.");
         }
-        commentService.deleteComment(member, commentId);
+        News news = newsService.getNewsById(newsId);
+        commentService.deleteComment(member, news, commentId);
         return new RsData<>("200", "댓글 삭제 완료");
     }
 }
