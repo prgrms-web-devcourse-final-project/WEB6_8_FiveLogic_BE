@@ -50,7 +50,7 @@ public class InformationPostController {
     @Operation(summary = "게시글 단건 조회")
     @GetMapping("/{post_id}")
     public ResponseEntity<ApiResponse<PostSingleResponse>> getSinglePost(@PathVariable long post_id) {
-        Post post = postService.findById(post_id);
+        Post post = postService.findById(post_id, "INFORMATIONPOST");
 
         PostSingleResponse postSingleResponse = new PostSingleResponse(post);
 

@@ -38,9 +38,6 @@ public class InformationPostControllerTest {
     @Autowired
     private PostService postService;
 
-//    @MockBean
-//    private PostService postMockService;
-
     @Autowired
     private MemberService memberService;
 
@@ -79,7 +76,7 @@ public class InformationPostControllerTest {
                                 .content("""
                                         {
                                             "memberId": 1,
-                                            "postType": "INFORMATIONPOST",
+                                            "postType": "QUESTIONPOST",
                                             "title": "테스트 제목",
                                             "content": "테스트 내용"
                                         }
@@ -87,8 +84,9 @@ public class InformationPostControllerTest {
                 )
                 .andDo(print());
 
+        String type = "QUESTIONPOST";
         // 실제 생성된 게시글 조회 (실제 DB에서)
-        Post createdPost = postService.findById(4L);
+        Post createdPost = postService.findById(4L, type);
 
         resultActions
                 .andExpect(handler().handlerType(InformationPostController.class))
