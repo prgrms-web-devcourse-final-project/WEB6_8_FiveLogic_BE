@@ -34,7 +34,7 @@ public class NewsController {
     }
 
     @GetMapping("{newsId}")
-    public RsData<NewsGetResponse> getNews(@PathVariable Long newsId) {
+    public RsData<NewsGetResponse> getNews(@PathVariable("newsId") Long newsId) {
         News news = newsService.getNewsById(newsId);
         NewsGetResponse response = new NewsGetResponse(news);
         return new RsData<>("200", "뉴스 읽어오기 완료", response);
@@ -55,7 +55,7 @@ public class NewsController {
     }
 
     @PutMapping("{newsId}/likes")
-    public RsData<NewsLikeResponse> likeNews(@PathVariable Long newsId) {
+    public RsData<NewsLikeResponse> likeNews(@PathVariable("newsId") Long newsId) {
         Member member = rq.getActor();
         try {
             likeService.likeNews(member, newsId);
@@ -67,10 +67,10 @@ public class NewsController {
     }
 
     @PutMapping("{newsId}")
-    public RsData<NewsUpdateResponse> modifyNews(@RequestBody NewsUpdateRequest request) {
+    public RsData<NewsUpdateResponse> modifyNews(@PathVariable("newsId") Long newsId, @RequestBody NewsUpdateRequest request) {
         Member member = rq.getActor();
         try {
-            News news = newsService.getNewsById(request.newsId());
+            News news = newsService.getNewsById(newsId);
             Video video = videoService.getNewsByUuid(request.videoUuid());
             News updatedNews = newsService.updateNews(member, news, request.title(), video, request.content());
             NewsUpdateResponse response = new NewsUpdateResponse(updatedNews);
@@ -81,7 +81,7 @@ public class NewsController {
     }
 
     @DeleteMapping("{newsId}")
-    public RsData<?> deleteNews(@PathVariable Long newsId) {
+    public RsData<?> deleteNews(@PathVariable("newsId") Long newsId) {
         Member member = rq.getActor();
         News news = newsService.getNewsById(newsId);
         newsService.deleteNews(member, news);
