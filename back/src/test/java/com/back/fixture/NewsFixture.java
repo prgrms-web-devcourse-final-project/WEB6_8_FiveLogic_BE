@@ -10,6 +10,10 @@ import java.util.List;
 
 import org.springframework.test.util.ReflectionTestUtils;
 
+/**
+ * News 엔티티의 테스트용 빌더 클래스입니다.
+ * 기본값을 제공하며, 필요에 따라 with-- 체이닝 메소드를 조합하여 News 객체를 생성하는 메서드를 생성할 수 있도록 했습니다..
+ */
 public class NewsFixture {
     private Long id;
     private Member member = MemberFixture.createDefault();
