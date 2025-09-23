@@ -9,6 +9,9 @@ spring:
     import: optional:file:.env[.properties]
   profiles:
     active: dev
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
   output:
     ansi:
       enabled: always
