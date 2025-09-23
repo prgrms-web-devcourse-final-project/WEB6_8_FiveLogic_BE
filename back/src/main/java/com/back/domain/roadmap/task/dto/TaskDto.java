@@ -2,11 +2,11 @@ package com.back.domain.roadmap.task.dto;
 
 import com.back.domain.roadmap.task.entity.Task;
 
-public record TaskResponse(
+public record TaskDto(
         Long id,
         String name
 ) {
-    public TaskResponse(Task task){
+    public TaskDto(Task task){
         this(task.getId(),task.getName());
     }
 }

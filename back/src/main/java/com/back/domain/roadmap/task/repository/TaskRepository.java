@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TaskRepository extends JpaRepository<Task, Long> {
-    Optional<Task> findByName(String name);
     Optional<Task> findByNameIgnoreCase(String name);
     List<Task> findByNameContainingIgnoreCase(String keyword);
 }
