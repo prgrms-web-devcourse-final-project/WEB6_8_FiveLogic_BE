@@ -85,6 +85,6 @@ public class NewsController {
         Member member = rq.getActor();
         News news = newsService.getNewsById(newsId);
         newsService.deleteNews(member, news);
-        return new RsData<>("200", news.getId()+"번 뉴스가 삭제되었습니다.", null);
+        return new RsData<>("200", newsId + "번 뉴스가 삭제되었습니다.", null);
     }
 }
