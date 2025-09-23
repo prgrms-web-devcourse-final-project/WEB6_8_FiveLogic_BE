@@ -24,9 +24,10 @@ public class MentoringController {
     @GetMapping
     public RsData<MentoringPagingResponse> getMentorings(
         @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(required = false) String keyword
     ) {
-        Page<MentoringDto> mentoringPage = mentoringService.getMentorings(page, size);
+        Page<MentoringDto> mentoringPage = mentoringService.getMentorings(keyword, page, size);
         MentoringPagingResponse resDto = MentoringPagingResponse.from(mentoringPage);
 
         return new RsData<>(

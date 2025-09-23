@@ -10,7 +10,7 @@ import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.domain.mentoring.slot.repository.MentorSlotRepository;
-import com.back.fixture.MemberFixture;
+import com.back.fixture.MemberTestFixture;
 import com.back.fixture.MentoringFixture;
 import com.back.global.exception.ServiceException;
 import com.back.standard.util.Ut;
@@ -39,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class MentoringControllerTest {
 
     @Autowired private MockMvc mvc;
-    @Autowired private MemberFixture memberFixture;
+    @Autowired private MemberTestFixture memberFixture;
     @Autowired private MentoringFixture mentoringFixture;
 
     @Autowired private MentoringRepository mentoringRepository;
@@ -76,20 +76,8 @@ class MentoringControllerTest {
     void getMentoringsSuccess() throws Exception {
         mentoringFixture.createMentorings(mentor, 15);
 
-        ResultActions resultActions = mvc
-            .perform(
-                get(MENTORING_URL)
-                    .cookie(new Cookie(TOKEN, mentorToken)) // TODO: 일반 조회, 목록 조회는 쿠키 없어도 가능하게 설정 필요
-                    .param("page", "0")
-                    .param("size", "10")
-            ).andDo(print());
-
-        resultActions
-            .andExpect(handler().handlerType(MentoringController.class))
-            .andExpect(handler().methodName("getMentorings"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.resultCode").value("200"))
-            .andExpect(jsonPath("$.msg").value("멘토링 목록을 조회하였습니다."))
+        // TODO: 일반 조회, 목록 조회는 쿠키 없어도 가능하게 설정 필요
+        performGetMentorings(null, "0")
             .andExpect(jsonPath("$.data.mentorings").isArray())
             .andExpect(jsonPath("$.data.mentorings.length()").value(10))
             .andExpect(jsonPath("$.data.currentPage").value(0))
@@ -103,20 +91,7 @@ class MentoringControllerTest {
     void getMentoringsSuccessSecondPage() throws Exception {
         mentoringFixture.createMentorings(mentor, 15);
 
-        ResultActions resultActions = mvc
-            .perform(
-                get(MENTORING_URL)
-                    .cookie(new Cookie(TOKEN, mentorToken))
-                    .param("page", "1")
-                    .param("size", "10")
-            ).andDo(print());
-
-        resultActions
-            .andExpect(handler().handlerType(MentoringController.class))
-            .andExpect(handler().methodName("getMentorings"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.resultCode").value("200"))
-            .andExpect(jsonPath("$.msg").value("멘토링 목록을 조회하였습니다."))
+        performGetMentorings(null, "1")
             .andExpect(jsonPath("$.data.mentorings").isArray())
             .andExpect(jsonPath("$.data.mentorings.length()").value(5))
             .andExpect(jsonPath("$.data.currentPage").value(1))
@@ -128,25 +103,57 @@ class MentoringControllerTest {
     @Test
     @DisplayName("멘토링 다건 조회 - 빈 결과")
     void getMentoringsSuccessEmpty() throws Exception {
-        ResultActions resultActions = mvc
-            .perform(
-                get(MENTORING_URL)
-                    .cookie(new Cookie(TOKEN, mentorToken))
-                    .param("page", "0")
-                    .param("size", "10")
-            ).andDo(print());
-
-        resultActions
-            .andExpect(handler().handlerType(MentoringController.class))
-            .andExpect(handler().methodName("getMentorings"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.resultCode").value("200"))
-            .andExpect(jsonPath("$.msg").value("멘토링 목록을 조회하였습니다."))
+        performGetMentorings(null, "0")
             .andExpect(jsonPath("$.data.mentorings").isArray())
             .andExpect(jsonPath("$.data.mentorings.length()").value(0))
             .andExpect(jsonPath("$.data.totalPage").value(0))
             .andExpect(jsonPath("$.data.totalElements").value(0));
     }
+
+    @Test
+    @DisplayName("멘토링 다건 조회 - 멘토명 검색")
+    void getMentoringsSuccessSearchMentor() throws Exception {
+        Member mentorMember = memberFixture.createMentorMember();
+        Mentor mentor2 = memberFixture.createMentor(mentorMember);
+
+        mentoringFixture.createMentorings(mentor, 8);
+        mentoringFixture.createMentorings(mentor2, 3);
+
+        performGetMentorings(mentorMember.getName(), "0")
+            .andExpect(jsonPath("$.data.mentorings").isArray())
+            .andExpect(jsonPath("$.data.mentorings.length()").value(3))
+            .andExpect(jsonPath("$.data.currentPage").value(0))
+            .andExpect(jsonPath("$.data.totalPage").value(1))
+            .andExpect(jsonPath("$.data.totalElements").value(3))
+            .andExpect(jsonPath("$.data.hasNext").value(false));
+    }
+
+    @Test
+    @DisplayName("멘토링 다건 조회 - 멘토링 검색")
+    void getMentoringsSuccessSearchMentoring() throws Exception {
+        mentoringFixture.createMentorings(mentor, 20);
+
+        performGetMentorings("테스트 멘토링 1", "0")
+            .andExpect(jsonPath("$.data.mentorings").isArray())
+            .andExpect(jsonPath("$.data.mentorings.length()").value(10))
+            .andExpect(jsonPath("$.data.currentPage").value(0))
+            .andExpect(jsonPath("$.data.totalPage").value(2))
+            .andExpect(jsonPath("$.data.totalElements").value(11))
+            .andExpect(jsonPath("$.data.hasNext").value(true));
+    }
+
+    @Test
+    @DisplayName("멘토링 다건 조회 - 검색 결과 없는 경우")
+    void getMentoringsSuccessSearchEmpty() throws Exception {
+        mentoringFixture.createMentorings(mentor, 2);
+
+        performGetMentorings("mentee", "0")
+            .andExpect(jsonPath("$.data.mentorings").isArray())
+            .andExpect(jsonPath("$.data.mentorings.length()").value(0))
+            .andExpect(jsonPath("$.data.totalPage").value(0))
+            .andExpect(jsonPath("$.data.totalElements").value(0));
+    }
+
 
     // ===== 멘토링 단건 조회 =====
     @Test
@@ -405,6 +412,24 @@ class MentoringControllerTest {
 
 
     // ===== perform =====
+
+    private ResultActions performGetMentorings(String keyword, String page) throws Exception {
+        ResultActions resultActions = mvc
+            .perform(
+                get(MENTORING_URL)
+                    .cookie(new Cookie(TOKEN, mentorToken))
+                    .param("page", page)
+                    .param("size", "10")
+                    .param("keyword", keyword)
+            ).andDo(print());
+
+        return resultActions
+            .andExpect(handler().handlerType(MentoringController.class))
+            .andExpect(handler().methodName("getMentorings"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.resultCode").value("200"))
+            .andExpect(jsonPath("$.msg").value("멘토링 목록을 조회하였습니다."));
+    }
 
     private ResultActions performCreateMentoring(String token) throws Exception {
         String req = """

@@ -1,6 +1,5 @@
 package com.back.global.exception;
 
-import com.back.global.error.ErrorCode;
 import com.back.global.rsData.RsData;
 
 public class ServiceException extends RuntimeException {

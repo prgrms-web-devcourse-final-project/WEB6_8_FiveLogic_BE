@@ -42,8 +42,9 @@ CLAUDE.md
 db_dev.mv.db
 db_dev.trace.db
 
-
 cookies.txt
 
 .DS_Store
 
+### QueryDSL Q클래스 ###
+**/generated/

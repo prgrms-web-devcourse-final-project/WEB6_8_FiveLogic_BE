@@ -1,6 +1,6 @@
 package com.back.domain.mentoring.mentoring.error;
 
-import com.back.global.error.ErrorCode;
+import com.back.global.exception.ErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

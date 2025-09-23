@@ -18,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,10 +30,10 @@ public class MentoringService {
     private final MentorSlotRepository mentorSlotRepository;
 
     @Transactional(readOnly = true)
-    public Page<MentoringDto> getMentorings(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+    public Page<MentoringDto> getMentorings(String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
 
-        return mentoringRepository.findAll(pageable)
+        return mentoringRepository.searchMentorings(keyword, pageable)
             .map(MentoringDto::from);
     }
 
