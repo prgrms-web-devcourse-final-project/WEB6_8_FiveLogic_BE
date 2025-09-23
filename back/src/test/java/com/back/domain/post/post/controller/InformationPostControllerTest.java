@@ -2,7 +2,6 @@ package com.back.domain.post.post.controller;
 
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
-import com.back.domain.post.post.controller.InformationPostController;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.service.PostService;
 import com.back.global.security.SecurityUser;
@@ -46,7 +45,7 @@ public class InformationPostControllerTest {
 
     @BeforeEach
     void setUp() {
-        Member member = memberService.join("user1", "사용자1", "password123", Member.Role.MENTEE);
+        Member member = memberService.joinMentee("user1", "사용자1", "password123", "");
 
         // SecurityContext에 인증 정보 설정
         SecurityUser securityUser = new SecurityUser(

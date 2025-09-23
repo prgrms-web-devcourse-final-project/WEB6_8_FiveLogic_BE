@@ -49,7 +49,7 @@ public class PostCommentControllerTest {
 
     @BeforeEach
     void setUp() {
-        Member member = memberService.join("user1", "사용자1", "password123", Member.Role.MENTEE);
+        Member member = memberService.joinMentee("user1", "사용자1", "password123", "" );
 
         // SecurityContext에 인증 정보 설정
         SecurityUser securityUser = new SecurityUser(
