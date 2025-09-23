@@ -40,10 +40,6 @@ public class VideoService {
 
     //HeadObjectRequest 고려
     public URL generateUploadUrl(String bucket, String objectKey) {
-        if(!isExist(bucket, objectKey)){
-            throw new RuntimeException("요청한 파일이 존재하지 않습니다: " + objectKey);
-        }
-
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(objectKey)
