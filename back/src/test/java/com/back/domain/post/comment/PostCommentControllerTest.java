@@ -25,6 +25,9 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
 
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -97,5 +100,55 @@ public class PostCommentControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.msg").value("댓글 작성 완료"));
     }
+
+    @Test
+    @DisplayName("댓글 생성 실패 - comment blank")
+    void t2() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/post/comment/{post_id}", 1L)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                           "memberId": 123,
+                                           "postId": 1,
+                                           "role": "mentor", 
+                                           "comment": ""
+                                         }
+                                        """.stripIndent())
+                )
+                .andDo(print());
+
+
+        resultActions
+                .andExpect(handler().handlerType(PostCommentController.class))
+                .andExpect(handler().methodName("createComment"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.msg").value("comment-NotBlank-댓글을 입력해주세요"));
+    }
+
+
+    @Test
+    @DisplayName("댓글 다건조회")
+    void t3() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/post/comment/{post_id}", 1L)
+                )
+                .andDo(print());
+
+
+        resultActions
+                .andExpect(handler().handlerType(PostCommentController.class))
+                .andExpect(handler().methodName("getAllPostComment"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.msg").value("게시글 다건 조회 성공"))
+                .andExpect(jsonPath("$.data").exists())
+                .andExpect(jsonPath("$.data", hasSize(greaterThan(0))));
+
+    }
+
+
 
 }

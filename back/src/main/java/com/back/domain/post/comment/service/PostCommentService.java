@@ -1,6 +1,7 @@
 package com.back.domain.post.comment.service;
 
 import com.back.domain.member.member.entity.Member;
+import com.back.domain.post.comment.dto.CommentAllResponse;
 import com.back.domain.post.comment.dto.CommentCreateRequest;
 import com.back.domain.post.comment.entity.PostComment;
 import com.back.domain.post.comment.repository.PostCommentRepository;
@@ -10,6 +11,8 @@ import com.back.global.exception.ServiceException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -31,5 +34,16 @@ public class PostCommentService {
 
         postCommentRepository.save(postComment);
 
+    }
+
+    public List<CommentAllResponse> getAllPostCommentResponse(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+
+        List<PostComment> listPostComment = post.getComments();
+
+
+        return listPostComment.stream()
+                .map(CommentAllResponse::from)
+                .toList();
     }
 }
