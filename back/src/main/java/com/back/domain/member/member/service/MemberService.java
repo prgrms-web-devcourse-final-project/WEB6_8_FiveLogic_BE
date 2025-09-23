@@ -88,4 +88,45 @@ public class MemberService {
         if (!passwordEncoder.matches(password, member.getPassword()))
             throw new ServiceException("401-1", "비밀번호가 일치하지 않습니다.");
     }
+
+    public Member login(String email, String password) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new ServiceException("400-3", "존재하지 않는 이메일입니다."));
+
+        checkPassword(member, password);
+        return member;
+    }
+
+    public Member getCurrentUser(Member actor) {
+        if (actor == null) {
+            throw new ServiceException("401-1", "로그인이 필요합니다.");
+        }
+        return actor;
+    }
+
+    public Member refreshAccessToken(String refreshToken) {
+        if (refreshToken.isBlank()) {
+            throw new ServiceException("401-1", "Refresh token이 없습니다.");
+        }
+
+        // Refresh token 유효성 검증
+        if (!isValidToken(refreshToken)) {
+            throw new ServiceException("401-2", "유효하지 않은 refresh token입니다.");
+        }
+
+        // Refresh token인지 확인
+        if (!isRefreshToken(refreshToken)) {
+            throw new ServiceException("401-3", "Access token으로는 갱신할 수 없습니다.");
+        }
+
+        // Refresh token에서 사용자 정보 추출
+        Map<String, Object> payload = payload(refreshToken);
+        if (payload == null) {
+            throw new ServiceException("401-4", "토큰에서 사용자 정보를 추출할 수 없습니다.");
+        }
+
+        String email = (String) payload.get("email");
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new ServiceException("401-5", "존재하지 않는 사용자입니다."));
+    }
 }
