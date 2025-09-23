@@ -1,9 +1,11 @@
 package com.back.domain.roadmap.task.controller;
 
+import com.back.domain.member.member.entity.Member;
 import com.back.domain.roadmap.task.dto.*;
 import com.back.domain.roadmap.task.entity.Task;
 import com.back.domain.roadmap.task.entity.TaskAlias;
 import com.back.domain.roadmap.task.service.TaskService;
+import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +13,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -22,6 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TaskController {
     private final TaskService taskService;
+    private final Rq rq;
 
     // 검색 api
     @GetMapping("/search")
@@ -63,10 +65,17 @@ public class TaskController {
     //=== 관리자용 API ===
     // 나중에 CORS 설정
     @GetMapping("/aliases/pending")
-    @PreAuthorize("hasRole('ADMIN')")
     public RsData<Page<TaskAliasDto>> getPendingTaskAliases(
             @PageableDefault(size = 10, sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable
     ) {
+        Member member = rq.getActor();
+        if(member == null) {
+            return new RsData<>("401", "로그인 후 이용해주세요.");
+        }
+        if(member.getRole() != Member.Role.ADMIN){
+            return new RsData<>("403", "권한이 없습니다.");
+        }
+
         Page<TaskAliasDto> pendingTaskAliases = taskService.getPendingTaskAliases(pageable);
 
         return  new RsData<>(
@@ -78,10 +87,18 @@ public class TaskController {
 
     // Pending alias를 기존 Task와 연결
     @PutMapping("/aliases/pending/{aliasId}/link")
-    @PreAuthorize("hasRole('ADMIN')")
     public RsData<TaskAliasDetailDto> linkPendingAlias(
             @PathVariable Long aliasId,
-            @Valid @RequestBody LinkPendingAliasRequest request) {
+            @Valid @RequestBody LinkPendingAliasRequest request
+    ) {
+        Member member = rq.getActor();
+        if(member == null) {
+            return new RsData<>("401", "로그인 후 이용해주세요.");
+        }
+        if(member.getRole() != Member.Role.ADMIN){
+            return new RsData<>("403", "권한이 없습니다.");
+        }
+
         TaskAlias linkedAlias = taskService.linkPendingAlias(aliasId, request.taskId());
 
         return new RsData<>(
@@ -93,10 +110,17 @@ public class TaskController {
 
     // Pending alias를 새로운 Task로 등록(생성)
     @PostMapping("/aliases/pending/{aliasId}")
-    @PreAuthorize("hasRole('ADMIN')")
     public RsData<TaskDto> createTaskFromPending(
             @PathVariable Long aliasId
     ) {
+        Member member = rq.getActor();
+        if(member == null) {
+            return new RsData<>("401", "로그인 후 이용해주세요.");
+        }
+        if(member.getRole() != Member.Role.ADMIN){
+            return new RsData<>("403", "권한이 없습니다.");
+        }
+
         Task newTask = taskService.createTaskFromPending(aliasId);
 
         return new RsData<>(
