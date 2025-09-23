@@ -70,8 +70,28 @@ class MentoringControllerTest {
         menteeToken = memberFixture.getAccessToken(menteeMember);
     }
 
+    // ===== 멘토링 단건 조회 =====
+    @Test
+    @DisplayName("멘토링 조회 성공")
+    void getMentoringSuccess() throws Exception {
+        Mentoring mentoring = mentoringFixture.createMentoring(mentor);
 
-    // ==== 멘토링 생성 =====
+        ResultActions resultActions = mvc
+            .perform(
+                get(MENTORING_URL + "/" + mentoring.getId())
+                    .cookie(new Cookie(TOKEN, mentorToken))
+            ).andDo(print());
+
+        resultActions
+            .andExpect(handler().handlerType(MentoringController.class))
+            .andExpect(handler().methodName("getMentoring"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.resultCode").value("200"))
+            .andExpect(jsonPath("$.msg").value("멘토링을 조회하였습니다."));
+    }
+    
+    
+    // ===== 멘토링 생성 ======
 
     @Test
     @DisplayName("멘토링 생성 성공")
@@ -86,7 +106,7 @@ class MentoringControllerTest {
             .andExpect(handler().handlerType(MentoringController.class))
             .andExpect(handler().methodName("createMentoring"))
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.resultCode").value("201-1"))
+            .andExpect(jsonPath("$.resultCode").value("201"))
             .andExpect(jsonPath("$.msg").value("멘토링이 생성 완료되었습니다."))
 
             // Mentoring 정보 검증
@@ -162,7 +182,7 @@ class MentoringControllerTest {
             .andExpect(handler().handlerType(MentoringController.class))
             .andExpect(handler().methodName("updateMentoring"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.resultCode").value("200-1"))
+            .andExpect(jsonPath("$.resultCode").value("200"))
             .andExpect(jsonPath("$.msg").value("멘토링이 수정되었습니다."))
 
             // Mentoring 정보 검증
@@ -223,7 +243,7 @@ class MentoringControllerTest {
             .andExpect(handler().handlerType(MentoringController.class))
             .andExpect(handler().methodName("deleteMentoring"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.resultCode").value("200-1"))
+            .andExpect(jsonPath("$.resultCode").value("200"))
             .andExpect(jsonPath("$.msg").value("멘토링이 삭제되었습니다."));
 
         assertThat(preCnt - afterCnt).isEqualTo(1);
@@ -254,7 +274,7 @@ class MentoringControllerTest {
             .andExpect(handler().handlerType(MentoringController.class))
             .andExpect(handler().methodName("deleteMentoring"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.resultCode").value("200-1"))
+            .andExpect(jsonPath("$.resultCode").value("200"))
             .andExpect(jsonPath("$.msg").value("멘토링이 삭제되었습니다."));
 
         assertThat(preMentoringCnt - afterMentoringCnt).isEqualTo(1);

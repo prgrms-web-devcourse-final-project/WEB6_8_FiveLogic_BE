@@ -26,8 +26,19 @@ public class MentoringService {
     private final MentorSlotRepository mentorSlotRepository;
 
     @Transactional
+    public MentoringResponse getMentoring(Long mentoringId)  {
+        Mentoring mentoring = findMentoring(mentoringId);
+        Mentor mentor = mentoring.getMentor();
+
+        return new MentoringResponse(
+            MentoringDetailDto.from(mentoring),
+            MentorDto.from(mentor)
+        );
+    }
+
+    @Transactional
     public MentoringResponse createMentoring(MentoringRequest reqDto, Member member) {
-        Mentor mentor = getMentor(member);
+        Mentor mentor = findMentor(member);
 
         // 멘토당 멘토링 1개 제한 체크 (추후 1:N 변경 시 제거 필요)
         if (mentoringRepository.existsByMentorId(mentor.getId())) {
@@ -52,8 +63,8 @@ public class MentoringService {
 
     @Transactional
     public MentoringResponse updateMentoring(Long mentoringId, MentoringRequest reqDto, Member member) {
-        Mentor mentor = getMentor(member);
-        Mentoring mentoring = getMentoring(mentoringId);
+        Mentor mentor = findMentor(member);
+        Mentoring mentoring = findMentoring(mentoringId);
 
         validateOwner(mentoring, mentor);
 
@@ -67,8 +78,8 @@ public class MentoringService {
 
     @Transactional
     public void deleteMentoring(Long mentoringId, Member member) {
-        Mentor mentor = getMentor(member);
-        Mentoring mentoring = getMentoring(mentoringId);
+        Mentor mentor = findMentor(member);
+        Mentoring mentoring = findMentoring(mentoringId);
 
         validateOwner(mentoring, mentor);
 
@@ -88,15 +99,16 @@ public class MentoringService {
 
     // ===== 헬퍼 메서드 =====
 
-    private Mentor getMentor(Member member) {
+    private Mentor findMentor(Member member) {
         return mentorRepository.findByMemberId(member.getId())
             .orElseThrow(() -> new ServiceException(MentoringErrorCode.NOT_FOUND_MENTOR));
     }
 
-    private Mentoring getMentoring(Long mentoringId) {
+    private Mentoring findMentoring(Long mentoringId) {
         return mentoringRepository.findById(mentoringId)
             .orElseThrow(() -> new ServiceException(MentoringErrorCode.NOT_FOUND_MENTORING));
     }
+
 
     // ===== 유효성 검사 =====
 

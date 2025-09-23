@@ -18,6 +18,18 @@ public class MentoringController {
     private final MentoringService mentoringService;
     private final Rq rq;
 
+    @GetMapping("/{mentoringId}")
+    public RsData<MentoringResponse> getMentoring(
+        @PathVariable Long mentoringId
+    ) {
+        MentoringResponse mentoring = mentoringService.getMentoring(mentoringId);
+        return new RsData<>(
+            "200",
+            "멘토링을 조회하였습니다.",
+            mentoring
+        );
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('MENTOR')")
     public RsData<MentoringResponse> createMentoring(
@@ -27,7 +39,7 @@ public class MentoringController {
         MentoringResponse resDto = mentoringService.createMentoring(reqDto, member);
 
         return new RsData<>(
-            "201-1",
+            "201",
             "멘토링이 생성 완료되었습니다.",
             resDto
         );
@@ -42,7 +54,7 @@ public class MentoringController {
         MentoringResponse resDto = mentoringService.updateMentoring(mentoringId, reqDto, member);
 
         return new RsData<>(
-            "200-1",
+            "200",
             "멘토링이 수정되었습니다.",
             resDto
         );
@@ -56,7 +68,7 @@ public class MentoringController {
         mentoringService.deleteMentoring(mentoringId, member);
 
         return new RsData<>(
-            "200-1",
+            "200",
             "멘토링이 삭제되었습니다."
         );
     }
