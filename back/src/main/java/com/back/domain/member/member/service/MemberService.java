@@ -25,14 +25,20 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public Member joinMentee(String email, String name, String password, String interestedField) {
+    public Member joinMentee(String email, String name, String nickname, String password, String interestedField) {
         memberRepository.findByEmail(email).ifPresent(
                 member -> {
                     throw new ServiceException("400-1", "이미 존재하는 이메일입니다.");
                 }
         );
 
-        Member member = new Member(email, passwordEncoder.encode(password), name, Member.Role.MENTEE);
+        memberRepository.findByNickname(nickname).ifPresent(
+                member -> {
+                    throw new ServiceException("400-3", "이미 존재하는 닉네임입니다.");
+                }
+        );
+
+        Member member = new Member(email, passwordEncoder.encode(password), name, nickname, Member.Role.MENTEE);
         Member savedMember = memberRepository.save(member);
 
         // TODO: interestedField를 jobId로 매핑하는 로직 필요
@@ -43,14 +49,20 @@ public class MemberService {
     }
 
     @Transactional
-    public Member joinMentor(String email, String name, String password, String career, Integer careerYears) {
+    public Member joinMentor(String email, String name, String nickname, String password, String career, Integer careerYears) {
         memberRepository.findByEmail(email).ifPresent(
                 member -> {
                     throw new ServiceException("400-2", "이미 존재하는 이메일입니다.");
                 }
         );
 
-        Member member = new Member(email, passwordEncoder.encode(password), name, Member.Role.MENTOR);
+        memberRepository.findByNickname(nickname).ifPresent(
+                member -> {
+                    throw new ServiceException("400-4", "이미 존재하는 닉네임입니다.");
+                }
+        );
+
+        Member member = new Member(email, passwordEncoder.encode(password), name, nickname, Member.Role.MENTOR);
         Member savedMember = memberRepository.save(member);
 
         // TODO: career를 jobId로 매핑하는 로직 필요

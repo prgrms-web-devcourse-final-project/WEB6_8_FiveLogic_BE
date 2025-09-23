@@ -39,7 +39,7 @@ public class AuthTokenServiceTest {
 
     @BeforeEach
     void setUp() {
-        memberService.joinMentee("user1", "사용자1", "password123", "테스트분야");
+        memberService.joinMentee("user1", "사용자1", "닉네임","password123", "테스트분야");
     }
 
     @Test

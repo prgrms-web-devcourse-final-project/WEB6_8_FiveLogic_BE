@@ -111,6 +111,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
                 member.getEmail(),
                 "",
                 member.getName(),
+                member.getNickname(),
                 List.of(new SimpleGrantedAuthority("ROLE_" + member.getRole().name()))
         );
 

@@ -18,6 +18,9 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
+    @Column(unique = true, nullable = false)
+    private String nickname;
+
     @Column(nullable = false)
     private String password;
 
@@ -29,17 +32,19 @@ public class Member extends BaseEntity {
         MENTOR, MENTEE, ADMIN
     }
 
-    public Member(String email, String password, String name, Role role) {
+    public Member(String email, String password, String name, String nickname, Role role) {
         this.email = email;
         this.password = password;
         this.name = name;
+        this.nickname = nickname;
         this.role = role;
     }
 
-    public Member(Long id, String email, String name, Role role) {
+    public Member(Long id, String email, String name, String nickname, Role role) {
         this.setId(id);
         this.email = email;
         this.name = name;
+        this.nickname = nickname;
         this.role = role;
     }
 }

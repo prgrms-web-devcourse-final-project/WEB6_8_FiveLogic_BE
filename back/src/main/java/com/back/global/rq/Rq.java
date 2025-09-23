@@ -56,6 +56,7 @@ public class Rq {
                             securityUser.getId(),
                             securityUser.getUsername(),  // email
                             securityUser.getName(),
+                            securityUser.getNickname(),
                             role != null ? Member.Role.valueOf(role) : null
                     );
                 })

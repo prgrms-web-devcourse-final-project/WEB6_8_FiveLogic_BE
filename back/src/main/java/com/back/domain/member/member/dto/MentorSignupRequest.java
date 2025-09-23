@@ -4,6 +4,7 @@ public record MentorSignupRequest(
     String email,
     String password,
     String name,
+    String nickname,
     String career,
     Integer careerYears
 ) {

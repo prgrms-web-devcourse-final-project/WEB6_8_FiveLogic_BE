@@ -30,6 +30,7 @@ public class MemberController {
         memberService.joinMentee(
             request.email(),
             request.name(),
+            request.nickname(),
             request.password(),
             request.interestedField()
         );
@@ -53,6 +54,7 @@ public class MemberController {
         memberService.joinMentor(
             request.email(),
             request.name(),
+            request.nickname(),
             request.password(),
             request.career(),
             request.careerYears()
@@ -62,7 +64,7 @@ public class MemberController {
 
     @PostMapping("/login")
     public RsData<Void> login(@RequestBody LoginRequest request) {
-        Member member = memberService.login(request.getEmail(), request.getPassword());
+        Member member = memberService.login(request.email(), request.password());
 
         // JWT 토큰 생성 후 쿠키에 저장
         String accessToken = memberService.genAccessToken(member);

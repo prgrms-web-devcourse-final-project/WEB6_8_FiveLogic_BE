@@ -5,6 +5,7 @@ public record MentorSignupVerifyRequest(
     String verificationCode,
     String password,
     String name,
+    String nickname,
     String career,
     Integer careerYears
 ) {
