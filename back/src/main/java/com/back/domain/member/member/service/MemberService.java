@@ -28,7 +28,7 @@ public class MemberService {
     public Member joinMentee(String email, String name, String password, String interestedField) {
         memberRepository.findByEmail(email).ifPresent(
                 member -> {
-                    throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+                    throw new ServiceException("400-1", "이미 존재하는 이메일입니다.");
                 }
         );
 
@@ -46,7 +46,7 @@ public class MemberService {
     public Member joinMentor(String email, String name, String password, String career, Integer careerYears) {
         memberRepository.findByEmail(email).ifPresent(
                 member -> {
-                    throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+                    throw new ServiceException("400-2", "이미 존재하는 이메일입니다.");
                 }
         );
 

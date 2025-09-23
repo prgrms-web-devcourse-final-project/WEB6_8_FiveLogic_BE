@@ -3,7 +3,7 @@ package com.back.domain.member.member.controller;
 
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
-import org.hibernate.validator.internal.constraintvalidators.bv.number.sign.PositiveOrZeroValidatorForBigDecimal;
+import com.back.domain.member.member.verification.EmailVerificationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -29,6 +29,9 @@ public class MemberControllerTest {
 
     @Autowired
     private MockMvc mvc;
+
+    @Autowired
+    private EmailVerificationService emailVerificationService;
 
     @Test
     @DisplayName("멘티 회원가입")
@@ -59,32 +62,96 @@ public class MemberControllerTest {
     }
 
     @Test
-    @DisplayName("멘토 회원가입")
+    @DisplayName("멘토 인증번호 발송")
     void t2() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/auth/signup/mentor/send-verification")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "email": "mentor@example.com"
+                                        }
+                                        """.stripIndent())
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(MemberController.class))
+                .andExpect(handler().methodName("sendMentorVerification"))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.resultCode").value("200-2"))
+                .andExpect(jsonPath("$.msg").value("인증번호가 발송되었습니다."));
+    }
+
+    @Test
+    @DisplayName("멘토 회원가입 (인증번호 확인)")
+    void t2_1() throws Exception {
+        String email = "mentor2@example.com";
+
+        // 인증번호 생성
+        String verificationCode = emailVerificationService.generateAndSendCode(email);
+
+        // 회원가입 요청
         ResultActions resultActions = mvc
                 .perform(
                         post("/auth/signup/mentor")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
+                                .content(String.format("""
                                         {
-                                            "email": "user2@example.com",
+                                            "email": "%s",
+                                            "verificationCode": "%s",
                                             "password": "password123",
-                                            "name": "사용자2",
+                                            "name": "멘토사용자",
                                             "career": "Backend",
                                             "careerYears": 5
                                         }
-                                        """.stripIndent())
-
+                                        """, email, verificationCode).stripIndent())
                 )
                 .andDo(print());
-        Member member = memberService.findByEmail("user2@example.com").get();
+
+        Member member = memberService.findByEmail(email).get();
 
         resultActions
                 .andExpect(handler().handlerType(MemberController.class))
                 .andExpect(handler().methodName("signupMentor"))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.resultCode").value("200-3"))
                 .andExpect(jsonPath("$.msg").value("멘토 회원가입 성공"));
+    }
+
+    @Test
+    @DisplayName("멘토 회원가입 시 잘못된 인증번호")
+    void t2_2() throws Exception {
+        String email = "mentor3@example.com";
+
+        // 인증번호 생성
+        emailVerificationService.generateAndSendCode(email);
+
+        // 잘못된 인증번호로 회원가입 시도
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/auth/signup/mentor")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(String.format("""
+                                        {
+                                            "email": "%s",
+                                            "verificationCode": "999999",
+                                            "password": "password123",
+                                            "name": "멘토사용자",
+                                            "career": "Backend",
+                                            "careerYears": 5
+                                        }
+                                        """, email).stripIndent())
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(MemberController.class))
+                .andExpect(handler().methodName("signupMentor"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resultCode").value("400-2"))
+                .andExpect(jsonPath("$.msg").value("인증번호가 일치하지 않습니다."));
     }
 
     @Test
@@ -120,23 +187,29 @@ public class MemberControllerTest {
     @Test
     @DisplayName("멘토 회원가입 시 이메일 중복 오류")
     void t4() throws Exception {
+        String email = "duplicate2@example.com";
+
         // 기존 멘토 회원가입
-        memberService.joinMentor("duplicate2@example.com", "기존멘토", "password123", "Backend", 5);
+        memberService.joinMentor(email, "기존멘토", "password123", "Backend", 5);
+
+        // 인증번호 생성
+        String verificationCode = emailVerificationService.generateAndSendCode(email);
 
         // 동일한 이메일로 다시 회원가입 시도
         ResultActions resultActions = mvc
                 .perform(
                         post("/auth/signup/mentor")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
+                                .content(String.format("""
                                         {
-                                            "email": "duplicate2@example.com",
+                                            "email": "%s",
+                                            "verificationCode": "%s",
                                             "password": "password456",
                                             "name": "새멘토",
                                             "career": "Frontend",
                                             "careerYears": 3
                                         }
-                                        """.stripIndent())
+                                        """, email, verificationCode).stripIndent())
                 )
                 .andDo(print());
 
@@ -144,7 +217,7 @@ public class MemberControllerTest {
                 .andExpect(handler().handlerType(MemberController.class))
                 .andExpect(handler().methodName("signupMentor"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.resultCode").value("400-1"))
+                .andExpect(jsonPath("$.resultCode").value("400-2"))
                 .andExpect(jsonPath("$.msg").value("이미 존재하는 이메일입니다."));
     }
 
