@@ -12,7 +12,6 @@ import java.util.Optional;
 
 public interface TaskAliasRepository extends JpaRepository<TaskAlias, Long> {
     Optional<TaskAlias> findByNameIgnoreCase(String name);
-    List<TaskAlias> findByNameContainingIgnoreCase(String keyword);
 
     @Query("SELECT ta FROM TaskAlias ta JOIN FETCH ta.task t WHERE LOWER(ta.name) LIKE LOWER(CONCAT('%', :keyword, '%')) AND ta.task IS NOT NULL")
     List<TaskAlias> findByNameContainingIgnoreCaseWithTask(@Param("keyword") String keyword);

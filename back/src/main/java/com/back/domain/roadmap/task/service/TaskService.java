@@ -52,7 +52,6 @@ public class TaskService {
         List<TaskAlias> aliasMatchesWithTask = taskAliasRepository.findByNameContainingIgnoreCaseWithTask(keyword);
         List<Task> aliasMatches = aliasMatchesWithTask.stream()
                 .map(TaskAlias::getTask)
-                .filter(Objects::nonNull)
                 .filter(task -> !directMatchIds.contains(task.getId()))
                 .toList();
 

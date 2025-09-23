@@ -5,6 +5,7 @@ import com.back.domain.roadmap.task.dto.*;
 import com.back.domain.roadmap.task.entity.Task;
 import com.back.domain.roadmap.task.entity.TaskAlias;
 import com.back.domain.roadmap.task.service.TaskService;
+import com.back.global.exception.ServiceException;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import jakarta.validation.Valid;
@@ -68,13 +69,7 @@ public class TaskController {
     public RsData<Page<TaskAliasDto>> getPendingTaskAliases(
             @PageableDefault(size = 10, sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Member member = rq.getActor();
-        if(member == null) {
-            return new RsData<>("401", "로그인 후 이용해주세요.");
-        }
-        if(member.getRole() != Member.Role.ADMIN){
-            return new RsData<>("403", "권한이 없습니다.");
-        }
+        validateAdminRole();
 
         Page<TaskAliasDto> pendingTaskAliases = taskService.getPendingTaskAliases(pageable);
 
@@ -91,13 +86,7 @@ public class TaskController {
             @PathVariable Long aliasId,
             @Valid @RequestBody LinkPendingAliasRequest request
     ) {
-        Member member = rq.getActor();
-        if(member == null) {
-            return new RsData<>("401", "로그인 후 이용해주세요.");
-        }
-        if(member.getRole() != Member.Role.ADMIN){
-            return new RsData<>("403", "권한이 없습니다.");
-        }
+        validateAdminRole();
 
         TaskAlias linkedAlias = taskService.linkPendingAlias(aliasId, request.taskId());
 
@@ -113,13 +102,7 @@ public class TaskController {
     public RsData<TaskDto> createTaskFromPending(
             @PathVariable Long aliasId
     ) {
-        Member member = rq.getActor();
-        if(member == null) {
-            return new RsData<>("401", "로그인 후 이용해주세요.");
-        }
-        if(member.getRole() != Member.Role.ADMIN){
-            return new RsData<>("403", "권한이 없습니다.");
-        }
+        validateAdminRole();
 
         Task newTask = taskService.createTaskFromPending(aliasId);
 
@@ -128,5 +111,22 @@ public class TaskController {
                 "Pending Alias를 새로운 Task로 등록 성공",
                 new TaskDto(newTask)
         );
+    }
+
+    @DeleteMapping("/aliases/pending/{aliasId}")
+    public RsData<Void> deletePendingAlias(@PathVariable Long aliasId) {
+        validateAdminRole();
+        taskService.deletePendingAlias(aliasId);
+        return new RsData<>("200", "Pending Alias 삭제 성공", null);
+    }
+
+    private void validateAdminRole() {
+        Member member = rq.getActor();
+        if(member == null) {
+            throw new ServiceException("401", "로그인 후 이용해주세요.");
+        }
+        if(member.getRole() != Member.Role.ADMIN){
+            throw new ServiceException("403", "권한이 없습니다.");
+        }
     }
 }
