@@ -84,9 +84,8 @@ public class InformationPostControllerTest {
                 )
                 .andDo(print());
 
-        String type = "QUESTIONPOST";
         // 실제 생성된 게시글 조회 (실제 DB에서)
-        Post createdPost = postService.findById(4L, type);
+        Post createdPost = postService.findById(4L);
 
         resultActions
                 .andExpect(handler().handlerType(InformationPostController.class))

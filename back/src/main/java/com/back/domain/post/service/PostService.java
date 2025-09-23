@@ -3,11 +3,7 @@ package com.back.domain.post.service;
 import com.back.domain.post.dto.PostAllResponse;
 import com.back.domain.post.dto.PostCreateRequest;
 import com.back.domain.post.entity.Post;
-import com.back.domain.post.entity.PracticePost;
-import com.back.domain.post.entity.QuestionPost;
 import com.back.domain.post.repository.PostRepository;
-import com.back.domain.post.repository.PracticePostRepository;
-import com.back.domain.post.repository.QuestionPostRepository;
 import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,8 +15,6 @@ import java.util.List;
 public class PostService {
 
     private final PostRepository postRepository;
-    private final PracticePostRepository practicePostRepository;
-    private final QuestionPostRepository questionPostRepository;
 
     public List<Post> getAllPosts() {
         List<Post> posts = postRepository.findAll();
@@ -35,29 +29,15 @@ public class PostService {
 
         Post.PostType postType = Post.PostType.valueOf(postTypeStr);
 
-        Post post = createPostByType(postType);
+        Post post = new Post();
         post.setTitle(postCreateRequest.getTitle());
         post.setContent(postCreateRequest.getContent());
         post.setAuthorName(authorName);
         post.setPostType(postType);
 
-        return saveByType(post);
-    }
+        postRepository.save(post);
 
-    private Post createPostByType(Post.PostType postType) {
-        return switch (postType) {
-            case INFORMATIONPOST -> new Post();
-            case PRACTICEPOST -> new PracticePost();
-            case QUESTIONPOST -> new QuestionPost();
-        };
-    }
-
-    private Post saveByType(Post post) {
-        return switch (post.getPostType()) {
-            case INFORMATIONPOST -> postRepository.save(post);
-            case PRACTICEPOST -> practicePostRepository.save((PracticePost) post);
-            case QUESTIONPOST -> questionPostRepository.save((QuestionPost) post);
-        };
+        return post;
     }
 
     private void validPostType(String postTypeStr) {
@@ -74,18 +54,19 @@ public class PostService {
     }
 
 
-    public Post findById(Long id, String category) {
-        Post.PostType postType = Post.PostType.valueOf(category);
-        return switch (postType) {
-            case INFORMATIONPOST -> postRepository.findById(id).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
-            case PRACTICEPOST -> practicePostRepository.findById(id).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
-            case QUESTIONPOST -> questionPostRepository.findById(id).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
-        };
+    public Post findById(Long id) {
+        Post post = postRepository.findById(id).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+        return post;
     }
 
     public List<PostAllResponse> getAllPostResponse() {
         return postRepository.findAll().stream()
                 .map(PostAllResponse::new)
                 .toList();
+    }
+
+    public void removePost(Long post_id) {
+        Post post = postRepository.findById(post_id).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+
     }
 }

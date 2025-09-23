@@ -34,4 +34,9 @@ public class Post extends BaseEntity {
 
     private int liked;
 
+    private Boolean isMento;
+    private String carrer;
+
+    private Boolean isResolve;
+
 }

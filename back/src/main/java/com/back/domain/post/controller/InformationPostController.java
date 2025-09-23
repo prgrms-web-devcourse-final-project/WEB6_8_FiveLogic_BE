@@ -50,11 +50,22 @@ public class InformationPostController {
     @Operation(summary = "게시글 단건 조회")
     @GetMapping("/{post_id}")
     public ResponseEntity<ApiResponse<PostSingleResponse>> getSinglePost(@PathVariable long post_id) {
-        Post post = postService.findById(post_id, "INFORMATIONPOST");
+        Post post = postService.findById(post_id);
 
         PostSingleResponse postSingleResponse = new PostSingleResponse(post);
 
         ApiResponse<PostSingleResponse> response = new ApiResponse<>("게시글 단건 조회 성공", postSingleResponse);
         return ResponseEntity.ok(response);
     }
+
+//    @Operation(summary = "게시글 삭제")
+//    @DeleteMapping("/{post_id}")
+//    public ResponseEntity<ApiResponse<PostSingleResponse>> removePost(@PathVariable long post_id) {
+//        Post post = postService.findById(post_id, "INFORMATIONPOST");
+//
+//        postService.removePost(post_id);
+//
+//        ApiResponse<PostSingleResponse> response = new ApiResponse<>("게시글 단건 조회 성공", postSingleResponse);
+//        return ResponseEntity.ok(response);
+//    }
 }
