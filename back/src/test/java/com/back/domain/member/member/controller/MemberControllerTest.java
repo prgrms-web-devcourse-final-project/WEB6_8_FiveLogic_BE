@@ -46,6 +46,7 @@ public class MemberControllerTest {
                                             "email": "user1@example.com",
                                             "password": "password123",
                                             "name": "사용자1",
+                                            "nickname": "유저1",
                                             "interestedField": "Backend"
                                         }
                                         """.stripIndent())
@@ -104,6 +105,7 @@ public class MemberControllerTest {
                                             "verificationCode": "%s",
                                             "password": "password123",
                                             "name": "멘토사용자",
+                                            "nickname": "멘토닉네임",
                                             "career": "Backend",
                                             "careerYears": 5
                                         }
@@ -140,6 +142,7 @@ public class MemberControllerTest {
                                             "verificationCode": "999999",
                                             "password": "password123",
                                             "name": "멘토사용자",
+                                            "nickname": "잘못된닉네임",
                                             "career": "Backend",
                                             "careerYears": 5
                                         }
@@ -159,7 +162,7 @@ public class MemberControllerTest {
     @DisplayName("멘티 회원가입 시 이메일 중복 오류")
     void t3() throws Exception {
         // 기존 멘티 회원가입
-        memberService.joinMentee("duplicate@example.com", "기존사용자", "password123", "Backend");
+        memberService.joinMentee("duplicate@example.com", "기존사용자", "기존닉네임", "password123", "Backend");
 
         // 동일한 이메일로 다시 회원가입 시도
         ResultActions resultActions = mvc
@@ -171,6 +174,7 @@ public class MemberControllerTest {
                                             "email": "duplicate@example.com",
                                             "password": "password456",
                                             "name": "새사용자",
+                                            "nickname": "새닉네임",
                                             "interestedField": "Frontend"
                                         }
                                         """.stripIndent())
@@ -191,7 +195,7 @@ public class MemberControllerTest {
         String email = "duplicate2@example.com";
 
         // 기존 멘토 회원가입
-        memberService.joinMentor(email, "기존멘토", "password123", "Backend", 5);
+        memberService.joinMentor(email, "기존멘토", "기존멘토닉네임", "password123", "Backend", 5);
 
         // 인증번호 생성
         String verificationCode = emailVerificationService.generateAndSendCode(email);
@@ -207,6 +211,7 @@ public class MemberControllerTest {
                                             "verificationCode": "%s",
                                             "password": "password456",
                                             "name": "새멘토",
+                                            "nickname": "새멘토닉네임",
                                             "career": "Frontend",
                                             "careerYears": 3
                                         }
@@ -227,7 +232,7 @@ public class MemberControllerTest {
     void t5() throws Exception {
         // 멘티 회원가입
         String email = "mentee@example.com";
-        memberService.joinMentee(email, "멘티사용자", "password123", "Backend");
+        memberService.joinMentee(email, "멘티사용자", "멘티닉네임", "password123", "Backend");
 
         // 로그인하여 쿠키 받기
         ResultActions loginResult = mvc.perform(
@@ -261,7 +266,7 @@ public class MemberControllerTest {
         // 멘티 회원가입
         String email = "login@example.com";
         String password = "password123";
-        memberService.joinMentee(email, "로그인사용자", password, "Backend");
+        memberService.joinMentee(email, "로그인사용자", "로그인닉네임", password, "Backend");
 
         // 로그인 요청
         ResultActions result = mvc
@@ -290,7 +295,7 @@ public class MemberControllerTest {
     void t7() throws Exception {
         // 멘티 회원가입
         String email = "fail@example.com";
-        memberService.joinMentee(email, "실패사용자", "password123", "Backend");
+        memberService.joinMentee(email, "실패사용자", "실패닉네임", "password123", "Backend");
 
         // 잘못된 비밀번호로 로그인 시도
         ResultActions result = mvc
@@ -336,7 +341,7 @@ public class MemberControllerTest {
     void t9() throws Exception {
         // 멘티 회원가입 및 로그인
         String email = "logout@example.com";
-        memberService.joinMentee(email, "로그아웃사용자", "password123", "Backend");
+        memberService.joinMentee(email, "로그아웃사용자", "로그아웃닉네임", "password123", "Backend");
 
         ResultActions loginResult = mvc.perform(
                 post("/auth/login")
@@ -367,6 +372,75 @@ public class MemberControllerTest {
                 .andExpect(jsonPath("$.msg").value("로그아웃 성공"))
                 .andExpect(cookie().maxAge("accessToken", 0))
                 .andExpect(cookie().maxAge("refreshToken", 0));
+    }
+
+    @Test
+    @DisplayName("멘티 회원가입 시 닉네임 중복 오류")
+    void t10() throws Exception {
+        // 기존 멘티 회원가입
+        memberService.joinMentee("existing@example.com", "기존사용자", "중복닉네임", "password123", "Backend");
+
+        // 동일한 닉네임으로 다시 회원가입 시도
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/auth/signup/mentee")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "email": "new@example.com",
+                                            "password": "password456",
+                                            "name": "새사용자",
+                                            "nickname": "중복닉네임",
+                                            "interestedField": "Frontend"
+                                        }
+                                        """.stripIndent())
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(MemberController.class))
+                .andExpect(handler().methodName("signupMentee"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resultCode").value("400-3"))
+                .andExpect(jsonPath("$.msg").value("이미 존재하는 닉네임입니다."));
+    }
+
+    @Test
+    @DisplayName("멘토 회원가입 시 닉네임 중복 오류")
+    void t11() throws Exception {
+        String email = "newmentor@example.com";
+
+        // 기존 멘토 회원가입
+        memberService.joinMentor("existing@example.com", "기존멘토", "중복멘토닉네임", "password123", "Backend", 5);
+
+        // 인증번호 생성
+        String verificationCode = emailVerificationService.generateAndSendCode(email);
+
+        // 동일한 닉네임으로 다시 회원가입 시도
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/auth/signup/mentor")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(String.format("""
+                                        {
+                                            "email": "%s",
+                                            "verificationCode": "%s",
+                                            "password": "password456",
+                                            "name": "새멘토",
+                                            "nickname": "중복멘토닉네임",
+                                            "career": "Frontend",
+                                            "careerYears": 3
+                                        }
+                                        """, email, verificationCode).stripIndent())
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(MemberController.class))
+                .andExpect(handler().methodName("signupMentor"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resultCode").value("400-4"))
+                .andExpect(jsonPath("$.msg").value("이미 존재하는 닉네임입니다."));
     }
 
 }
