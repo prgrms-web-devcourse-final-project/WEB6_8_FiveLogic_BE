@@ -11,6 +11,8 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import java.net.URI;
 
 @Configuration
+// S3 클라이언트와 프리사인드 URL 생성을 위한 설정 클래스입니다.
+// 현재 개발 환경에서는 MinIO를 사용하며, 이후 AWS S3를 사용할 수 있도록 설정을 변경해야 합니다.
 public class S3Config {
 
     private static final String ACCESS_KEY = "minioadmin"; // FIXME: 실제 키로 교체

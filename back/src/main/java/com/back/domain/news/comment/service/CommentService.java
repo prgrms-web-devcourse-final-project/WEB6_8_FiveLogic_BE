@@ -14,7 +14,8 @@ import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional(readOnly = true) // 의도하지 않은 어노테이션입니다. 이후 삭제하고 재도입을 고려중입니다.
+// 일반적인 CRUD가 있는 서비스입니다. 특이사항은 없습니다.
 public class CommentService {
     private final CommentRepository commentRepository;
 
@@ -32,6 +33,7 @@ public class CommentService {
                 .orElseThrow(() -> new NoSuchElementException("Comment not found: " + commentId));
     }
 
+    // 댓글 작성자만 수정할 수 있습니다.
     public Comment updateComment(Member member, News news, Long commentId, String content) {
         Comment comment = getCommentById(commentId);
 
@@ -45,6 +47,7 @@ public class CommentService {
         return comment;
     }
 
+    // 댓글 작성자만 삭제할 수 있습니다.
     public void deleteComment(Member member, News news, Long commentId) {
         Comment comment = getCommentById(commentId);
 

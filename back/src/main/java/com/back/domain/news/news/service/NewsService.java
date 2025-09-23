@@ -19,20 +19,33 @@ import java.util.NoSuchElementException;
 public class NewsService {
     private final NewsRepository newsRepository;
 
+    /**
+     * 뉴스를 생성합니다.
+     */
     public News createNews(Member member, String title, Video video, String content) {
         News news = News.create(member, title, video, content);
         return newsRepository.save(news);
     }
 
+    /**
+     * 페이지네이션을 적용하여 뉴스를 조회합니다.
+     */
     public Page<News> getNewsByPage(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createDate").descending());
         return newsRepository.findAll(pageable);
     }
 
+    /**
+     * ID로 뉴스를 조회합니다.
+     */
     public News getNewsById(Long id) {
         return newsRepository.findById(id).orElseThrow(() -> new NoSuchElementException("뉴스를 찾을 수 없습니다."));
     }
 
+    /**
+     * 뉴스를 수정합니다. 관리자 권한이 필요합니다.
+     * 작성한 멤버가 아니더라도 관리자 권한이 있으면 수정할 수 있습니다.
+     */
     public News updateNews(Member member, News news, String title, Video video, String content) {
         if (!(member.getRole()== Member.Role.ADMIN)) {
             throw new SecurityException("수정 권한이 없습니다.");
@@ -41,6 +54,10 @@ public class NewsService {
         return newsRepository.save(news);
     }
 
+    /**
+     * 뉴스를 삭제합니다. 관리자 권한이 필요합니다.
+     * 작성한 멤버가 아니더라도 관리자 권한이 있으면 삭제할 수 있습니다.
+     */
     public void deleteNews(Member member, News news) {
         if (!(member.getRole()== Member.Role.ADMIN)) {
             throw new SecurityException("삭제 권한이 없습니다.");

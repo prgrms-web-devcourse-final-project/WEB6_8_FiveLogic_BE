@@ -29,6 +29,9 @@ public class News extends BaseEntity {
     @OneToMany(mappedBy = "news", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Like> likes = new ArrayList<>();
 
+    /**
+     * private한 생성자를 통해서만 News 객체를 생성할 수 있습니다.
+     */
     @Builder(access = AccessLevel.PRIVATE)
     private News(Member member, String title, Video video, String content, List<Comment> comment, List<Like> likes) {
         this.member = member;
@@ -39,6 +42,10 @@ public class News extends BaseEntity {
         this.likes = likes;
     }
 
+    /**
+     * News 객체를 생성하는 정적 팩토리 메서드입니다.
+     * 필드값이 유효한지 확인하고 private한 빌더패턴을 통해 객체를 생성합니다.
+     */
     public static News create(Member member, String title, Video video, String content) {
         if (member == null) {
             throw new IllegalArgumentException("Member cannot be null");

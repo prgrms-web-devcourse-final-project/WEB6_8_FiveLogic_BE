@@ -26,6 +26,9 @@ public class CommentController {
     private final CommentService commentService;
     private final Rq rq;
 
+    /**
+     * 특정 뉴스의 댓글 목록을 조회합니다. 모두가 접근할 수 있습니다.
+     */
     @GetMapping
     @Operation(summary = "댓글 목록 조회", description = "특정 뉴스의 댓글 목록을 불러옵니다.")
     public RsData<List<CommentResponse>> getComments(@PathVariable Long newsId) {
@@ -37,6 +40,9 @@ public class CommentController {
         return new RsData<>("200", "댓글 목록 불러오기 완료", commentResponses);
     }
 
+    /**
+     * 특정 뉴스에 댓글을 생성합니다. 로그인한 사용자만 접근할 수 있습니다.
+     */
     @PostMapping
     @Operation(summary = "댓글 생성", description = "특정 뉴스에 댓글을 생성합니다. 로그인한 사용자만 접근할 수 있습니다.")
     public RsData<CommentResponse> createComment(@PathVariable Long newsId, @RequestBody CommentCreateRequest request) {
@@ -50,6 +56,9 @@ public class CommentController {
         return new RsData<>("201", "댓글 생성 완료", commentResponse);
     }
 
+    /**
+     * 특정 뉴스의 댓글을 수정합니다. 댓글 작성자만 접근할 수 있습니다.
+     */
     @PutMapping("/{commentId}")
     @Operation(summary = "댓글 수정", description = "특정 뉴스의 댓글을 수정합니다. 댓글 작성자만 접근할 수 있습니다.")
     public RsData<CommentResponse> updateComment(@PathVariable Long newsId, @PathVariable Long commentId, @RequestBody CommentUpdateRequest request) {
@@ -69,6 +78,9 @@ public class CommentController {
         }
     }
 
+    /**
+     * 특정 뉴스의 댓글을 삭제합니다. 댓글 작성자만 접근할 수 있습니다.
+     */
     @DeleteMapping("/{commentId}")
     @Operation(summary = "댓글 삭제", description = "특정 뉴스의 댓글을 삭제합니다. 댓글 작성자만 접근할 수 있습니다.")
     public RsData<Void> deleteComment(@PathVariable Long newsId, @PathVariable Long commentId) {

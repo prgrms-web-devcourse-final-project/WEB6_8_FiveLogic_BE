@@ -15,6 +15,10 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
+/**
+ * Table어노테이션을 사용해 복합 유니크 제약조건 설정 합니다. 한 멤버는 동일한 뉴스에 대해 하나의 좋아요만 가질 수 있음
+ */
+
 @Table(name = "news_like", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"member_id", "news_id"})
 })
