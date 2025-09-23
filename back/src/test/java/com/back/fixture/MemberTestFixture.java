@@ -6,13 +6,9 @@ import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentee.repository.MenteeRepository;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.member.mentor.repository.MentorRepository;
-import com.back.standard.util.Ut;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
 
 @Component
 public class MemberTestFixture {
@@ -22,40 +18,35 @@ public class MemberTestFixture {
     @Autowired private MenteeRepository menteeRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
-    @Value("${custom.jwt.secretKey}")
-    private String jwtSecretKey;
-
-    @Value("${custom.accessToken.expirationSeconds}")
-    private int accessTokenExpiration;
-
     private int counter = 0;
 
     // ===== Member =====
 
-    public Member createMember(String email, String name, Member.Role role) {
+    public Member createMember(String email, String name, String nickName, Member.Role role) {
         Member member = new Member(
             email,
             passwordEncoder.encode("password123"),
             name,
+            nickName,
             role
         );
         return memberRepository.save(member);
     }
 
-    public Member createMentorMember(String email, String name) {
-        return createMember(email, name, Member.Role.MENTOR);
+    public Member createMentorMember(String email, String name, String nickName) {
+        return createMember(email, name, nickName, Member.Role.MENTOR);
     }
 
     public Member createMentorMember() {
-        return createMentorMember("mentor" + (++counter) + "@test.com", "멘토" + counter);
+        return createMentorMember("mentor" + (++counter) + "@test.com", "멘토" + counter, "멘토 닉네임" + counter);
     }
 
-    public Member createMenteeMember(String email, String name) {
-        return createMember(email, name, Member.Role.MENTEE);
+    public Member createMenteeMember(String email, String name, String nickName) {
+        return createMember(email, name, nickName, Member.Role.MENTEE);
     }
 
     public Member createMenteeMember() {
-        return createMenteeMember("mentee" + (++counter) + "@test.com", "멘티" + counter);
+        return createMenteeMember("mentee" + (++counter) + "@test.com", "멘티" + counter, "멘티 닉네임" + counter);
     }
 
 
@@ -88,17 +79,5 @@ public class MemberTestFixture {
 
     public Mentee createMentee(Member member) {
         return createMentee(member, 1L);
-    }
-
-
-    // ===== Token =====
-
-    public String getAccessToken(Member member) {
-        return Ut.jwt.toString(jwtSecretKey, accessTokenExpiration, Map.of(
-            "id", member.getId(),
-            "email", member.getEmail(),
-            "name", member.getName(),
-            "role", member.getRole().name()
-        ));
     }
 }
