@@ -1,6 +1,7 @@
 services:
   minio:
     image: quay.io/minio/minio:latest
+    container_name: "minio"
     ports:
       - "9000:9000"   # S3 API
       - "9001:9001"   # Web Console
@@ -13,6 +14,8 @@ services:
 
   zookeeper:
     image: bitnami/zookeeper:3
+    container_name: "zookeeper"
+    platform: linux/amd64 #환경에 따라 불필요
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
     ports:
@@ -20,6 +23,8 @@ services:
 
   kafka:
     image: bitnami/kafka:latest
+    container_name: "kafka"
+    platform: linux/amd64 #환경에 따라 불필요
     depends_on:
       - zookeeper
     environment:
