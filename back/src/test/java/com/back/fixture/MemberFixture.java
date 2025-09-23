@@ -19,20 +19,20 @@ public class MemberFixture {
 
     public static Member create(Long id, String email, String name, String password, Member.Role role) {
         return builder()
-                .withId(id)
-                .withEmail(email)
-                .withName(name)
-                .withPassword(password)
-                .withRole(role)
-                .build();
+            .withId(id)
+            .withEmail(email)
+            .withName(name)
+            .withPassword(password)
+            .withRole(role)
+            .build();
     }
 
     public static Member create(String email, String name, String password) {
         return builder()
-                .withEmail(email)
-                .withName(name)
-                .withPassword(password)
-                .build();
+            .withEmail(email)
+            .withName(name)
+            .withPassword(password)
+            .build();
     }
 
     public MemberFixture withEmail(String email) {
@@ -62,7 +62,7 @@ public class MemberFixture {
 
     public Member build() {
         if (id != null) {
-            return new Member(id, email, name);
+            return new Member(id, email, name, role);
         }
         return new Member(email, password, name, role);
     }

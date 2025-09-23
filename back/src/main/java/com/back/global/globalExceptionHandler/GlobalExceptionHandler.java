@@ -6,6 +6,7 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
@@ -17,8 +18,7 @@ import java.util.Comparator;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.*;
 
 @RestControllerAdvice
 @RequiredArgsConstructor
@@ -103,6 +103,18 @@ public class GlobalExceptionHandler {
                         )
                 ),
                 BAD_REQUEST
+        );
+    }
+
+    // @PreAuthorize 권한 에러
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<RsData<Void>> handle(AuthorizationDeniedException ex) {
+        return new ResponseEntity<>(
+            new RsData<>(
+                "403-1",
+                "접근 권한이 없습니다."
+            ),
+            FORBIDDEN
         );
     }
 

@@ -1,17 +1,21 @@
 package com.back.domain.mentoring.mentoring.entity;
 
 import com.back.domain.member.mentor.entity.Mentor;
+import com.back.global.converter.StringListConverter;
 import com.back.global.jpa.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
+@NoArgsConstructor
 public class Mentoring extends BaseEntity {
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mentor_id")
     private Mentor mentor;
 
@@ -21,9 +25,30 @@ public class Mentoring extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String bio;
 
+    @Convert(converter = StringListConverter.class)
     @Column(columnDefinition = "JSON")
-    private String tags;
+    private List<String> tags;
 
     @Column(length = 255)
     private String thumb;
+
+    @Builder
+    public Mentoring(Mentor mentor, String title, String bio, List<String> tags, String thumb) {
+        this.mentor = mentor;
+        this.title = title;
+        this.bio = bio;
+        this.tags = tags != null ? tags : new ArrayList<>();
+        this.thumb = thumb;
+    }
+
+    public void update(String title, String bio, List<String> tags, String thumb) {
+        this.title = title;
+        this.bio = bio;
+        this.tags = tags != null ? tags : new ArrayList<>();
+        this.thumb = thumb;
+    }
+
+    public boolean isOwner(Mentor mentor) {
+        return this.mentor.equals(mentor);
+    }
 }
