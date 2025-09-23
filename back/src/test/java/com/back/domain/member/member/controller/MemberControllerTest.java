@@ -255,4 +255,118 @@ public class MemberControllerTest {
                 .andExpect(jsonPath("$.data.role").value("MENTEE"));
     }
 
+    @Test
+    @DisplayName("멘티 로그인 성공 - 쿠키에 토큰 저장 확인")
+    void t6() throws Exception {
+        // 멘티 회원가입
+        String email = "login@example.com";
+        String password = "password123";
+        memberService.joinMentee(email, "로그인사용자", password, "Backend");
+
+        // 로그인 요청
+        ResultActions result = mvc
+                .perform(
+                        post("/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(String.format("""
+                                        {
+                                            "email": "%s",
+                                            "password": "%s"
+                                        }
+                                        """, email, password))
+                )
+                .andDo(print());
+
+        result
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.resultCode").value("200-4"))
+                .andExpect(jsonPath("$.msg").value("로그인 성공"))
+                .andExpect(cookie().exists("accessToken"))
+                .andExpect(cookie().exists("refreshToken"));
+    }
+
+    @Test
+    @DisplayName("잘못된 비밀번호로 로그인 실패")
+    void t7() throws Exception {
+        // 멘티 회원가입
+        String email = "fail@example.com";
+        memberService.joinMentee(email, "실패사용자", "password123", "Backend");
+
+        // 잘못된 비밀번호로 로그인 시도
+        ResultActions result = mvc
+                .perform(
+                        post("/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(String.format("""
+                                        {
+                                            "email": "%s",
+                                            "password": "wrongpassword"
+                                        }
+                                        """, email))
+                )
+                .andDo(print());
+
+        result
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 이메일로 로그인 실패")
+    void t8() throws Exception {
+        // 존재하지 않는 이메일로 로그인 시도
+        ResultActions result = mvc
+                .perform(
+                        post("/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "email": "notexist@example.com",
+                                            "password": "password123"
+                                        }
+                                        """)
+                )
+                .andDo(print());
+
+        result
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("로그아웃 성공 - 쿠키 삭제 확인")
+    void t9() throws Exception {
+        // 멘티 회원가입 및 로그인
+        String email = "logout@example.com";
+        memberService.joinMentee(email, "로그아웃사용자", "password123", "Backend");
+
+        ResultActions loginResult = mvc.perform(
+                post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(String.format("""
+                                {
+                                    "email": "%s",
+                                    "password": "password123"
+                                }
+                                """, email))
+        );
+
+        Cookie accessToken = loginResult.andReturn().getResponse().getCookie("accessToken");
+        Cookie refreshToken = loginResult.andReturn().getResponse().getCookie("refreshToken");
+
+        // 로그아웃 요청
+        ResultActions result = mvc
+                .perform(
+                        post("/auth/logout")
+                                .cookie(accessToken)
+                                .cookie(refreshToken)
+                )
+                .andDo(print());
+
+        result
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.msg").value("로그아웃 성공"))
+                .andExpect(cookie().maxAge("accessToken", 0))
+                .andExpect(cookie().maxAge("refreshToken", 0));
+    }
+
 }
