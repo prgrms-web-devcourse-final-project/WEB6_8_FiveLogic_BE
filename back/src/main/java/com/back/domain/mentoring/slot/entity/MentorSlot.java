@@ -6,12 +6,15 @@ import com.back.domain.mentoring.reservation.entity.Reservation;
 import com.back.domain.mentoring.slot.constant.MentorSlotStatus;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@NoArgsConstructor
 public class MentorSlot extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mentor_id", nullable = false)
@@ -25,6 +28,13 @@ public class MentorSlot extends BaseEntity {
 
     @OneToOne(mappedBy = "mentorSlot")
     private Reservation reservation;
+
+    @Builder
+    public MentorSlot(Mentor mentor, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        this.mentor = mentor;
+        this.startDateTime = startDateTime;
+        this.endDateTime = endDateTime;
+    }
 
     public MentorSlotStatus getStatus() {
         if (reservation == null) {
