@@ -47,11 +47,18 @@ public class Rq {
                 .map(Authentication::getPrincipal)
                 .filter(principal -> principal instanceof SecurityUser)
                 .map(principal -> (SecurityUser) principal)
-                .map(securityUser -> new Member(
-                        securityUser.getId(),
-                        securityUser.getUsername(),  // email
-                        securityUser.getName()
-                ))
+                .map(securityUser -> {
+                    String role = securityUser.getAuthorities().stream()
+                            .findFirst()
+                            .map(auth -> auth.getAuthority().replace("ROLE_", ""))
+                            .orElse(null);
+                    return new Member(
+                            securityUser.getId(),
+                            securityUser.getUsername(),  // email
+                            securityUser.getName(),
+                            role != null ? Member.Role.valueOf(role) : null
+                    );
+                })
                 .orElse(null);
     }
 
