@@ -36,5 +36,22 @@ services:
     ports:
       - "9092:9092"
 
+  ffmpeg-worker:
+    image: jrottenberg/ffmpeg:5.1-ubuntu
+    container_name: "ffmpeg-worker"
+    depends_on:
+      - kafka
+      - minio
+    volumes:
+      - ./worker:/worker
+      - ./videos:/videos
+    environment:
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - KAFKA_BROKER=kafka:9092
+      - KAFKA_TOPIC=video-tasks
+    command: bash -c "pip install kafka-python && apt update && apt install -y ffmpeg mc && python ./sh/ffmpeg/worker.py"
+
 volumes:
   minio-data:
