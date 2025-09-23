@@ -29,6 +29,7 @@ public class Member extends BaseEntity {
         MENTOR, MENTEE, ADMIN
     }
 
+    @Builder
     public Member(String email, String password, String name, Role role) {
         this.email = email;
         this.password = password;
@@ -36,7 +37,8 @@ public class Member extends BaseEntity {
         this.role = role;
     }
 
-    public Member(Long id, String email, String name, Role role) {
+    @Builder
+    public Member(Long id, String email, String name) {
         this.setId(id);
         this.email = email;
         this.name = name;

@@ -10,6 +10,8 @@ import com.back.domain.mentoring.mentoring.dto.response.MentoringResponse;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
+import com.back.domain.mentoring.reservation.repository.ReservationRepository;
+import com.back.domain.mentoring.slot.repository.MentorSlotRepository;
 import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,12 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class MentoringService {
     private final MentoringRepository mentoringRepository;
     private final MentorRepository mentorRepository;
-
-
-    public Mentoring getLastestMentoring() {
-        return mentoringRepository.findTopByOrderByIdDesc()
-            .orElseThrow(() -> new ServiceException(MentoringErrorCode.NOT_FOUND_MENTORING));
-    }
+    private final ReservationRepository reservationRepository;
+    private final MentorSlotRepository mentorSlotRepository;
 
     @Transactional
     public MentoringResponse createMentoring(MentoringRequest reqDto, Member member) {
@@ -65,6 +63,26 @@ public class MentoringService {
             MentoringDetailDto.from(mentoring),
             MentorDto.from(mentor)
         );
+    }
+
+    @Transactional
+    public void deleteMentoring(Long mentoringId, Member member) {
+        Mentor mentor = getMentor(member);
+        Mentoring mentoring = getMentoring(mentoringId);
+
+        validateOwner(mentoring, mentor);
+
+        // 예약 이력이 있을 시 삭제 불가
+        if (reservationRepository.existsByMentoringId(mentoring.getId())) {
+            throw new ServiceException(MentoringErrorCode.CANNOT_DELETE_MENTORING);
+        }
+
+        // 멘토 슬롯 있을 시 일괄 삭제 (추후 1:N 변경 시 제거 필요)
+        if (mentorSlotRepository.existsByMentorId(mentor.getId())) {
+            mentorSlotRepository.deleteAllByMentorId(mentor.getId());
+        }
+        // 멘토 삭제
+        mentoringRepository.delete(mentoring);
     }
 
 

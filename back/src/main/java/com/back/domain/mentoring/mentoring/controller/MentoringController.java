@@ -34,7 +34,6 @@ public class MentoringController {
     }
 
     @PutMapping("/{mentoringId}")
-    @PreAuthorize("hasRole('MENTOR')")
     public RsData<MentoringResponse> updateMentoring(
         @PathVariable Long mentoringId,
         @RequestBody @Valid MentoringRequest reqDto
@@ -46,6 +45,19 @@ public class MentoringController {
             "200-1",
             "멘토링이 수정되었습니다.",
             resDto
+        );
+    }
+
+    @DeleteMapping("/{mentoringId}")
+    public RsData<Void> deleteMentoring(
+        @PathVariable Long mentoringId
+    ) {
+        Member member = rq.getActor();
+        mentoringService.deleteMentoring(mentoringId, member);
+
+        return new RsData<>(
+            "200-1",
+            "멘토링이 삭제되었습니다."
         );
     }
 }

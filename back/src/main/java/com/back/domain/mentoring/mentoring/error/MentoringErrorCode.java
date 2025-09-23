@@ -8,6 +8,9 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum MentoringErrorCode implements ErrorCode {
 
+    // 400
+    CANNOT_DELETE_MENTORING("400-1", "예약 이력이 있는 멘토링은 삭제할 수 없습니다."),
+
     // 403
     FORBIDDEN_NOT_OWNER("403-1", "해당 멘토링에 대한 권한이 없습니다."),
 

@@ -3,6 +3,7 @@ package com.back.domain.member.mentor.entity;
 import com.back.domain.member.member.entity.Member;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -23,6 +24,7 @@ public class Mentor extends BaseEntity {
     @Column(name = "career_years")
     private Integer careerYears;
 
+    @Builder
     public Mentor(Member member, Long jobId, Double rate, Integer careerYears) {
         this.member = member;
         this.jobId = jobId;

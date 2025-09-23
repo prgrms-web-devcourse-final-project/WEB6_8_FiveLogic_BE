@@ -7,10 +7,13 @@ import com.back.domain.mentoring.reservation.constant.ReservationStatus;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@NoArgsConstructor
 public class Reservation extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mentoring_id", nullable = false)
@@ -34,4 +37,14 @@ public class Reservation extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReservationStatus status;
+
+    @Builder
+    public Reservation(Mentoring mentoring, Mentee mentee, MentorSlot mentorSlot, String preQuestion) {
+        this.mentoring = mentoring;
+        this.mentor = mentoring.getMentor();
+        this.mentee = mentee;
+        this.mentorSlot = mentorSlot;
+        this.preQuestion = preQuestion;
+        this.status = ReservationStatus.PENDING;
+    }
 }
