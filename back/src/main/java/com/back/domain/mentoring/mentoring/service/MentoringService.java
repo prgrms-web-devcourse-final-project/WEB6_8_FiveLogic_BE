@@ -1,10 +1,11 @@
 package com.back.domain.mentoring.mentoring.service;
 
 import com.back.domain.member.member.entity.Member;
+import com.back.domain.member.mentor.dto.MentorDto;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.member.mentor.repository.MentorRepository;
-import com.back.domain.mentoring.mentoring.dto.MentorDto;
 import com.back.domain.mentoring.mentoring.dto.MentoringDetailDto;
+import com.back.domain.mentoring.mentoring.dto.MentoringDto;
 import com.back.domain.mentoring.mentoring.dto.request.MentoringRequest;
 import com.back.domain.mentoring.mentoring.dto.response.MentoringResponse;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
@@ -14,6 +15,10 @@ import com.back.domain.mentoring.reservation.repository.ReservationRepository;
 import com.back.domain.mentoring.slot.repository.MentorSlotRepository;
 import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +30,15 @@ public class MentoringService {
     private final ReservationRepository reservationRepository;
     private final MentorSlotRepository mentorSlotRepository;
 
-    @Transactional
+    @Transactional(readOnly = true)
+    public Page<MentoringDto> getMentorings(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+
+        return mentoringRepository.findAll(pageable)
+            .map(MentoringDto::from);
+    }
+
+    @Transactional(readOnly = true)
     public MentoringResponse getMentoring(Long mentoringId)  {
         Mentoring mentoring = findMentoring(mentoringId);
         Mentor mentor = mentoring.getMentor();

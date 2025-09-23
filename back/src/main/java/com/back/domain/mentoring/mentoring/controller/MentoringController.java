@@ -1,13 +1,16 @@
 package com.back.domain.mentoring.mentoring.controller;
 
 import com.back.domain.member.member.entity.Member;
+import com.back.domain.mentoring.mentoring.dto.MentoringDto;
 import com.back.domain.mentoring.mentoring.dto.request.MentoringRequest;
+import com.back.domain.mentoring.mentoring.dto.response.MentoringPagingResponse;
 import com.back.domain.mentoring.mentoring.dto.response.MentoringResponse;
 import com.back.domain.mentoring.mentoring.service.MentoringService;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,11 +21,27 @@ public class MentoringController {
     private final MentoringService mentoringService;
     private final Rq rq;
 
+    @GetMapping
+    public RsData<MentoringPagingResponse> getMentorings(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<MentoringDto> mentoringPage = mentoringService.getMentorings(page, size);
+        MentoringPagingResponse resDto = MentoringPagingResponse.from(mentoringPage);
+
+        return new RsData<>(
+            "200",
+            "멘토링 목록을 조회하였습니다.",
+            resDto
+        );
+    }
+
     @GetMapping("/{mentoringId}")
     public RsData<MentoringResponse> getMentoring(
         @PathVariable Long mentoringId
     ) {
         MentoringResponse mentoring = mentoringService.getMentoring(mentoringId);
+
         return new RsData<>(
             "200",
             "멘토링을 조회하였습니다.",

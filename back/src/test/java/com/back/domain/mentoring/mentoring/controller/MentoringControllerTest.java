@@ -70,6 +70,84 @@ class MentoringControllerTest {
         menteeToken = memberFixture.getAccessToken(menteeMember);
     }
 
+    // ===== 멘토링 다건 조회 ====
+    @Test
+    @DisplayName("멘토링 다건 조회 - 기본 페이징")
+    void getMentoringsSuccess() throws Exception {
+        mentoringFixture.createMentorings(mentor, 15);
+
+        ResultActions resultActions = mvc
+            .perform(
+                get(MENTORING_URL)
+                    .cookie(new Cookie(TOKEN, mentorToken)) // TODO: 일반 조회, 목록 조회는 쿠키 없어도 가능하게 설정 필요
+                    .param("page", "0")
+                    .param("size", "10")
+            ).andDo(print());
+
+        resultActions
+            .andExpect(handler().handlerType(MentoringController.class))
+            .andExpect(handler().methodName("getMentorings"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.resultCode").value("200"))
+            .andExpect(jsonPath("$.msg").value("멘토링 목록을 조회하였습니다."))
+            .andExpect(jsonPath("$.data.mentorings").isArray())
+            .andExpect(jsonPath("$.data.mentorings.length()").value(10))
+            .andExpect(jsonPath("$.data.currentPage").value(0))
+            .andExpect(jsonPath("$.data.totalPage").value(2))
+            .andExpect(jsonPath("$.data.totalElements").value(15))
+            .andExpect(jsonPath("$.data.hasNext").value(true));
+    }
+
+    @Test
+    @DisplayName("멘토링 다건 조회 - 두번 째 페이지")
+    void getMentoringsSuccessSecondPage() throws Exception {
+        mentoringFixture.createMentorings(mentor, 15);
+
+        ResultActions resultActions = mvc
+            .perform(
+                get(MENTORING_URL)
+                    .cookie(new Cookie(TOKEN, mentorToken))
+                    .param("page", "1")
+                    .param("size", "10")
+            ).andDo(print());
+
+        resultActions
+            .andExpect(handler().handlerType(MentoringController.class))
+            .andExpect(handler().methodName("getMentorings"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.resultCode").value("200"))
+            .andExpect(jsonPath("$.msg").value("멘토링 목록을 조회하였습니다."))
+            .andExpect(jsonPath("$.data.mentorings").isArray())
+            .andExpect(jsonPath("$.data.mentorings.length()").value(5))
+            .andExpect(jsonPath("$.data.currentPage").value(1))
+            .andExpect(jsonPath("$.data.totalPage").value(2))
+            .andExpect(jsonPath("$.data.totalElements").value(15))
+            .andExpect(jsonPath("$.data.hasNext").value(false));
+    }
+
+    @Test
+    @DisplayName("멘토링 다건 조회 - 빈 결과")
+    void getMentoringsSuccessEmpty() throws Exception {
+        ResultActions resultActions = mvc
+            .perform(
+                get(MENTORING_URL)
+                    .cookie(new Cookie(TOKEN, mentorToken))
+                    .param("page", "0")
+                    .param("size", "10")
+            ).andDo(print());
+
+        resultActions
+            .andExpect(handler().handlerType(MentoringController.class))
+            .andExpect(handler().methodName("getMentorings"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.resultCode").value("200"))
+            .andExpect(jsonPath("$.msg").value("멘토링 목록을 조회하였습니다."))
+            .andExpect(jsonPath("$.data.mentorings").isArray())
+            .andExpect(jsonPath("$.data.mentorings.length()").value(0))
+            .andExpect(jsonPath("$.data.totalPage").value(0))
+            .andExpect(jsonPath("$.data.totalElements").value(0));
+    }
+
     // ===== 멘토링 단건 조회 =====
     @Test
     @DisplayName("멘토링 조회 성공")
@@ -110,17 +188,17 @@ class MentoringControllerTest {
             .andExpect(jsonPath("$.msg").value("멘토링이 생성 완료되었습니다."))
 
             // Mentoring 정보 검증
-            .andExpect(jsonPath("$.data.mentoringDetailDto.mentoringId").value(mentoring.getId()))
-            .andExpect(jsonPath("$.data.mentoringDetailDto.title").value(mentoring.getTitle()))
-            .andExpect(jsonPath("$.data.mentoringDetailDto.tags").value(mentoring.getTags()))
-            .andExpect(jsonPath("$.data.mentoringDetailDto.bio").value(mentoring.getBio()))
-            .andExpect(jsonPath("$.data.mentoringDetailDto.thumb").value(mentoring.getThumb()))
+            .andExpect(jsonPath("$.data.mentoring.mentoringId").value(mentoring.getId()))
+            .andExpect(jsonPath("$.data.mentoring.title").value(mentoring.getTitle()))
+            .andExpect(jsonPath("$.data.mentoring.tags").value(mentoring.getTags()))
+            .andExpect(jsonPath("$.data.mentoring.bio").value(mentoring.getBio()))
+            .andExpect(jsonPath("$.data.mentoring.thumb").value(mentoring.getThumb()))
 
             // Mentor 정보 검증
-            .andExpect(jsonPath("$.data.mentorDto.mentorId").value(mentorOfMentoring.getId()))
-            .andExpect(jsonPath("$.data.mentorDto.name").value(mentorOfMentoring.getMember().getName()))
-            .andExpect(jsonPath("$.data.mentorDto.rate").value(mentorOfMentoring.getRate()))
-            .andExpect(jsonPath("$.data.mentorDto.careerYears").value(mentorOfMentoring.getCareerYears()));
+            .andExpect(jsonPath("$.data.mentor.mentorId").value(mentorOfMentoring.getId()))
+            .andExpect(jsonPath("$.data.mentor.name").value(mentorOfMentoring.getMember().getName()))
+            .andExpect(jsonPath("$.data.mentor.rate").value(mentorOfMentoring.getRate()))
+            .andExpect(jsonPath("$.data.mentor.careerYears").value(mentorOfMentoring.getCareerYears()));
     }
 
     @Test
@@ -186,12 +264,12 @@ class MentoringControllerTest {
             .andExpect(jsonPath("$.msg").value("멘토링이 수정되었습니다."))
 
             // Mentoring 정보 검증
-            .andExpect(jsonPath("$.data.mentoringDetailDto.mentoringId").value(mentoring.getId()))
-            .andExpect(jsonPath("$.data.mentoringDetailDto.title").value(reqDto.title()))
-            .andExpect(jsonPath("$.data.mentoringDetailDto.tags[0]").value(reqDto.tags().get(0)))
-            .andExpect(jsonPath("$.data.mentoringDetailDto.tags[1]").value(reqDto.tags().get(1)))
-            .andExpect(jsonPath("$.data.mentoringDetailDto.bio").value(reqDto.bio()))
-            .andExpect(jsonPath("$.data.mentoringDetailDto.thumb").value(reqDto.thumb()));
+            .andExpect(jsonPath("$.data.mentoring.mentoringId").value(mentoring.getId()))
+            .andExpect(jsonPath("$.data.mentoring.title").value(reqDto.title()))
+            .andExpect(jsonPath("$.data.mentoring.tags[0]").value(reqDto.tags().get(0)))
+            .andExpect(jsonPath("$.data.mentoring.tags[1]").value(reqDto.tags().get(1)))
+            .andExpect(jsonPath("$.data.mentoring.bio").value(reqDto.bio()))
+            .andExpect(jsonPath("$.data.mentoring.thumb").value(reqDto.thumb()));
     }
 
     @Test

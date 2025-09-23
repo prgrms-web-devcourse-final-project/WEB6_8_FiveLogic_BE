@@ -1,4 +1,4 @@
-package com.back.domain.mentoring.mentoring.dto;
+package com.back.domain.member.mentor.dto;
 
 import com.back.domain.member.mentor.entity.Mentor;
 import io.swagger.v3.oas.annotations.media.Schema;

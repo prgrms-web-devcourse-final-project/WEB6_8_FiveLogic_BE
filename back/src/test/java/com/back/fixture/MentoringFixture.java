@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 @Component
 public class MentoringFixture {
@@ -42,6 +43,12 @@ public class MentoringFixture {
             "테스트 설명",
             List.of("Spring", "Java")
         );
+    }
+
+    public List<Mentoring> createMentorings(Mentor mentor, int count) {
+        return IntStream.range(0, count)
+            .mapToObj(i -> createMentoring(mentor))
+            .toList();
     }
 
 
