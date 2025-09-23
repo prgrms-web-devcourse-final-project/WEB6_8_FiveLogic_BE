@@ -8,6 +8,7 @@ import com.back.global.security.SecurityUser;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -23,8 +24,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -91,14 +91,14 @@ public class InformationPostControllerTest {
                 .andExpect(handler().handlerType(InformationPostController.class))
                 .andExpect(handler().methodName("createPost"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.msg").value("게시글이 성공적으로 생성되었습니다. "))
+                .andExpect(jsonPath("$.msg").value("게시글이 성공적으로 생성되었습니다."))
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.postId").value(createdPost.getId()))
                 .andExpect(jsonPath("$.data.title").value(createdPost.getTitle()));
     }
 
     @Test
-    @DisplayName("게시글 생성 실패 (제목 null)")
+    @DisplayName("게시글 생성 실패 - 제목 null")
     void t6() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
@@ -190,7 +190,7 @@ public class InformationPostControllerTest {
     }
 
     @Test
-    @DisplayName("게시글 단건조회 실패 (유효하지 않은 Id")
+    @DisplayName("게시글 단건조회 실패 - 유효하지 않은 Id")
     void t5() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
@@ -203,5 +203,52 @@ public class InformationPostControllerTest {
                 .andExpect(handler().methodName("getSinglePost"))
                 .andExpect(jsonPath("$.resultCode").value("400"))
                 .andExpect(jsonPath("$.msg").value("해당 Id의 게시글이 없습니다."));
+    }
+
+    @Test
+    @Order(7)
+    @DisplayName("게시글 삭제")
+    void t7() throws Exception {
+        mvc.perform(
+                post("/post/infor")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                                "memberId": 1,
+                                "postType": "INFORMATIONPOST",
+                                "title": "삭제용 제목",
+                                "content": "삭제용 내용"
+                            }
+                            """)
+        );
+
+
+        ResultActions resultActions = mvc
+                .perform(
+                        delete("/post/infor/{post_id}", 5L)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("removePost"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
+                .andExpect(jsonPath("$.msg").value("게시글 삭제 성공"));
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 실패 - 권한 없는 사용자")
+    void t8() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        delete("/post/infor/{post_id}", 3L)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("removePost"))
+                .andExpect(jsonPath("$.resultCode").value("400"))
+                .andExpect(jsonPath("$.msg").value("삭제 권한이 없습니다."));
     }
 }

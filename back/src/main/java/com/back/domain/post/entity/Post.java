@@ -1,9 +1,8 @@
 package com.back.domain.post.entity;
 
+import com.back.domain.member.member.entity.Member;
 import com.back.global.jpa.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,6 +19,9 @@ public class Post extends BaseEntity {
     private String content;
     @NotNull
     private String authorName;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Member member;
 
     @Enumerated(EnumType.STRING)
     private PostType postType;

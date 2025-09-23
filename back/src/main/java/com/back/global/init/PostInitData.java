@@ -1,5 +1,7 @@
 package com.back.global.init;
 
+import com.back.domain.member.member.entity.Member;
+import com.back.domain.member.member.service.MemberService;
 import com.back.domain.post.entity.Post;
 import com.back.domain.post.repository.PostRepository;
 import com.back.global.exception.ServiceException;
@@ -17,7 +19,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class PostInitData implements ApplicationRunner {
     private final PostRepository postRepository;
-
+    private final MemberService memberService;
 
 
     @Override
@@ -31,17 +33,22 @@ public class PostInitData implements ApplicationRunner {
         log.info("postinit데이터 생성 완료");
     }
 
+
+
     @Transactional
     protected void initPostData() {
         if (postRepository.count() > 0) return;
-
+        Member member2 = memberService.join("user2", "사용자1", "password123", Member.Role.MENTEE);
+        Member member3 = memberService.join("user3", "사용자1", "password123", Member.Role.MENTEE);
+        Member member4 = memberService.join("user4", "사용자1", "password123", Member.Role.MENTEE);
+        Member member5 = memberService.join("user5", "사용자1", "password123", Member.Role.MENTEE);
         // 여러 종류의 게시글 생성
-        createPost("정보글 제목", "정보글 내용", Post.PostType.INFORMATIONPOST);
-        createPost("연습글 제목", "연습글 내용", Post.PostType.PRACTICEPOST);
-        createPost("질문글 제목", "질문글 내용", Post.PostType.QUESTIONPOST);
+        createPost("정보글 제목", "정보글 내용", member2, Post.PostType.INFORMATIONPOST);
+        createPost("연습글 제목", "연습글 내용", member3, Post.PostType.PRACTICEPOST);
+        createPost("질문글 제목", "질문글 내용", member4, Post.PostType.QUESTIONPOST);
     }
 
-    private void createPost(String title, String content, Post.PostType type) {
+    private void createPost(String title, String content, Member member, Post.PostType type) {
         validPostType(String.valueOf(type));
 
         Post post = new Post();
@@ -49,6 +56,7 @@ public class PostInitData implements ApplicationRunner {
         post.setContent(content);
         post.setAuthorName("테스트유저");
         post.setPostType(type);
+        post.setMember(member);
 
         postRepository.save(post);
     }

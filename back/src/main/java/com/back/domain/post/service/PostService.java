@@ -1,5 +1,6 @@
 package com.back.domain.post.service;
 
+import com.back.domain.member.member.entity.Member;
 import com.back.domain.post.dto.PostAllResponse;
 import com.back.domain.post.dto.PostCreateRequest;
 import com.back.domain.post.entity.Post;
@@ -23,16 +24,20 @@ public class PostService {
     }
 
 
-    public Post createPost(PostCreateRequest postCreateRequest, String authorName) {
+    public Post createPost(PostCreateRequest postCreateRequest,Member member) {
         String postTypeStr = postCreateRequest.getPostType();
+
         validPostType(postTypeStr);
+
+
 
         Post.PostType postType = Post.PostType.valueOf(postTypeStr);
 
         Post post = new Post();
         post.setTitle(postCreateRequest.getTitle());
         post.setContent(postCreateRequest.getContent());
-        post.setAuthorName(authorName);
+        post.setAuthorName(member.getName());
+        post.setMember(member);
         post.setPostType(postType);
 
         postRepository.save(post);
@@ -65,8 +70,11 @@ public class PostService {
                 .toList();
     }
 
-    public void removePost(Long post_id) {
+    public void removePost(Long post_id, Member member) {
         Post post = postRepository.findById(post_id).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+        Long authorId = post.getMember().getId();
+        if(authorId != member.getId()) throw new ServiceException("400", "삭제 권한이 없습니다.");
 
+        postRepository.delete(post);
     }
 }
