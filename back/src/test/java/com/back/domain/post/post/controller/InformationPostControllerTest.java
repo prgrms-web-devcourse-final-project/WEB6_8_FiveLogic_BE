@@ -1,9 +1,10 @@
-package com.back.domain.post.controller;
+package com.back.domain.post.post.controller;
 
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
-import com.back.domain.post.entity.Post;
-import com.back.domain.post.service.PostService;
+import com.back.domain.post.post.controller.InformationPostController;
+import com.back.domain.post.post.entity.Post;
+import com.back.domain.post.post.service.PostService;
 import com.back.global.security.SecurityUser;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;

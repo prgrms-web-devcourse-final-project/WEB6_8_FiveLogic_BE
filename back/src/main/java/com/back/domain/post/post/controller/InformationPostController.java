@@ -1,9 +1,9 @@
-package com.back.domain.post.controller;
+package com.back.domain.post.post.controller;
 
 import com.back.domain.member.member.entity.Member;
-import com.back.domain.post.dto.*;
-import com.back.domain.post.entity.Post;
-import com.back.domain.post.service.PostService;
+import com.back.domain.post.post.dto.*;
+import com.back.domain.post.post.entity.Post;
+import com.back.domain.post.post.service.PostService;
 import com.back.global.auth.CurrentUser;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;

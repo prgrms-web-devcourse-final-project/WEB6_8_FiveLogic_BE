@@ -1,4 +1,4 @@
-package com.back.domain.post.rq;
+package com.back.domain.post.post.rq;
 
 import lombok.Getter;
 

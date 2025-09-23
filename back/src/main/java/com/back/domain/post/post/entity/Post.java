@@ -1,12 +1,16 @@
-package com.back.domain.post.entity;
+package com.back.domain.post.post.entity;
 
 import com.back.domain.member.member.entity.Member;
+import com.back.domain.post.comment.entity.PostComment;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @NoArgsConstructor
@@ -32,6 +36,9 @@ public class Post extends BaseEntity {
         QUESTIONPOST
     }
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostComment> comments = new ArrayList<>();
+
     private int viewCount;
 
     private int liked;
@@ -41,4 +48,15 @@ public class Post extends BaseEntity {
 
     private Boolean isResolve;
 
+
+
+    public void addComment(PostComment comment) {
+        comments.add(comment);
+        comment.setPost(this);
+    }
+
+    public void removeComment(PostComment comment) {
+        comments.remove(comment);
+        comment.setPost(null);
+    }
 }

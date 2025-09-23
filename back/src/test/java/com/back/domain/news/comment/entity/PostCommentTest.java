@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class CommentTest {
+class PostCommentTest {
     @Test
     @DisplayName("사용자, 뉴스, 내용으로 댓글 객체 생성")
     void commentCreationTest() {

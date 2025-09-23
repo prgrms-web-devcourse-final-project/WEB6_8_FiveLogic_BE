@@ -1,10 +1,10 @@
-package com.back.domain.post.service;
+package com.back.domain.post.post.service;
 
 import com.back.domain.member.member.entity.Member;
-import com.back.domain.post.dto.PostAllResponse;
-import com.back.domain.post.dto.PostCreateRequest;
-import com.back.domain.post.entity.Post;
-import com.back.domain.post.repository.PostRepository;
+import com.back.domain.post.post.dto.PostAllResponse;
+import com.back.domain.post.post.dto.PostCreateRequest;
+import com.back.domain.post.post.entity.Post;
+import com.back.domain.post.post.repository.PostRepository;
 import com.back.global.exception.ServiceException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ public class PostService {
     }
 
 
-    public Post createPost(PostCreateRequest postCreateRequest,Member member) {
+    public Post createPost(PostCreateRequest postCreateRequest, Member member) {
         String postTypeStr = postCreateRequest.getPostType();
 
         validPostType(postTypeStr);
