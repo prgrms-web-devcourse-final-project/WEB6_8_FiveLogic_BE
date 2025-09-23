@@ -4,6 +4,7 @@ package com.back.domain.member.member.controller;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
 import com.back.domain.member.member.verification.EmailVerificationService;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -219,6 +220,39 @@ public class MemberControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.resultCode").value("400-2"))
                 .andExpect(jsonPath("$.msg").value("이미 존재하는 이메일입니다."));
+    }
+
+    @Test
+    @DisplayName("멘티 로그인 후 /auth/me로 정보 조회 - rq.getActor() role 확인")
+    void t5() throws Exception {
+        // 멘티 회원가입
+        String email = "mentee@example.com";
+        memberService.joinMentee(email, "멘티사용자", "password123", "Backend");
+
+        // 로그인하여 쿠키 받기
+        ResultActions loginResult = mvc.perform(
+                post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(String.format("""
+                                {
+                                    "email": "%s",
+                                    "password": "password123"
+                                }
+                                """, email))
+        );
+
+        // 로그인 응답에서 쿠키 추출
+        Cookie accessToken = loginResult.andReturn().getResponse().getCookie("accessToken");
+
+        // /auth/me 호출하여 role 확인 (쿠키 포함)
+        ResultActions result = mvc
+                .perform(get("/auth/me")
+                        .cookie(accessToken))
+                .andDo(print());
+
+        result
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.data.role").value("MENTEE"));
     }
 
 }
