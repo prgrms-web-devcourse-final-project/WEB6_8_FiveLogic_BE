@@ -6,6 +6,7 @@ import com.back.domain.post.dto.PostCreateRequest;
 import com.back.domain.post.entity.Post;
 import com.back.domain.post.repository.PostRepository;
 import com.back.global.exception.ServiceException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -59,8 +60,8 @@ public class PostService {
     }
 
 
-    public Post findById(Long id) {
-        Post post = postRepository.findById(id).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+    public Post findById(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
         return post;
     }
 
@@ -70,11 +71,41 @@ public class PostService {
                 .toList();
     }
 
-    public void removePost(Long post_id, Member member) {
-        Post post = postRepository.findById(post_id).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+    public void removePost(Long postId, Member member) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
         Long authorId = post.getMember().getId();
         if(authorId != member.getId()) throw new ServiceException("400", "삭제 권한이 없습니다.");
 
         postRepository.delete(post);
+    }
+
+    public void updatePost(long postId, Member member, @Valid PostCreateRequest postCreateRequest) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+        Long authorId = post.getMember().getId();
+        if(authorId != member.getId()) throw new ServiceException("400", "수정 권한이 없습니다.");
+
+        post.setTitle(postCreateRequest.getTitle());
+        post.setContent(postCreateRequest.getContent());
+
+        postRepository.save(post);
+    }
+
+    public void likePost(long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+
+        post.setLiked(post.getLiked()+1);
+    }
+
+    public void disLikePost(long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+
+        post.setLiked(post.getLiked()-1);
+    }
+
+    public int showLikeCount(long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+
+        int count = post.getLiked();
+        return count;
     }
 }

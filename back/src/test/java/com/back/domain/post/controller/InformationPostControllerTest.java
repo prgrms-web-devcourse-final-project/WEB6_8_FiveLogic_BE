@@ -8,7 +8,6 @@ import com.back.global.security.SecurityUser;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -206,7 +205,6 @@ public class InformationPostControllerTest {
     }
 
     @Test
-    @Order(7)
     @DisplayName("게시글 삭제")
     void t7() throws Exception {
         mvc.perform(
@@ -251,4 +249,88 @@ public class InformationPostControllerTest {
                 .andExpect(jsonPath("$.resultCode").value("400"))
                 .andExpect(jsonPath("$.msg").value("삭제 권한이 없습니다."));
     }
+
+    @Test
+    @DisplayName("게시글 수정")
+    void t9() throws Exception {
+        mvc.perform(
+                post("/post/infor")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                                "memberId": 1,
+                                "postType": "INFORMATIONPOST",
+                                "title": "삭제용 제목",
+                                "content": "삭제용 내용"
+                            }
+                            """)
+        );
+
+
+        ResultActions resultActions = mvc
+                .perform(
+                        put("/post/infor/{post_id}", 6L)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                            {                        
+                                "title": "수정용 제목",
+                                "content": "수정용 내용"
+                            }
+                            """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("updatePost"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
+                .andExpect(jsonPath("$.msg").value("게시글 수정 성공"));
+    }
+
+    @Test
+    @DisplayName("게시글 수정 실패 - 권한 없는 사용자")
+    void t10() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        put("/post/infor/{post_id}", 2L)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                            {                        
+                                "title": "수정용 제목",
+                                "content": "수정용 내용"
+                            }
+                            """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("updatePost"))
+                .andExpect(jsonPath("$.resultCode").value("400"))
+                .andExpect(jsonPath("$.msg").value("수정 권한이 없습니다."));
+    }
+
+    @Test
+    @DisplayName("게시글 수정 실패 - title blank")
+    void t11() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        put("/post/infor/{post_id}", 6L)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                            {                        
+                                "title": "",
+                                "content": "수정용 내용"
+                            }
+                            """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("updatePost"))
+                .andExpect(jsonPath("$.resultCode").value("400-1"))
+                .andExpect(jsonPath("$.msg").value("title-NotBlank-제목은 null 혹은 공백일 수 없습니다."));
+    }
+
 }
