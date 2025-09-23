@@ -48,7 +48,8 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
     private void work(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // 인증이 필요없는 API 요청이라면 패스
-        if (List.of("/auth/login", "/auth/signup", "/auth/refresh", "/h2-console").contains(request.getRequestURI()) ||
+        if (List.of("/auth/login", "/auth/refresh", "/h2-console").contains(request.getRequestURI()) ||
+                request.getRequestURI().startsWith("/auth/signup") ||
                 request.getRequestURI().startsWith("/h2-console/") ||
                 request.getRequestURI().startsWith("/swagger-ui/") ||
                 request.getRequestURI().startsWith("/v3/api-docs/") ||

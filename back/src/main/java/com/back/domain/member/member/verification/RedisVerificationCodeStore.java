@@ -9,7 +9,7 @@ import java.time.Duration;
 import java.util.Optional;
 
 @Component
-@Profile("!test")
+@Profile("prod")
 @RequiredArgsConstructor
 public class RedisVerificationCodeStore implements VerificationCodeStore {
     private final RedisTemplate<String, String> redisTemplate;
