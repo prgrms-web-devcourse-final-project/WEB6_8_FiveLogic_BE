@@ -49,6 +49,30 @@ public class MentorSlotService {
         return MentorSlotResponse.from(mentorSlot, mentoring);
     }
 
+    @Transactional
+    public MentorSlotResponse updateMentorSlot(Long slotId, MentorSlotRequest reqDto, Member member) {
+        Mentor mentor = findMentor(member);
+        Mentoring mentoring = findMentoring(mentor);
+        MentorSlot mentorSlot = findMentorSlot(slotId);
+
+        if (!mentorSlot.getMentor().equals(mentor)) {
+            throw new ServiceException(MentorSlotErrorCode.NOT_OWNER);
+        }
+        if (!mentorSlot.isAvailable()) {
+            throw new ServiceException(MentorSlotErrorCode.CANNOT_UPDATE_RESERVED_SLOT);
+        }
+
+        // 시간대 유효성 검사
+        MentorSlotValidator.validateTimeSlot(reqDto.startDateTime(), reqDto.endDateTime());
+
+        // 기존 슬롯과 시간 겹치는지 검사
+        validateOverlappingExcept(mentor, mentorSlot, reqDto.startDateTime(), reqDto.endDateTime());
+
+        mentorSlot.update(reqDto.startDateTime(), reqDto.endDateTime());
+
+        return MentorSlotResponse.from(mentorSlot, mentoring);
+    }
+
 
     // ===== 헬퍼 메서드 =====
 
@@ -65,11 +89,22 @@ public class MentorSlotService {
         return mentorings.getFirst();
     }
 
+    private MentorSlot findMentorSlot(Long slotId) {
+        return mentorSlotRepository.findById(slotId)
+            .orElseThrow(() -> new ServiceException(MentorSlotErrorCode.NOT_FOUND_MENTOR_SLOT));
+    }
+
 
     // ===== 검증 메서드 =====
 
     private void validateOverlappingSlots(Mentor mentor, LocalDateTime start, LocalDateTime end) {
         if (mentorSlotRepository.existsOverlappingSlot(mentor.getId(), start, end)) {
+            throw new ServiceException(MentorSlotErrorCode.OVERLAPPING_SLOT);
+        }
+    }
+
+    private void validateOverlappingExcept(Mentor mentor, MentorSlot mentorSlot, LocalDateTime start, LocalDateTime end) {
+        if (mentorSlotRepository.existsOverlappingExcept(mentor.getId(), mentorSlot.getId(), start, end)) {
             throw new ServiceException(MentorSlotErrorCode.OVERLAPPING_SLOT);
         }
     }

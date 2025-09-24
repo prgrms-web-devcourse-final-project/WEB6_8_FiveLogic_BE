@@ -41,12 +41,12 @@ public class MentoringController {
     public RsData<MentoringResponse> getMentoring(
         @PathVariable Long mentoringId
     ) {
-        MentoringResponse mentoring = mentoringService.getMentoring(mentoringId);
+        MentoringResponse resDto = mentoringService.getMentoring(mentoringId);
 
         return new RsData<>(
             "200",
             "멘토링을 조회하였습니다.",
-            mentoring
+            resDto
         );
     }
 

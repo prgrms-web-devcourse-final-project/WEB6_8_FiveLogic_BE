@@ -73,4 +73,9 @@ public class MentorSlot extends BaseEntity {
             reservation.getStatus().equals(ReservationStatus.REJECTED) ||
             reservation.getStatus().equals(ReservationStatus.CANCELED);
     }
+
+    public void update(LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        this.startDateTime = startDateTime;
+        this.endDateTime = endDateTime;
+    }
 }

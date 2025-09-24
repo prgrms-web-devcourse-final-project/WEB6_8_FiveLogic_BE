@@ -25,12 +25,27 @@ public class MentorSlotController {
         @RequestBody @Valid MentorSlotRequest reqDto
     ) {
         Member member = rq.getActor();
-        MentorSlotResponse mentorSlot = mentorSlotService.createMentorSlot(reqDto, member);
+        MentorSlotResponse resDto = mentorSlotService.createMentorSlot(reqDto, member);
 
         return new RsData<>(
             "201",
             "멘토링 예약 일정을 등록했습니다.",
-            mentorSlot
+            resDto
+        );
+    }
+
+    @PutMapping("/{slotId}")
+    public RsData<MentorSlotResponse> updateMentorSlot(
+        @PathVariable Long slotId,
+        @RequestBody @Valid MentorSlotRequest reqDto
+    ) {
+        Member member = rq.getActor();
+        MentorSlotResponse resDto = mentorSlotService.updateMentorSlot(slotId, reqDto, member);
+
+        return new RsData<>(
+            "200",
+            "멘토링 예약 일정이 수정되었습니다.",
+            resDto
         );
     }
 

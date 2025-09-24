@@ -6,8 +6,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
+    Optional<MentorSlot> findTopByOrderByIdDesc();
     boolean existsByMentorId(Long mentorId);
     void deleteAllByMentorId(Long mentorId);
 
@@ -23,6 +25,22 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
     boolean existsOverlappingSlot(
         @Param("mentorId") Long mentorId,
         @Param("start")LocalDateTime start,
+        @Param("end") LocalDateTime end
+    );
+
+    @Query("""
+        SELECT CASE WHEN COUNT(ms) > 0
+                THEN TRUE
+                ELSE FALSE END
+        FROM MentorSlot ms
+        WHERE ms.mentor.id = :mentorId
+        AND ms.id != :slotId
+        AND (ms.startDateTime < :end AND ms.endDateTime > :start)
+        """)
+    boolean existsOverlappingExcept(
+        @Param("mentorId") Long mentorId,
+        @Param("slotId") Long slotId,
+        @Param("start") LocalDateTime start,
         @Param("end") LocalDateTime end
     );
 }
