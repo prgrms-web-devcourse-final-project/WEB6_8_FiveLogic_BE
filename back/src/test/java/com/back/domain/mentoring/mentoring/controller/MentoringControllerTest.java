@@ -1,6 +1,7 @@
 package com.back.domain.mentoring.mentoring.controller;
 
 import com.back.domain.member.member.entity.Member;
+import com.back.domain.member.member.service.AuthTokenService;
 import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.dto.request.MentoringRequest;
@@ -45,7 +46,7 @@ class MentoringControllerTest {
     @Autowired private MentoringRepository mentoringRepository;
     @Autowired private MentorSlotRepository mentorSlotRepository;
     @Autowired private ReservationRepository reservationRepository;
-
+    @Autowired private AuthTokenService authTokenService;
 
     private static final String TOKEN = "accessToken";
     private static final String MENTORING_URL = "/mentoring";
@@ -66,8 +67,8 @@ class MentoringControllerTest {
         mentee = memberFixture.createMentee(menteeMember);
 
         // JWT 발급
-        mentorToken = memberFixture.getAccessToken(mentorMember);
-        menteeToken = memberFixture.getAccessToken(menteeMember);
+        mentorToken = authTokenService.genAccessToken(mentorMember);
+        menteeToken = authTokenService.genAccessToken(menteeMember);
     }
 
     // ===== 멘토링 다건 조회 ====
@@ -221,7 +222,7 @@ class MentoringControllerTest {
     @DisplayName("멘토링 생성 실패 - Mentor 권한이지만 Mentor 엔티티가 없는 경우")
     void createMentoringFailNotMentor() throws Exception {
         Member mentorMember = memberFixture.createMentorMember();
-        String token = memberFixture.getAccessToken(mentorMember);
+        String token = authTokenService.genAccessToken(mentorMember);
 
         performCreateMentoring(token)
             .andExpect(status().isNotFound())
@@ -282,7 +283,7 @@ class MentoringControllerTest {
     @Test
     @DisplayName("멘토링 수정 실패 - 멘토링 존재하지 않는 경우")
     void updateMentoringFailNotMentoring() throws Exception {
-        long nonId = -1;
+        long nonId = Long.MAX_VALUE;
 
         performUpdateMentoring(nonId, mentorToken)
             .andExpect(status().isNotFound())
@@ -298,7 +299,7 @@ class MentoringControllerTest {
         // 다른 멘토
         Member otherMentor = memberFixture.createMentorMember();
         memberFixture.createMentor(otherMentor);
-        String token = memberFixture.getAccessToken(otherMentor);
+        String token = authTokenService.genAccessToken(otherMentor);
 
         performUpdateMentoring(mentoring.getId(), token)
             .andExpect(status().isForbidden())
@@ -372,7 +373,7 @@ class MentoringControllerTest {
     @Test
     @DisplayName("멘토링 삭제 실패 - 멘토링 존재하지 않는 경우")
     void deleteMentoringFailNotMentoring() throws Exception {
-        long nonId = -1;
+        long nonId = Long.MAX_VALUE;
 
         performDeleteMentoring(nonId, mentorToken)
             .andExpect(status().isNotFound())
@@ -388,7 +389,7 @@ class MentoringControllerTest {
         // 다른 멘토
         Member otherMentor = memberFixture.createMentorMember();
         memberFixture.createMentor(otherMentor);
-        String token = memberFixture.getAccessToken(otherMentor);
+        String token = authTokenService.genAccessToken(otherMentor);
 
         performDeleteMentoring(mentoring.getId(), token)
             .andExpect(status().isForbidden())
