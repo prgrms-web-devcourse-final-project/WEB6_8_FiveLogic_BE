@@ -1,13 +1,20 @@
 package com.back.domain.post.post.service;
 
 import com.back.domain.member.member.entity.Member;
+import com.back.domain.mentoring.mentoring.dto.MentoringDto;
 import com.back.domain.post.post.dto.PostAllResponse;
 import com.back.domain.post.post.dto.PostCreateRequest;
+import com.back.domain.post.post.dto.PostDto;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.repository.PostRepository;
+import com.back.domain.post.post.repository.PostRepositoryCustom;
 import com.back.global.exception.ServiceException;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,7 +31,7 @@ public class PostService {
         return posts;
     }
 
-
+    @Transactional
     public Post createPost(PostCreateRequest postCreateRequest, Member member) {
         String postTypeStr = postCreateRequest.getPostType();
 
@@ -47,16 +54,11 @@ public class PostService {
     }
 
     private void validPostType(String postTypeStr) {
-        boolean eq = false;
-
-        String[] validType = new String[3];
-        validType[0] = "INFORMATIONPOST";
-        validType[1] = "PRACTICEPOST";
-        validType[2] = "QUESTIONPOST";
-
-        for(String x : validType) if(x.equals(postTypeStr)) eq = true;
-
-        if(!eq) throw new ServiceException("400-2", "유효하지 않은 PostType입니다.");
+        try {
+            Post.PostType.valueOf(postTypeStr);
+        } catch (IllegalArgumentException e) {
+            throw new ServiceException("400-2", "유효하지 않은 PostType입니다.");
+        }
     }
 
 
@@ -70,7 +72,7 @@ public class PostService {
                 .map(PostAllResponse::new)
                 .toList();
     }
-
+    @Transactional
     public void removePost(Long postId, Member member) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
         Long authorId = post.getMember().getId();
@@ -78,7 +80,7 @@ public class PostService {
 
         postRepository.delete(post);
     }
-
+    @Transactional
     public void updatePost(long postId, Member member, @Valid PostCreateRequest postCreateRequest) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
         Long authorId = post.getMember().getId();
@@ -89,23 +91,31 @@ public class PostService {
 
         postRepository.save(post);
     }
-
+    @Transactional
     public void likePost(long postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
 
         post.setLiked(post.getLiked()+1);
     }
-
+    @Transactional
     public void disLikePost(long postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
 
         post.setLiked(post.getLiked()-1);
     }
-
+    @Transactional()
     public int showLikeCount(long postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
 
         int count = post.getLiked();
         return count;
+    }
+
+
+    public Page<PostDto> getPosts(String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page,size);
+
+
+        return postRepository.searchPosts(keyword, pageable).map(PostDto::from);
     }
 }

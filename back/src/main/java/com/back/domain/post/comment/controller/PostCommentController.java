@@ -20,7 +20,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/post/comment")
-@RequiredArgsConstructor
 public class PostCommentController {
     @Autowired
     private Rq rq;
