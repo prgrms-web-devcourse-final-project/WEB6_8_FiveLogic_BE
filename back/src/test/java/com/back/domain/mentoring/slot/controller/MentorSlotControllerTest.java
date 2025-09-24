@@ -73,6 +73,35 @@ class MentorSlotControllerTest {
         mentorSlots = mentoringFixture.createMentorSlots(mentor, baseDateTime, 2, 3);
     }
 
+    // ===== 슬롯 조회 =====
+    @Test
+    @DisplayName("멘토 슬롯 조회 성공")
+    void getMentorSlotSuccess() throws Exception {
+        MentorSlot mentorSlot = mentorSlots.getFirst();
+
+        ResultActions resultActions = mvc.perform(
+            get(MENTOR_SLOT_URL + "/" + mentorSlot.getId())
+                .cookie(new Cookie(TOKEN, mentorToken))
+            )
+            .andDo(print());
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+
+        resultActions
+            .andExpect(status().isOk())
+            .andExpect(handler().handlerType(MentorSlotController.class))
+            .andExpect(handler().methodName("getMentorSlot"))
+            .andExpect(jsonPath("$.resultCode").value("200"))
+            .andExpect(jsonPath("$.msg").value("멘토의 예약 가능 일정을 조회하였습니다."))
+            .andExpect(jsonPath("$.data.mentorSlotId").value(mentorSlot.getId()))
+            .andExpect(jsonPath("$.data.mentorId").value(mentorSlot.getMentor().getId()))
+            .andExpect(jsonPath("$.data.mentoringId").value(mentoring.getId()))
+            .andExpect(jsonPath("$.data.mentoringTitle").value(mentoring.getTitle()))
+            .andExpect(jsonPath("$.data.startDateTime").value(mentorSlot.getStartDateTime().format(formatter)))
+            .andExpect(jsonPath("$.data.endDateTime").value(mentorSlot.getEndDateTime().format(formatter)))
+            .andExpect(jsonPath("$.data.mentorSlotStatus").value(mentorSlot.getStatus().name()));
+    }
+
     // ===== 슬롯 생성 =====
 
     @Test
@@ -84,7 +113,7 @@ class MentorSlotControllerTest {
         ResultActions resultActions = performCreateMentorSlot(mentor.getId(), mentorToken, startDateTime, endDateTime)
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.resultCode").value("201"))
-            .andExpect(jsonPath("$.msg").value("멘토링 예약 일정을 등록했습니다."));
+            .andExpect(jsonPath("$.msg").value("멘토의 예약 가능 일정을 등록했습니다."));
 
         MentorSlot mentorSlot = mentorSlotRepository.findTopByOrderByIdDesc()
             .orElseThrow(() -> new ServiceException(MentorSlotErrorCode.NOT_FOUND_MENTOR_SLOT));
@@ -146,7 +175,7 @@ class MentorSlotControllerTest {
         resultActions
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.resultCode").value("200"))
-            .andExpect(jsonPath("$.msg").value("멘토링 예약 일정이 수정되었습니다."))
+            .andExpect(jsonPath("$.msg").value("멘토의 예약 가능 일정이 수정되었습니다."))
             .andExpect(jsonPath("$.data.mentorSlotId").value(mentorSlot.getId()))
             .andExpect(jsonPath("$.data.mentorId").value(mentorSlot.getMentor().getId()))
             .andExpect(jsonPath("$.data.mentoringId").value(mentoring.getId()))
@@ -176,7 +205,7 @@ class MentorSlotControllerTest {
         resultActions
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.resultCode").value("200"))
-            .andExpect(jsonPath("$.msg").value("멘토링 예약 일정이 수정되었습니다."))
+            .andExpect(jsonPath("$.msg").value("멘토의 예약 가능 일정이 수정되었습니다."))
             .andExpect(jsonPath("$.data.mentorSlotId").value(mentorSlot.getId()))
             .andExpect(jsonPath("$.data.mentorId").value(mentorSlot.getMentor().getId()))
             .andExpect(jsonPath("$.data.mentoringId").value(mentoring.getId()))
@@ -249,7 +278,7 @@ class MentorSlotControllerTest {
             .andExpect(handler().handlerType(MentorSlotController.class))
             .andExpect(handler().methodName("deleteMentorSlot"))
             .andExpect(jsonPath("$.resultCode").value("200"))
-            .andExpect(jsonPath("$.msg").value("멘토링 예약 일정이 삭제되었습니다."));
+            .andExpect(jsonPath("$.msg").value("멘토의 예약 가능 일정이 삭제되었습니다."));
 
         assertThat(afterCnt).isEqualTo(beforeCnt - 1);
     }

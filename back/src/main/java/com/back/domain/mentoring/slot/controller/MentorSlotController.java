@@ -22,6 +22,20 @@ public class MentorSlotController {
     private final MentorSlotService mentorSlotService;
     private final Rq rq;
 
+    @GetMapping("/{slotId}")
+    @Operation(summary = "멘토 슬롯 조회", description = "특정 멘토 슬롯을 조회합니다.")
+    public RsData<MentorSlotResponse> getMentorSlot(
+        @PathVariable Long slotId
+    ) {
+        MentorSlotResponse resDto = mentorSlotService.getMentorSlot(slotId);
+
+        return new RsData<>(
+            "200",
+            "멘토의 예약 가능 일정을 조회하였습니다.",
+            resDto
+        );
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('MENTOR')")
     @Operation(summary = "멘토 슬롯 생성", description = "멘토 슬롯을 생성합니다. 로그인한 멘토만 생성할 수 있습니다.")
@@ -33,7 +47,7 @@ public class MentorSlotController {
 
         return new RsData<>(
             "201",
-            "멘토링 예약 일정을 등록했습니다.",
+            "멘토의 예약 가능 일정을 등록했습니다.",
             resDto
         );
     }
@@ -49,7 +63,7 @@ public class MentorSlotController {
 
         return new RsData<>(
             "200",
-            "멘토링 예약 일정이 수정되었습니다.",
+            "멘토의 예약 가능 일정이 수정되었습니다.",
             resDto
         );
     }
@@ -64,8 +78,7 @@ public class MentorSlotController {
 
         return new RsData<>(
             "200",
-            "멘토링 예약 일정이 삭제되었습니다."
+            "멘토의 예약 가능 일정이 삭제되었습니다."
         );
     }
-
 }

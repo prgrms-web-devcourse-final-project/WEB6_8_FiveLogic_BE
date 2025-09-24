@@ -29,6 +29,14 @@ public class MentorSlotService {
     private final MentoringRepository mentoringRepository;
     private final ReservationRepository reservationRepository;
 
+    @Transactional(readOnly = true)
+    public MentorSlotResponse getMentorSlot(Long slotId) {
+        MentorSlot mentorSlot = findMentorSlot(slotId);
+        Mentoring mentoring = findMentoring(mentorSlot.getMentor());
+
+        return MentorSlotResponse.from(mentorSlot, mentoring);
+    }
+
     @Transactional
     public MentorSlotResponse createMentorSlot(MentorSlotRequest reqDto, Member member) {
         Mentor mentor = findMentor(member);
