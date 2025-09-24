@@ -49,7 +49,7 @@ public class PostCommentControllerTest {
 
     @BeforeEach
     void setUp() {
-        Member member = memberService.joinMentee("user1", "사용자1", "password123", "" );
+        Member member = memberService.joinMentee("user1", "사용자1", "nickname4","password123", "" );
 
         // SecurityContext에 인증 정보 설정
         SecurityUser securityUser = new SecurityUser(
@@ -57,6 +57,7 @@ public class PostCommentControllerTest {
                 member.getEmail(),
                 member.getPassword(),
                 member.getName(),
+                member.getNickname(),
                 List.of(new SimpleGrantedAuthority("ROLE_" + member.getRole().name()))
         );
 
