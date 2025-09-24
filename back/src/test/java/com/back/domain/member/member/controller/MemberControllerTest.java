@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -368,7 +369,7 @@ public class MemberControllerTest {
 
         result
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.resultCode").value("200-8"))
                 .andExpect(jsonPath("$.msg").value("로그아웃 성공"))
                 .andExpect(cookie().maxAge("accessToken", 0))
                 .andExpect(cookie().maxAge("refreshToken", 0));
@@ -441,6 +442,58 @@ public class MemberControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.resultCode").value("400-4"))
                 .andExpect(jsonPath("$.msg").value("이미 존재하는 닉네임입니다."));
+    }
+
+    @Test
+    @DisplayName("회원 탈퇴 성공")
+    void t12() throws Exception {
+        // 멘티 회원가입
+        String email = "delete@example.com";
+        memberService.joinMentee(email, "탈퇴사용자", "탈퇴닉네임", "password123", "Backend");
+
+        // 로그인하여 쿠키 받기
+        ResultActions loginResult = mvc.perform(
+                post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(String.format("""
+                                {
+                                    "email": "%s",
+                                    "password": "password123"
+                                }
+                                """, email))
+        );
+
+        Cookie accessToken = loginResult.andReturn().getResponse().getCookie("accessToken");
+
+        // 회원 탈퇴 요청
+        ResultActions result = mvc
+                .perform(
+                        delete("/auth/me")
+                                .cookie(accessToken)
+                )
+                .andDo(print());
+
+        result
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.resultCode").value("200-7"))
+                .andExpect(jsonPath("$.msg").value("회원 탈퇴가 완료되었습니다."))
+                .andExpect(cookie().maxAge("accessToken", 0))
+                .andExpect(cookie().maxAge("refreshToken", 0));
+
+        // 탈퇴 후 해당 이메일로 조회했을 때 없어야 함
+        assertThat(memberService.findByEmail(email)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("로그인하지 않은 상태에서 회원 탈퇴 시도 - 실패")
+    void t13() throws Exception {
+        // 로그인 없이 회원 탈퇴 시도
+        ResultActions result = mvc
+                .perform(delete("/auth/me"))
+                .andDo(print());
+
+        result
+                .andExpect(status().isUnauthorized());
     }
 
 }

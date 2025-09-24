@@ -38,10 +38,10 @@ public class PostInitData implements ApplicationRunner {
     @Transactional
     protected void initPostData() {
         if (postRepository.count() > 0) return;
-        Member member2 = memberService.joinMentee("user2", "사용자1", "password123","");
-        Member member3 = memberService.joinMentee("user3", "사용자1", "password123", "");
-        Member member4 = memberService.joinMentee("user4", "사용자1", "password123", "");
-        Member member5 = memberService.joinMentee("user5", "사용자1", "password123", "");
+        Member member2 = memberService.joinMentee("user2", "사용자1", "닉네임1","password123","");
+        Member member3 = memberService.joinMentee("user3", "사용자1", "닉네임2","password123", "");
+        Member member4 = memberService.joinMentee("user4", "사용자1", "닉네임3","password123", "");
+        Member member5 = memberService.joinMentee("user5", "사용자1", "닉네임4","password123", "");
         // 여러 종류의 게시글 생성
         createPost("정보글 제목", "정보글 내용", member2, Post.PostType.INFORMATIONPOST);
         createPost("연습글 제목", "연습글 내용", member3, Post.PostType.PRACTICEPOST);

@@ -92,6 +92,22 @@ public class MemberService {
         return authTokenService.isValidToken(token);
     }
 
+    @Transactional
+    public void deleteMember(Member currentUser) {
+        if (currentUser == null) {
+            throw new ServiceException("401-1", "로그인이 필요합니다.");
+        }
+
+        Member member = memberRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+
+        // 관련 엔티티들 먼저 삭제
+        menteeRepository.findByMemberId(member.getId()).ifPresent(menteeRepository::delete);
+        mentorRepository.findByMemberId(member.getId()).ifPresent(mentorRepository::delete);
+
+        memberRepository.delete(member);
+    }
+
     public boolean isRefreshToken(String token) {
         return authTokenService.isRefreshToken(token);
     }
