@@ -8,6 +8,7 @@ import com.back.domain.roadmap.task.service.TaskService;
 import com.back.global.exception.ServiceException;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,13 +21,13 @@ import java.util.Collections;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/tasks")
+@RequestMapping("/tasks")
 @RequiredArgsConstructor
 public class TaskController {
     private final TaskService taskService;
     private final Rq rq;
 
-    // 검색 api
+    @Operation(summary = "키워드로 task 검색", description = "사용자가 입력한 키워드로 Task를 검색합니다.")
     @GetMapping("/search")
     public RsData<List<TaskDto>> searchTasks(@RequestParam String keyword) {
         // 입력값 검증
@@ -51,6 +52,7 @@ public class TaskController {
     }
 
     // 사용자가 새로운 기술 제안 (pending alias 생성)
+    @Operation(summary = "사용자가 새로운 Task 제안", description = "사용자가 입력한 Task 이름으로 pending 상태의(표준 Task와 연결되지 않은) TaskAlias를 생성합니다.")
     @PostMapping("/aliases/pending")
     public RsData<CreatePendingAliasResponse> createPendingAlias(@Valid @RequestBody CreatePendingAliasRequest request) {
         TaskAlias pendingAlias = taskService.createPendingAlias(request.taskName().trim());
@@ -65,6 +67,7 @@ public class TaskController {
 
     //=== 관리자용 API ===
     // 나중에 CORS 설정
+    @Operation(summary = "pending 상태의 TaskAlias 목록 조회", description = "관리자가 pending 상태의 (아직 매칭되지 않은) TaskAlias 목록을 페이징하여 조회합니다.")
     @GetMapping("/aliases/pending")
     public RsData<Page<TaskAliasDto>> getPendingTaskAliases(
             @PageableDefault(size = 10, sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable
@@ -81,6 +84,7 @@ public class TaskController {
     }
 
     // Pending alias를 기존 Task와 연결
+    @Operation(summary = "pending 상태의 alias를 기존 표준 Task와 연결", description = "관리자가 pending 상태의 (아직 매칭되지 않은) TaskAlias를 기존에 존재하는 표준 Task와 연결합니다.")
     @PutMapping("/aliases/pending/{aliasId}/link")
     public RsData<TaskAliasDetailDto> linkPendingAlias(
             @PathVariable Long aliasId,
@@ -98,6 +102,7 @@ public class TaskController {
     }
 
     // Pending alias를 새로운 Task로 등록(생성)
+    @Operation(summary = "pending 상태의 alias를 새로운 표준 Task로 등록", description = "관리자가 pending 상태의 (아직 매칭되지 않은) TaskAlias를 표준 Task로 생성하고, 해당 alias를 새 Task와 연결합니다.")
     @PostMapping("/aliases/pending/{aliasId}")
     public RsData<TaskDto> createTaskFromPending(
             @PathVariable Long aliasId
@@ -113,6 +118,7 @@ public class TaskController {
         );
     }
 
+    @Operation(summary = "pending 상태의 alias 삭제", description = "관리자가 pending 상태의 (아직 매칭되지 않은) TaskAlias를 삭제합니다. 더 이상 필요하지 않은 제안이거나, 부적절한 제안인 경우에 사용됩니다.")
     @DeleteMapping("/aliases/pending/{aliasId}")
     public RsData<Void> deletePendingAlias(@PathVariable Long aliasId) {
         validateAdminRole();
