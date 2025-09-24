@@ -17,9 +17,10 @@ public enum MentorSlotErrorCode implements ErrorCode {
 
     // 400 Slot 체크
     CANNOT_UPDATE_RESERVED_SLOT("400-6", "예약된 슬롯은 수정할 수 없습니다."),
+    CANNOT_DELETE_RESERVED_SLOT("400-7", "예약된 슬롯은 삭제할 수 없습니다."),
 
     // 403
-    NOT_OWNER("403-1", "일정의 소유주가 아닙니다."),
+    NOT_OWNER("403-1", "접근 권한이 없습니다."),
 
     // 404
     NOT_FOUND_MENTOR_SLOT("404-1", "일정 정보가 없습니다."),

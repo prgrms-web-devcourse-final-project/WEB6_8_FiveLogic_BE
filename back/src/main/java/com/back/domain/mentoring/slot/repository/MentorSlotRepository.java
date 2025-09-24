@@ -43,4 +43,6 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
         @Param("start") LocalDateTime start,
         @Param("end") LocalDateTime end
     );
+
+    long countByMentorId(Long id);
 }

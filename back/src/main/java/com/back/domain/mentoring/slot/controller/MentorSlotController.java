@@ -54,4 +54,18 @@ public class MentorSlotController {
         );
     }
 
+    @DeleteMapping("/{slotId}")
+    @Operation(summary = "멘토 슬롯 삭제", description = "멘토 슬롯을 삭제합니다. 멘토 슬롯 작성자만 접근할 수 있습니다.")
+    public RsData<Void> deleteMentorSlot(
+        @PathVariable Long slotId
+    ) {
+        Member member = rq.getActor();
+        mentorSlotService.deleteMentorSlot(slotId, member);
+
+        return new RsData<>(
+            "200",
+            "멘토링 예약 일정이 삭제되었습니다."
+        );
+    }
+
 }
