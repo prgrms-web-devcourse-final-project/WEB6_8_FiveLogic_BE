@@ -6,6 +6,8 @@ import com.back.domain.mentoring.slot.dto.response.MentorSlotResponse;
 import com.back.domain.mentoring.slot.service.MentorSlotService;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/mentor-slot")
 @RequiredArgsConstructor
+@Tag(name = "MentorSlotController", description = "멘토 슬롯(멘토의 예약 가능 일정) API")
 public class MentorSlotController {
 
     private final MentorSlotService mentorSlotService;
@@ -21,6 +24,7 @@ public class MentorSlotController {
 
     @PostMapping
     @PreAuthorize("hasRole('MENTOR')")
+    @Operation(summary = "멘토 슬롯 생성")
     public RsData<MentorSlotResponse> createMentorSlot(
         @RequestBody @Valid MentorSlotRequest reqDto
     ) {
@@ -35,6 +39,7 @@ public class MentorSlotController {
     }
 
     @PutMapping("/{slotId}")
+    @Operation(summary = "멘토 슬롯 수정")
     public RsData<MentorSlotResponse> updateMentorSlot(
         @PathVariable Long slotId,
         @RequestBody @Valid MentorSlotRequest reqDto
