@@ -24,7 +24,7 @@ public class MentorSlotController {
 
     @PostMapping
     @PreAuthorize("hasRole('MENTOR')")
-    @Operation(summary = "멘토 슬롯 생성")
+    @Operation(summary = "멘토 슬롯 생성", description = "멘토 슬롯을 생성합니다. 로그인한 멘토만 생성할 수 있습니다.")
     public RsData<MentorSlotResponse> createMentorSlot(
         @RequestBody @Valid MentorSlotRequest reqDto
     ) {
@@ -39,7 +39,7 @@ public class MentorSlotController {
     }
 
     @PutMapping("/{slotId}")
-    @Operation(summary = "멘토 슬롯 수정")
+    @Operation(summary = "멘토 슬롯 수정", description = "멘토 슬롯을 수정합니다. 멘토 슬롯 작성자만 접근할 수 있습니다.")
     public RsData<MentorSlotResponse> updateMentorSlot(
         @PathVariable Long slotId,
         @RequestBody @Valid MentorSlotRequest reqDto
