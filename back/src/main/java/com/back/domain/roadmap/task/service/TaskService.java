@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,22 +41,7 @@ public class TaskService {
     // 사용자가 입력한 키워드 기반 검색
     @Transactional(readOnly = true)
     public List<Task> searchByKeyword(String keyword){
-        // 1. Task(표준 이름) 직접 검색
-        List<Task> directMatches = taskRepository.findByNameContainingIgnoreCase(keyword);
-        Set<Long> directMatchIds = directMatches.stream()
-                .map(Task::getId)
-                .collect(Collectors.toSet());
-
-        // 2. TaskAlias(별칭) 검색
-        List<TaskAlias> aliasMatchesWithTask = taskAliasRepository.findByNameContainingIgnoreCaseWithTask(keyword);
-        List<Task> aliasMatches = aliasMatchesWithTask.stream()
-                .map(TaskAlias::getTask)
-                .filter(task -> !directMatchIds.contains(task.getId()))
-                .toList();
-
-        List<Task> results = new ArrayList<>(directMatches);
-        results.addAll(aliasMatches);
-        return results;
+        return taskRepository.findTasksByKeyword(keyword);
     }
 
     @Transactional

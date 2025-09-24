@@ -5,30 +5,29 @@ import com.back.domain.job.job.service.JobService;
 import com.back.domain.roadmap.task.entity.Task;
 import com.back.domain.roadmap.task.service.TaskService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Transactional;
 
 @Configuration
 @RequiredArgsConstructor
 @Transactional
-public class BaseInitData {
-    @Autowired
-    @Lazy
-    private BaseInitData self;
-
+public class RoadmapInitData {
     private final JobService jobService;
     private final TaskService taskService;
 
     @Bean
     ApplicationRunner baseInitDataApplicationRunner() {
         return args -> {
-            self.initJobData();
-            self.initTaskData();
+            runInitData();
         };
+    }
+
+    @Transactional
+    public void runInitData() {
+        initJobData();
+        initTaskData();
     }
 
     public void initJobData() {
