@@ -27,8 +27,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -78,13 +77,13 @@ public class PostCommentControllerTest {
     void t1() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        post("/post/comment/{post_id}", 1L)
+                        post("/post/comment/post/{post_id}", 1L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
                                            "memberId": 123,
                                            "postId": 1,
-                                           "role": "mentor", 
+                                           "role": "mentor",
                                            "comment": "댓글 내용"
                                          }
                                         """.stripIndent())
@@ -106,13 +105,13 @@ public class PostCommentControllerTest {
     void t2() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        post("/post/comment/{post_id}", 1L)
+                        post("/post/comment/post/{post_id}", 1L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
                                            "memberId": 123,
                                            "postId": 1,
-                                           "role": "mentor", 
+                                           "role": "mentor",
                                            "comment": ""
                                          }
                                         """.stripIndent())
@@ -133,7 +132,7 @@ public class PostCommentControllerTest {
     void t3() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        get("/post/comment/{post_id}", 1L)
+                        get("/post/comment/post/{post_id}", 1L)
                 )
                 .andDo(print());
 
@@ -149,6 +148,152 @@ public class PostCommentControllerTest {
 
     }
 
+    @Test
+    @DisplayName("댓글 삭제")
+    void t4() throws Exception {
+        mvc
+                .perform(
+                        post("/post/comment/post/{post_id}", 2L)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                           "memberId": 7,
+                                           "postId": 2,
+                                           "role": "mentor",
+                                           "comment": "댓글 내용"
+                                         }
+                                        """)
+                );
 
+
+
+
+        // 댓글 삭제
+        ResultActions resultActions = mvc
+                .perform(
+                        delete("/post/comment/post/{post_id}/comment", 2L)  // URL 수정
+                                .contentType(MediaType.APPLICATION_JSON)   // Content-Type 추가
+                                .content("""
+                                    {
+                                       "commentId": 9
+                                     }
+                                    """)  // Request Body 추가
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(status().isOk())  // 먼저 상태 확인
+                .andExpect(handler().handlerType(PostCommentController.class))
+                .andExpect(handler().methodName("removePostComment"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
+                .andExpect(jsonPath("$.msg").value("게시글 삭제 성공"));
+    }
+
+    @Test
+    @DisplayName("댓글 삭제 실패 - 권한 없는 사용자")
+    void t5() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        delete("/post/comment/post/{post_id}/comment", 1L)  // URL 수정
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                    {
+                                       "commentId": 1
+                                     }
+                                    """)  // Request Body 추가
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(status().isBadRequest())  // 먼저 상태 확인
+                .andExpect(handler().handlerType(PostCommentController.class))
+                .andExpect(handler().methodName("removePostComment"))
+                .andExpect(jsonPath("$.resultCode").value("400"))
+                .andExpect(jsonPath("$.msg").value("삭제 권한이 없습니다."));
+    }
+
+    @Test
+    @DisplayName("댓글 수정")
+    void t6() throws Exception {
+        mvc
+                .perform(
+                        post("/post/comment/post/{post_id}", 2L)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                           "memberId": 7,
+                                           "postId": 2,
+                                           "role": "mentor",
+                                           "comment": "댓글 내용"
+                                         }
+                                        """)
+                );
+
+
+        ResultActions resultActions = mvc
+                .perform(
+                        put("/post/comment/post/{post_id}/comment/", 2L)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                            {                        
+                                "commentId": 10,
+                                "content": "수정용 내용"
+                            }
+                            """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(PostCommentController.class))
+                .andExpect(handler().methodName("updatePostComment"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
+                .andExpect(jsonPath("$.msg").value("댓글 수정 성공"));
+    }
+
+    @Test
+    @DisplayName("댓글 수정 실패 - 권한 없는 사용자 ")
+    void t7() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        put("/post/comment/post/{post_id}/comment/", 1L)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                            {                        
+                                "commentId": 1,
+                                "content": "수정용 내용"
+                            }
+                            """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(PostCommentController.class))
+                .andExpect(handler().methodName("updatePostComment"))
+                .andExpect(jsonPath("$.resultCode").value("400"))
+                .andExpect(jsonPath("$.msg").value("수정 권한이 없습니다."));
+    }
+
+    @Test
+    @DisplayName("댓글 수정 실패 - Blank Content")
+    void t8() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        put("/post/comment/post/{post_id}/comment/", 1L)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                            {                        
+                                "commentId": 1,
+                                "content": ""
+                            }
+                            """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(PostCommentController.class))
+                .andExpect(handler().methodName("updatePostComment"))
+                .andExpect(jsonPath("$.resultCode").value("400-1"))
+                .andExpect(jsonPath("$.msg").value("content-NotBlank-공백일 수 없습니다."));
+    }
 
 }

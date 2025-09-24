@@ -3,6 +3,8 @@ package com.back.domain.post.comment.service;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.post.comment.dto.CommentAllResponse;
 import com.back.domain.post.comment.dto.CommentCreateRequest;
+import com.back.domain.post.comment.dto.CommentDeleteRequest;
+import com.back.domain.post.comment.dto.CommentModifyRequest;
 import com.back.domain.post.comment.entity.PostComment;
 import com.back.domain.post.comment.repository.PostCommentRepository;
 import com.back.domain.post.post.entity.Post;
@@ -13,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -45,5 +48,35 @@ public class PostCommentService {
         return listPostComment.stream()
                 .map(CommentAllResponse::from)
                 .toList();
+    }
+
+    public void removePostComment(Long postId, CommentDeleteRequest commentDeleteRequest, Member member) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+
+        PostComment postComment = postCommentRepository.findById(commentDeleteRequest.getCommentId()).orElseThrow(() -> new ServiceException("400", "해당 Id의 댓글이 없습니다."));
+        Member author = postComment.getMember();
+
+
+        if(!Objects.equals(member.getId(), author.getId())) {
+            throw new ServiceException("400", "삭제 권한이 없습니다.");
+        }
+
+        postCommentRepository.delete(postComment);
+
+    }
+
+    @Transactional
+    public void updatePostComment(Long postId, CommentModifyRequest commentModifyRequest, Member member) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+
+        PostComment postComment = postCommentRepository.findById(commentModifyRequest.getCommentId()).orElseThrow(() -> new ServiceException("400", "해당 Id의 댓글이 없습니다."));
+        Member author = postComment.getMember();
+
+
+        if(!Objects.equals(member.getId(), author.getId())) {
+            throw new ServiceException("400", "수정 권한이 없습니다.");
+        }
+
+        postComment.setContent(commentModifyRequest.getContent());
     }
 }
