@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @Tag(name = "MemberController", description = "회원 컨트롤러")
-public class MemberController {
+public class  MemberController {
     private final MemberService memberService;
     private final Rq rq;
     private final EmailVerificationService emailVerificationService;
@@ -80,7 +80,7 @@ public class MemberController {
     public RsData<Void> logout() {
         rq.deleteCookie("accessToken");
         rq.deleteCookie("refreshToken");
-        return new RsData<>("200-1", "로그아웃 성공");
+        return new RsData<>("200-8", "로그아웃 성공");
     }
 
     @GetMapping("/me")
@@ -99,5 +99,18 @@ public class MemberController {
         rq.setCookie("accessToken", newAccessToken);
 
         return new RsData<>("200-6", "토큰 갱신 성공");
+    }
+
+    @DeleteMapping("/me")
+    @Operation(summary = "회원 탈퇴")
+    public RsData<Void> deleteMember() {
+        Member currentUser = rq.getActor();
+        memberService.deleteMember(currentUser);
+
+        // 탈퇴 후 쿠키 삭제
+        rq.deleteCookie("accessToken");
+        rq.deleteCookie("refreshToken");
+
+        return new RsData<>("200-7", "회원 탈퇴가 완료되었습니다.");
     }
 }
