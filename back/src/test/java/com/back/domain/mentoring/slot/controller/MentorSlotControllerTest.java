@@ -135,28 +135,13 @@ class MentorSlotControllerTest {
         MentorSlot mentorSlot = mentorSlots.getFirst();
         LocalDateTime updateEndDate = mentorSlot.getEndDateTime().minusMinutes(10);
 
-        String req = """
-            {
-                "mentorId": %d,
-                "startDateTime": "%s",
-                "endDateTime": "%s"
-            }
-            """.formatted(mentor.getId(), mentorSlot.getStartDateTime(), updateEndDate);
-
-        ResultActions resultActions = mvc.perform(
-                put(MENTOR_SLOT_URL + "/" + mentorSlot.getId())
-                    .cookie(new Cookie(TOKEN, mentorToken))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(req)
-            )
-            .andDo(print());
+        ResultActions resultActions = performUpdateMentorSlot(mentor.getId(), mentorToken, mentorSlot, updateEndDate);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
         String expectedEndDate = updateEndDate.format(formatter);
 
         resultActions
-            .andExpect(handler().handlerType(MentorSlotController.class))
-            .andExpect(handler().methodName("updateMentorSlot"))
+            .andExpect(status().isOk())
             .andExpect(jsonPath("$.resultCode").value("200"))
             .andExpect(jsonPath("$.msg").value("멘토링 예약 일정이 수정되었습니다."))
             .andExpect(jsonPath("$.data.mentorSlotId").value(mentorSlot.getId()))
@@ -165,6 +150,18 @@ class MentorSlotControllerTest {
             .andExpect(jsonPath("$.data.mentoringTitle").value(mentoring.getTitle()))
             .andExpect(jsonPath("$.data.endDateTime").value(expectedEndDate))
             .andExpect(jsonPath("$.data.mentorSlotStatus").value("AVAILABLE"));
+    }
+
+    @Test
+    @DisplayName("멘토 슬롯 수정 실패 - 기존 슬롯과 겹치는지 검사")
+    void updateMentorSlotFail() throws Exception {
+        MentorSlot mentorSlot = mentorSlots.getFirst();
+        LocalDateTime updateEndDate = mentorSlots.get(1).getEndDateTime();
+
+        performUpdateMentorSlot(mentor.getId(), mentorToken, mentorSlot, updateEndDate)
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.resultCode").value("409-1"))
+            .andExpect(jsonPath("$.msg").value("선택한 시간은 이미 예약된 시간대입니다."));
     }
 
 
@@ -189,4 +186,25 @@ class MentorSlotControllerTest {
             .andExpect(handler().handlerType(MentorSlotController.class))
             .andExpect(handler().methodName("createMentorSlot"));
     }
+
+    private ResultActions performUpdateMentorSlot(Long mentorId, String token, MentorSlot mentorSlot, LocalDateTime updateEndDate) throws Exception {
+        String req = """
+            {
+                "mentorId": %d,
+                "startDateTime": "%s",
+                "endDateTime": "%s"
+            }
+            """.formatted(mentorId, mentorSlot.getStartDateTime(), updateEndDate);
+
+        return mvc.perform(
+                put(MENTOR_SLOT_URL + "/" + mentorSlot.getId())
+                    .cookie(new Cookie(TOKEN, token))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(req)
+            )
+            .andDo(print())
+            .andExpect(handler().handlerType(MentorSlotController.class))
+            .andExpect(handler().methodName("updateMentorSlot"));
+    }
+
 }
