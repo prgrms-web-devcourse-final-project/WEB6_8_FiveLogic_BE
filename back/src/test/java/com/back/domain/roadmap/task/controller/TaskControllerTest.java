@@ -45,7 +45,7 @@ class TaskControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        get("/api/tasks/search")
+                        get("/tasks/search")
                                 .param("keyword", keyword)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
@@ -74,7 +74,7 @@ class TaskControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        get("/api/tasks/search")
+                        get("/tasks/search")
                                 .param("keyword", keyword)
                 )
                 .andDo(print());
@@ -98,7 +98,7 @@ class TaskControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        get("/api/tasks/search")
+                        get("/tasks/search")
                                 .param("keyword", keyword)
                 )
                 .andDo(print());
@@ -120,7 +120,7 @@ class TaskControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        get("/api/tasks/search")
+                        get("/tasks/search")
                                 .param("keyword", keyword)
                 )
                 .andDo(print());
@@ -140,7 +140,7 @@ class TaskControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        get("/api/tasks/search")
+                        get("/tasks/search")
                                 .param("keyword", keyword)
                 )
                 .andDo(print());
@@ -160,7 +160,7 @@ class TaskControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        get("/api/tasks/search")
+                        get("/tasks/search")
                                 .param("keyword", keyword)
                 )
                 .andDo(print());
@@ -178,7 +178,7 @@ class TaskControllerTest {
     void t7() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        get("/api/tasks/search")
+                        get("/tasks/search")
                         // keyword 파라미터 없음
                 )
                 .andDo(print());
@@ -195,7 +195,7 @@ class TaskControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        get("/api/tasks/search")
+                        get("/tasks/search")
                                 .param("keyword", keywordWithSpaces)
                 )
                 .andDo(print());
@@ -217,7 +217,7 @@ class TaskControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        get("/api/tasks/search")
+                        get("/tasks/search")
                                 .param("keyword", keyword)
                 )
                 .andDo(print());
@@ -238,7 +238,7 @@ class TaskControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        get("/api/tasks/search")
+                        get("/tasks/search")
                                 .param("keyword", keyword)
                 )
                 .andDo(print());
@@ -262,7 +262,7 @@ class TaskControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        post("/api/tasks/aliases/pending")
+                        post("/tasks/aliases/pending")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody)
                 )
@@ -292,7 +292,7 @@ class TaskControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        post("/api/tasks/aliases/pending")
+                        post("/tasks/aliases/pending")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody)
                 )
@@ -317,7 +317,7 @@ class TaskControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        post("/api/tasks/aliases/pending")
+                        post("/tasks/aliases/pending")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody)
                 )
@@ -345,7 +345,7 @@ class TaskControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        post("/api/tasks/aliases/pending")
+                        post("/tasks/aliases/pending")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody)
                 )
@@ -370,7 +370,7 @@ class TaskControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        post("/api/tasks/aliases/pending")
+                        post("/tasks/aliases/pending")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody)
                 )
@@ -394,7 +394,7 @@ class TaskControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        post("/api/tasks/aliases/pending")
+                        post("/tasks/aliases/pending")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody)
                 )
