@@ -6,6 +6,7 @@ public class MemberFixture {
     private String email = "test@example.com";
     private String password = "password123";
     private String name = "Test User";
+    private String nickname = "Test Nickname";
     private Member.Role role = Member.Role.MENTEE;
     private Long id = null;
 
@@ -60,10 +61,15 @@ public class MemberFixture {
         return this;
     }
 
+    public MemberFixture withNickname(String nickname) {
+        this.nickname = nickname;
+        return this;
+    }
+
     public Member build() {
         if (id != null) {
-            return new Member(id, email, name, role);
+            return new Member(id, email, name, nickname, role);
         }
-        return new Member(email, password, name, role);
+        return new Member(email, password, name, nickname, role);
     }
 }
