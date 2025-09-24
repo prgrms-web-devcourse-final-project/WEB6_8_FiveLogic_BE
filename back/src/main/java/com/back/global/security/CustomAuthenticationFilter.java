@@ -37,7 +37,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         try {
             work(request, response, filterChain);
         } catch (Exception e) {
-            log.error("CustomAuthenticationFilter에서 예외 발생: ",e);
+            log.error("CustomAuthenticationFilter에서 예외 발생: ",e); //401 에러로 빠지는거 추적 가능
             RsData<Void> rsData = new RsData<>("401-1", "인증 오류가 발생했습니다.");
             response.setContentType("application/json;charset=UTF-8");
             response.setStatus(rsData.statusCode());
