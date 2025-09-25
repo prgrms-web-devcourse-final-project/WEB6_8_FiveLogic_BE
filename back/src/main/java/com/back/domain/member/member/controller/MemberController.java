@@ -60,6 +60,7 @@ public class  MemberController {
     }
 
     @PostMapping("/login")
+    @Operation(summary = "로그인")
     public RsData<Void> login(@RequestBody LoginRequest request) {
         Member member = memberService.login(request.email(), request.password());
 
@@ -74,6 +75,7 @@ public class  MemberController {
     }
 
     @PostMapping("/logout")
+    @Operation(summary = "로그아웃")
     public RsData<Void> logout() {
         rq.deleteCookie("accessToken");
         rq.deleteCookie("refreshToken");
@@ -81,12 +83,14 @@ public class  MemberController {
     }
 
     @GetMapping("/me")
+    @Operation(summary = "사용자 정보 조회")
     public RsData<Member> me() {
         Member actor = memberService.getCurrentUser(rq.getActor());
         return new RsData<>("200-5", "사용자 정보 조회 성공", actor);
     }
 
     @PostMapping("/refresh")
+    @Operation(summary = "토큰 갱신")
     public RsData<Void> refresh() {
         String refreshToken = rq.getCookieValue("refreshToken", "");
         Member member = memberService.refreshAccessToken(refreshToken);
