@@ -62,7 +62,7 @@ class MentorSlotControllerTest {
         Member mentorMember = memberFixture.createMentorMember();
         mentor = memberFixture.createMentor(mentorMember);
 
-        // // JWT 발급
+        // JWT 발급
         mentorToken = authTokenService.genAccessToken(mentorMember);
 
         // Mentoring
