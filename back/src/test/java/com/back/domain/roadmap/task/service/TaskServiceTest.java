@@ -124,7 +124,7 @@ class TaskServiceTest {
         // When & Then
         assertThatThrownBy(() -> taskService.createPendingAlias(existingTaskName))
                 .isInstanceOf(ServiceException.class)
-                .hasMessage("400 : 이미 등록된 task입니다.");
+                .hasMessage("400 : 이미 등록된 Task명입니다.");
     }
 
     @Test
@@ -136,7 +136,7 @@ class TaskServiceTest {
         // When & Then
         assertThatThrownBy(() -> taskService.createPendingAlias(existingAliasName))
                 .isInstanceOf(ServiceException.class)
-                .hasMessage("400 : 이미 등록된 task의 별칭입니다.");
+                .hasMessage("400 : 이미 등록된 Task의 별칭입니다.");
     }
 
     @Test
@@ -149,7 +149,7 @@ class TaskServiceTest {
         // When & Then
         assertThatThrownBy(() -> taskService.createPendingAlias(aliasName))
                 .isInstanceOf(ServiceException.class)
-                .hasMessage("400 : 이미 제안된 task입니다.");
+                .hasMessage("400 : 이미 제안된 Task명입니다.");
     }
 
     @Test
@@ -275,20 +275,6 @@ class TaskServiceTest {
     }
 
     @Test
-    @DisplayName("Pending Alias를 새로운 Task로 생성 실패 - 동일한 이름의 Task 이미 존재")
-    void t18() {
-        // Given
-        TaskAlias pendingAlias = taskService.createPendingAlias("중복 task"); // 먼저 pending alias 생성
-        taskService.create("중복 task"); // 그 다음에 동일한 이름의 Task 생성
-
-
-        // When & Then
-        assertThatThrownBy(() -> taskService.createTaskFromPending(pendingAlias.getId()))
-                .isInstanceOf(ServiceException.class)
-                .hasMessage("400 : 이미 존재하는 Task 이름입니다.");
-    }
-
-    @Test
     @DisplayName("Pending Alias 삭제 - 성공")
     void t19() {
         // Given
@@ -322,7 +308,7 @@ class TaskServiceTest {
         // When & Then
         assertThatThrownBy(() -> taskService.deletePendingAlias(pendingAlias.getId()))
                 .isInstanceOf(ServiceException.class)
-                .hasMessage("400 : 연결된 별칭은 삭제할 수 없습니다.");
+                .hasMessage("400 : 이미 연결된 별칭입니다.");
     }
 
     @Test

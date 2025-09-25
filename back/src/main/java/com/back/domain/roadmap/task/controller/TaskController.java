@@ -9,6 +9,7 @@ import com.back.global.exception.ServiceException;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +24,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/tasks")
 @RequiredArgsConstructor
+@Tag(name = "TaskController", description = "Task 컨트롤러")
 public class TaskController {
     private final TaskService taskService;
     private final Rq rq;
