@@ -21,12 +21,13 @@ public class AuthTokenService {
     public String genAccessToken(Member member) {
         String email = member.getEmail();
         String name = member.getName();
+        String nickname = member.getNickname();
         String role = member.getRole().name();
 
         return Ut.jwt.toString(
                 jwtSecretKey,
                 accessTokenExpirationSeconds,
-                Map.of("email", email, "name", name, "role", role)
+                Map.of("email", email, "name", name, "nickname", nickname, "role", role)
         );
     }
 
@@ -36,20 +37,22 @@ public class AuthTokenService {
 
         String email = (String) parsedPayload.get("email");
         String name = (String) parsedPayload.get("name");
+        String nickname = (String) parsedPayload.get("nickname");
         String role = (String) parsedPayload.get("role");
 
-        return Map.of("email", email, "name", name, "role", role);
+        return Map.of("email", email, "name", name, "nickname", nickname, "role", role);
     }
 
     public String genRefreshToken(Member member) {
         String email = member.getEmail();
         String name = member.getName();
+        String nickname = member.getNickname();
         String role = member.getRole().name();
 
         return Ut.jwt.toString(
                 jwtSecretKey,
                 refreshTokenExpirationSeconds,
-                Map.of("email", email, "name", name, "role", role, "type", "refresh")
+                Map.of("email", email, "name", name, "nickname", nickname, "role", role, "type", "refresh")
         );
     }
 

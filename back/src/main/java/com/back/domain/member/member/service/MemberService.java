@@ -1,9 +1,20 @@
 package com.back.domain.member.member.service;
 
+import com.back.domain.member.member.dto.MenteeMyPageResponse;
+import com.back.domain.member.member.dto.MenteeUpdateRequest;
+import com.back.domain.member.member.dto.MentorMyPageResponse;
+import com.back.domain.member.member.dto.MentorUpdateRequest;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.repository.MemberRepository;
+import com.back.domain.member.mentee.entity.Mentee;
+import com.back.domain.member.mentee.repository.MenteeRepository;
+import com.back.domain.member.mentor.entity.Mentor;
+import com.back.domain.member.mentor.repository.MentorRepository;
+import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 import java.util.Optional;
@@ -13,17 +24,56 @@ import java.util.Optional;
 public class MemberService {
     private final MemberRepository memberRepository;
     private final AuthTokenService authTokenService;
+    private final MentorRepository mentorRepository;
+    private final MenteeRepository menteeRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public Member join(String email, String name, String password, Member.Role role) {
+    @Transactional
+    public Member joinMentee(String email, String name, String nickname, String password, String interestedField) {
         memberRepository.findByEmail(email).ifPresent(
                 member -> {
-                    throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+                    throw new ServiceException("400-1", "이미 존재하는 이메일입니다.");
                 }
         );
 
-        Member member = new Member(email, password, name, role);
+        memberRepository.findByNickname(nickname).ifPresent(
+                member -> {
+                    throw new ServiceException("400-3", "이미 존재하는 닉네임입니다.");
+                }
+        );
 
-        return memberRepository.save(member);
+        Member member = new Member(email, passwordEncoder.encode(password), name, nickname, Member.Role.MENTEE);
+        Member savedMember = memberRepository.save(member);
+
+        // TODO: interestedField를 jobId로 매핑하는 로직 필요
+        Mentee mentee = new Mentee(savedMember, null);
+        menteeRepository.save(mentee);
+
+        return savedMember;
+    }
+
+    @Transactional
+    public Member joinMentor(String email, String name, String nickname, String password, String career, Integer careerYears) {
+        memberRepository.findByEmail(email).ifPresent(
+                member -> {
+                    throw new ServiceException("400-2", "이미 존재하는 이메일입니다.");
+                }
+        );
+
+        memberRepository.findByNickname(nickname).ifPresent(
+                member -> {
+                    throw new ServiceException("400-4", "이미 존재하는 닉네임입니다.");
+                }
+        );
+
+        Member member = new Member(email, passwordEncoder.encode(password), name, nickname, Member.Role.MENTOR);
+        Member savedMember = memberRepository.save(member);
+
+        // TODO: career를 jobId로 매핑하는 로직 필요
+        Mentor mentor = new Mentor(savedMember, null, null, careerYears);
+        mentorRepository.save(mentor);
+
+        return savedMember;
     }
 
     public Optional<Member> findByEmail(String email) {
@@ -46,7 +96,136 @@ public class MemberService {
         return authTokenService.isValidToken(token);
     }
 
+    @Transactional
+    public void deleteMember(Member currentUser) {
+        if (currentUser == null) {
+            throw new ServiceException("401-1", "로그인이 필요합니다.");
+        }
+
+        Member member = memberRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+
+        // 관련 엔티티들 먼저 삭제
+        menteeRepository.findByMemberId(member.getId()).ifPresent(menteeRepository::delete);
+        mentorRepository.findByMemberId(member.getId()).ifPresent(mentorRepository::delete);
+
+        memberRepository.delete(member);
+    }
+
     public boolean isRefreshToken(String token) {
         return authTokenService.isRefreshToken(token);
+    }
+
+    public void checkPassword(Member member, String password) {
+        if (!passwordEncoder.matches(password, member.getPassword()))
+            throw new ServiceException("401-1", "비밀번호가 일치하지 않습니다.");
+    }
+
+    public Member login(String email, String password) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new ServiceException("400-3", "존재하지 않는 이메일입니다."));
+
+        checkPassword(member, password);
+        return member;
+    }
+
+    public Member getCurrentUser(Member actor) {
+        if (actor == null) {
+            throw new ServiceException("401-1", "로그인이 필요합니다.");
+        }
+        return actor;
+    }
+
+    public Member refreshAccessToken(String refreshToken) {
+        if (refreshToken.isBlank()) {
+            throw new ServiceException("401-1", "Refresh token이 없습니다.");
+        }
+
+        // Refresh token 유효성 검증
+        if (!isValidToken(refreshToken)) {
+            throw new ServiceException("401-2", "유효하지 않은 refresh token입니다.");
+        }
+
+        // Refresh token인지 확인
+        if (!isRefreshToken(refreshToken)) {
+            throw new ServiceException("401-3", "Access token으로는 갱신할 수 없습니다.");
+        }
+
+        // Refresh token에서 사용자 정보 추출
+        Map<String, Object> payload = payload(refreshToken);
+        if (payload == null) {
+            throw new ServiceException("401-4", "토큰에서 사용자 정보를 추출할 수 없습니다.");
+        }
+
+        String email = (String) payload.get("email");
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new ServiceException("401-5", "존재하지 않는 사용자입니다."));
+    }
+
+    public MenteeMyPageResponse getMenteeMyPage(Member currentUser) {
+        Mentee mentee = menteeRepository.findByMemberId(currentUser.getId())
+                .orElseThrow(() -> new ServiceException("404-2", "멘티 정보를 찾을 수 없습니다."));
+
+        return MenteeMyPageResponse.from(currentUser, mentee);
+    }
+
+    @Transactional
+    public void updateMentee(Member currentUser, MenteeUpdateRequest request) {
+        // 닉네임 중복 체크 (본인 제외)
+        if (!currentUser.getNickname().equals(request.nickname())) {
+            memberRepository.findByNickname(request.nickname()).ifPresent(
+                    member -> {
+                        if (!member.getId().equals(currentUser.getId())) {
+                            throw new ServiceException("400-3", "이미 존재하는 닉네임입니다.");
+                        }
+                    }
+            );
+        }
+
+        // Member 정보 업데이트 (닉네임)
+        Member member = memberRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+
+        member.updateNickname(request.nickname());
+        memberRepository.save(member);
+
+        // TODO: interestedField를 jobId로 매핑하는 로직 필요 (현재는 기존 jobId 유지)
+    }
+
+    public MentorMyPageResponse getMentorMyPage(Member currentUser) {
+        Mentor mentor = mentorRepository.findByMemberId(currentUser.getId())
+                .orElseThrow(() -> new ServiceException("404-3", "멘토 정보를 찾을 수 없습니다."));
+
+        return MentorMyPageResponse.from(currentUser, mentor);
+    }
+
+    @Transactional
+    public void updateMentor(Member currentUser, MentorUpdateRequest request) {
+        // 닉네임 중복 체크 (본인 제외)
+        if (!currentUser.getNickname().equals(request.nickname())) {
+            memberRepository.findByNickname(request.nickname()).ifPresent(
+                    member -> {
+                        if (!member.getId().equals(currentUser.getId())) {
+                            throw new ServiceException("400-4", "이미 존재하는 닉네임입니다.");
+                        }
+                    }
+            );
+        }
+
+        Mentor mentor = mentorRepository.findByMemberId(currentUser.getId())
+                .orElseThrow(() -> new ServiceException("404-3", "멘토 정보를 찾을 수 없습니다."));
+
+        // Member 정보 업데이트 (닉네임)
+        Member member = memberRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+
+        member.updateNickname(request.nickname());
+        memberRepository.save(member);
+
+        // Mentor 정보 업데이트 (경력연수)
+        mentor.updateCareerYears(request.careerYears());
+        mentorRepository.save(mentor);
+
+        // TODO: career를 jobId로 매핑하는 로직 필요 (현재는 기존 jobId 유지)
     }
 }

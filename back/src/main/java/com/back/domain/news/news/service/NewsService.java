@@ -12,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.NoSuchElementException;
+
 @Service
 @RequiredArgsConstructor
 public class NewsService {
@@ -28,7 +30,7 @@ public class NewsService {
     }
 
     public News getNewsById(Long id) {
-        return newsRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("뉴스를 찾을 수 없습니다."));
+        return newsRepository.findById(id).orElseThrow(() -> new NoSuchElementException("뉴스를 찾을 수 없습니다."));
     }
 
     public News updateNews(Member member, News news, String title, Video video, String content) {

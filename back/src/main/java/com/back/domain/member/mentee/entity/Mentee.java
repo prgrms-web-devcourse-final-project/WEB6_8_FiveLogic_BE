@@ -3,6 +3,7 @@ package com.back.domain.member.mentee.entity;
 import com.back.domain.member.member.entity.Member;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -17,6 +18,7 @@ public class Mentee extends BaseEntity {
     @Column(name = "job_id")
     private Long jobId;
 
+    @Builder
     public Mentee(Member member, Long jobId) {
         this.member = member;
         this.jobId = jobId;

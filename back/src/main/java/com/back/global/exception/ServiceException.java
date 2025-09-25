@@ -1,8 +1,10 @@
 package com.back.global.exception;
 
 import com.back.global.rsData.RsData;
+import lombok.Getter;
 
 public class ServiceException extends RuntimeException {
+    @Getter
     private final String resultCode;
     private final String msg;
 
@@ -10,6 +12,12 @@ public class ServiceException extends RuntimeException {
         super(resultCode + " : " + msg);
         this.resultCode = resultCode;
         this.msg = msg;
+    }
+
+    public ServiceException(ErrorCode errorCode) {
+        super(errorCode.getCode() + " : " + errorCode.getMessage());
+        this.resultCode = errorCode.getCode();
+        this.msg = errorCode.getMessage();
     }
 
     public RsData<Void> getRsData() {

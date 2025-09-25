@@ -17,6 +17,7 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -35,7 +36,7 @@ public class VideoService {
 
     public Video getNewsByUuid(String uuid) {
         return videoRepository.findByUuid(uuid)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 비디오입니다."));
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 비디오입니다."));
     }
 
     //HeadObjectRequest 고려
@@ -60,7 +61,7 @@ public class VideoService {
 
     public URL generateDownloadUrl(String bucket, String objectKey) {
         if(!isExist(bucket, objectKey)){
-            throw new RuntimeException("요청한 파일이 존재하지 않습니다: " + objectKey);
+            throw new NoSuchElementException("요청한 파일이 존재하지 않습니다: " + objectKey);
         }
 
         GetObjectRequest request = GetObjectRequest.builder()
