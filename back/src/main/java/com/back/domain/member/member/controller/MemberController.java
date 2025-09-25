@@ -1,9 +1,6 @@
 package com.back.domain.member.member.controller;
 
-import com.back.domain.member.member.dto.LoginRequest;
-import com.back.domain.member.member.dto.MenteeSignupRequest;
-import com.back.domain.member.member.dto.MentorVerificationRequest;
-import com.back.domain.member.member.dto.MentorSignupVerifyRequest;
+import com.back.domain.member.member.dto.*;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
 import com.back.global.rq.Rq;
@@ -112,5 +109,37 @@ public class  MemberController {
         rq.deleteCookie("refreshToken");
 
         return new RsData<>("200-7", "회원 탈퇴가 완료되었습니다.");
+    }
+
+    @GetMapping("/me/mentee")
+    @Operation(summary = "멘티 마이페이지 조회")
+    public RsData<MenteeMyPageResponse> getMenteeMyPage() {
+        Member currentUser = rq.getActor();
+        MenteeMyPageResponse response = memberService.getMenteeMyPage(currentUser);
+        return new RsData<>("200-9", "멘티 정보 조회 성공", response);
+    }
+
+    @PutMapping("/me/mentee")
+    @Operation(summary = "멘티 정보 수정")
+    public RsData<Void> updateMentee(@RequestBody MenteeUpdateRequest request) {
+        Member currentUser = rq.getActor();
+        memberService.updateMentee(currentUser, request);
+        return new RsData<>("200-10", "멘티 정보 수정 성공");
+    }
+
+    @GetMapping("/me/mentor")
+    @Operation(summary = "멘토 마이페이지 조회")
+    public RsData<MentorMyPageResponse> getMentorMyPage() {
+        Member currentUser = rq.getActor();
+        MentorMyPageResponse response = memberService.getMentorMyPage(currentUser);
+        return new RsData<>("200-11", "멘토 정보 조회 성공", response);
+    }
+
+    @PutMapping("/me/mentor")
+    @Operation(summary = "멘토 정보 수정")
+    public RsData<Void> updateMentor(@RequestBody MentorUpdateRequest request) {
+        Member currentUser = rq.getActor();
+        memberService.updateMentor(currentUser, request);
+        return new RsData<>("200-12", "멘토 정보 수정 성공");
     }
 }

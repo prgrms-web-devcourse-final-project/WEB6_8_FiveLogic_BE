@@ -1,5 +1,9 @@
 package com.back.domain.member.member.service;
 
+import com.back.domain.member.member.dto.MenteeMyPageResponse;
+import com.back.domain.member.member.dto.MenteeUpdateRequest;
+import com.back.domain.member.member.dto.MentorMyPageResponse;
+import com.back.domain.member.member.dto.MentorUpdateRequest;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.repository.MemberRepository;
 import com.back.domain.member.mentee.entity.Mentee;
@@ -156,5 +160,72 @@ public class MemberService {
         String email = (String) payload.get("email");
         return memberRepository.findByEmail(email)
                 .orElseThrow(() -> new ServiceException("401-5", "존재하지 않는 사용자입니다."));
+    }
+
+    public MenteeMyPageResponse getMenteeMyPage(Member currentUser) {
+        Mentee mentee = menteeRepository.findByMemberId(currentUser.getId())
+                .orElseThrow(() -> new ServiceException("404-2", "멘티 정보를 찾을 수 없습니다."));
+
+        return MenteeMyPageResponse.from(currentUser, mentee);
+    }
+
+    @Transactional
+    public void updateMentee(Member currentUser, MenteeUpdateRequest request) {
+        // 닉네임 중복 체크 (본인 제외)
+        if (!currentUser.getNickname().equals(request.nickname())) {
+            memberRepository.findByNickname(request.nickname()).ifPresent(
+                    member -> {
+                        if (!member.getId().equals(currentUser.getId())) {
+                            throw new ServiceException("400-3", "이미 존재하는 닉네임입니다.");
+                        }
+                    }
+            );
+        }
+
+        // Member 정보 업데이트 (닉네임)
+        Member member = memberRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+
+        member.updateNickname(request.nickname());
+        memberRepository.save(member);
+
+        // TODO: interestedField를 jobId로 매핑하는 로직 필요 (현재는 기존 jobId 유지)
+    }
+
+    public MentorMyPageResponse getMentorMyPage(Member currentUser) {
+        Mentor mentor = mentorRepository.findByMemberId(currentUser.getId())
+                .orElseThrow(() -> new ServiceException("404-3", "멘토 정보를 찾을 수 없습니다."));
+
+        return MentorMyPageResponse.from(currentUser, mentor);
+    }
+
+    @Transactional
+    public void updateMentor(Member currentUser, MentorUpdateRequest request) {
+        // 닉네임 중복 체크 (본인 제외)
+        if (!currentUser.getNickname().equals(request.nickname())) {
+            memberRepository.findByNickname(request.nickname()).ifPresent(
+                    member -> {
+                        if (!member.getId().equals(currentUser.getId())) {
+                            throw new ServiceException("400-4", "이미 존재하는 닉네임입니다.");
+                        }
+                    }
+            );
+        }
+
+        Mentor mentor = mentorRepository.findByMemberId(currentUser.getId())
+                .orElseThrow(() -> new ServiceException("404-3", "멘토 정보를 찾을 수 없습니다."));
+
+        // Member 정보 업데이트 (닉네임)
+        Member member = memberRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+
+        member.updateNickname(request.nickname());
+        memberRepository.save(member);
+
+        // Mentor 정보 업데이트 (경력연수)
+        mentor.updateCareerYears(request.careerYears());
+        mentorRepository.save(mentor);
+
+        // TODO: career를 jobId로 매핑하는 로직 필요 (현재는 기존 jobId 유지)
     }
 }

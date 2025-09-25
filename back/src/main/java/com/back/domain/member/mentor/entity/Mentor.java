@@ -31,4 +31,8 @@ public class Mentor extends BaseEntity {
         this.rate = rate;
         this.careerYears = careerYears;
     }
+
+    public void updateCareerYears(Integer careerYears) {
+        this.careerYears = careerYears;
+    }
 }
