@@ -17,7 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/mentoring")
+@RequestMapping("/mentorings")
 @RequiredArgsConstructor
 @Tag(name = "MentoringController", description = "멘토링 API")
 public class MentoringController {

@@ -25,10 +25,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -49,7 +52,7 @@ class MentorSlotControllerTest {
     @Autowired private AuthTokenService authTokenService;
 
     private static final String TOKEN = "accessToken";
-    private static final String MENTOR_SLOT_URL = "/mentor-slot";
+    private static final String MENTOR_SLOT_URL = "/mentor-slots";
 
     private Mentor mentor;
     private String mentorToken;
@@ -72,6 +75,73 @@ class MentorSlotControllerTest {
         LocalDateTime baseDateTime = LocalDateTime.of(2025, 10, 1, 10, 0);
         mentorSlots = mentoringFixture.createMentorSlots(mentor, baseDateTime, 2, 3);
     }
+
+    // ===== 슬롯 목록 조회 =====
+    @Test
+    @DisplayName("멘토가 본인의 모든 슬롯 목록 조회 성공")
+    void getMyMentorSlotsSuccess() throws Exception {
+        // 캘린더 기준 (월)
+        LocalDateTime startDate = LocalDateTime.of(2025, 8, 31, 0, 0);
+        LocalDateTime endDate = LocalDateTime.of(2025, 10, 5, 0, 0);
+
+        // 경계값
+        mentoringFixture.createMentorSlot(mentor, endDate.minusMinutes(1), endDate.plusMinutes(10));
+        mentoringFixture.createMentorSlot(mentor, startDate.minusMinutes(10), startDate);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        ResultActions resultActions = mvc.perform(
+                get(MENTOR_SLOT_URL)
+                    .cookie(new Cookie(TOKEN, mentorToken))
+                    .param("startDate", startDate.format(formatter))
+                    .param("endDate", endDate.format(formatter))
+            )
+            .andDo(print());
+
+        resultActions
+            .andExpect(status().isOk())
+            .andExpect(handler().handlerType(MentorSlotController.class))
+            .andExpect(handler().methodName("getMyMentorSlots"))
+            .andExpect(jsonPath("$.resultCode").value("200"))
+            .andExpect(jsonPath("$.msg").value("나의 모든 일정 목록을 조회하였습니다."))
+            .andExpect(jsonPath("$.data").isArray())
+            .andExpect(jsonPath("$.data.length()").value(8));
+    }
+
+    @Test
+    @DisplayName("멘토의 예약 가능한 슬롯 목록 조회(멘티) 성공")
+    void getAvailableMentorSlotsSuccess() throws Exception {
+        // 캘린더 기준 (월)
+        LocalDateTime startDate = LocalDateTime.of(2025, 8, 31, 0, 0);
+        LocalDateTime endDate = LocalDateTime.of(2025, 10, 5, 0, 0);
+
+        // 경계값
+        mentoringFixture.createMentorSlot(mentor, endDate.minusMinutes(1), endDate.plusMinutes(10));
+        mentoringFixture.createMentorSlot(mentor, startDate.minusMinutes(10), startDate);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        Member menteeMember = memberFixture.createMenteeMember();
+        String token  = authTokenService.genAccessToken(menteeMember);
+
+        ResultActions resultActions = mvc.perform(
+                get(MENTOR_SLOT_URL + "/available/" + mentor.getId())
+                    .cookie(new Cookie(TOKEN, token))
+                    .param("startDate", startDate.format(formatter))
+                    .param("endDate", endDate.format(formatter))
+            )
+            .andDo(print());
+
+        resultActions
+            .andExpect(status().isOk())
+            .andExpect(handler().handlerType(MentorSlotController.class))
+            .andExpect(handler().methodName("getAvailableMentorSlots"))
+            .andExpect(jsonPath("$.resultCode").value("200"))
+            .andExpect(jsonPath("$.msg").value("멘토의 예약 가능 일정 목록을 조회하였습니다."))
+            .andExpect(jsonPath("$.data").isArray())
+            .andExpect(jsonPath("$.data.length()").value(8));
+    }
+
 
     // ===== 슬롯 조회 =====
     @Test
@@ -156,6 +226,60 @@ class MentorSlotControllerTest {
             .andExpect(status().isConflict())
             .andExpect(jsonPath("$.resultCode").value("409-1"))
             .andExpect(jsonPath("$.msg").value("선택한 시간은 이미 예약된 시간대입니다."));
+    }
+
+
+    // ===== 슬롯 반복 생성 =====
+    @Test
+    @DisplayName("멘토 슬롯 반복 생성 성공")
+    void createMentorSlotRepetitionSuccess() throws Exception {
+        String req = """
+        {
+            "repeatStartDate": "2025-11-01",
+            "repeatEndDate": "2025-11-30",
+            "daysOfWeek": ["MONDAY", "WEDNESDAY", "FRIDAY"],
+            "startTime": "10:00:00",
+            "endTime": "11:00:00"
+        }
+        """;
+
+        long beforeCount = mentorSlotRepository.countByMentorId(mentor.getId());
+
+        mvc.perform(
+                post(MENTOR_SLOT_URL + "/repetition")
+                    .cookie(new Cookie(TOKEN, mentorToken))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(req)
+            )
+            .andDo(print())
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.resultCode").value("201"))
+            .andExpect(jsonPath("$.msg").value("반복 일정을 등록했습니다."));
+
+        // 11월 월/수/금 = 13개
+        long afterCount = mentorSlotRepository.countByMentorId(mentor.getId());
+        assertThat(afterCount - beforeCount).isEqualTo(12);
+
+        List<MentorSlot> createdSlots = mentorSlotRepository.findMySlots(
+            mentor.getId(),
+            LocalDateTime.of(2025, 11, 1, 0, 0),
+            LocalDateTime.of(2025, 12, 1, 0, 0)
+        );
+        assertThat(createdSlots).hasSize(12);
+
+        // 모든 슬롯이 월/수/금인지 검증
+        Set<DayOfWeek> actualDaysOfWeek = createdSlots.stream()
+            .map(slot -> slot.getStartDateTime().getDayOfWeek())
+            .collect(Collectors.toSet());
+
+        assertThat(actualDaysOfWeek).containsExactlyInAnyOrder(
+            DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY
+        );
+
+        // 시간 검증
+        MentorSlot firstSlot = createdSlots.getFirst();
+        assertThat(firstSlot.getStartDateTime().getHour()).isEqualTo(10);
+        assertThat(firstSlot.getEndDateTime().getHour()).isEqualTo(11);
     }
 
 

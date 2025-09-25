@@ -7,7 +7,9 @@ import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
+import com.back.domain.mentoring.slot.dto.request.MentorSlotRepetitionRequest;
 import com.back.domain.mentoring.slot.dto.request.MentorSlotRequest;
+import com.back.domain.mentoring.slot.dto.response.MentorSlotDto;
 import com.back.domain.mentoring.slot.dto.response.MentorSlotResponse;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.domain.mentoring.slot.error.MentorSlotErrorCode;
@@ -17,7 +19,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -30,6 +36,31 @@ public class MentorSlotService {
     private final ReservationRepository reservationRepository;
 
     @Transactional(readOnly = true)
+    public List<MentorSlotDto> getMyMentorSlots(Member member, LocalDateTime startDate, LocalDateTime endDate) {
+        Mentor mentor = findMentorByMember(member);
+
+        DateTimeValidator.validateTime(startDate, endDate);
+
+        List<MentorSlot> availableSlots = mentorSlotRepository.findMySlots(mentor.getId(), startDate, endDate);
+
+        return availableSlots.stream()
+            .map(MentorSlotDto::from)
+            .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<MentorSlotDto> getAvailableMentorSlots(Long mentorId, LocalDateTime startDate, LocalDateTime endDate) {
+        validateMentorExists(mentorId);
+        DateTimeValidator.validateTime(startDate, endDate);
+
+        List<MentorSlot> availableSlots = mentorSlotRepository.findAvailableSlots(mentorId, startDate, endDate);
+
+        return availableSlots.stream()
+            .map(MentorSlotDto::from)
+            .toList();
+    }
+
+    @Transactional(readOnly = true)
     public MentorSlotResponse getMentorSlot(Long slotId) {
         MentorSlot mentorSlot = findMentorSlot(slotId);
         Mentoring mentoring = findMentoring(mentorSlot.getMentor());
@@ -39,10 +70,10 @@ public class MentorSlotService {
 
     @Transactional
     public MentorSlotResponse createMentorSlot(MentorSlotRequest reqDto, Member member) {
-        Mentor mentor = findMentor(member);
+        Mentor mentor = findMentorByMember(member);
         Mentoring mentoring = findMentoring(mentor);
 
-        MentorSlotValidator.validateTimeSlot(reqDto.startDateTime(), reqDto.endDateTime());
+        DateTimeValidator.validateTimeSlot(reqDto.startDateTime(), reqDto.endDateTime());
         validateOverlappingSlots(mentor, reqDto.startDateTime(), reqDto.endDateTime());
 
         MentorSlot mentorSlot = MentorSlot.builder()
@@ -56,8 +87,21 @@ public class MentorSlotService {
     }
 
     @Transactional
+    public void createMentorSlotRepetition(MentorSlotRepetitionRequest reqDto, Member member) {
+        Mentor mentor = findMentorByMember(member);
+
+        List<MentorSlot> mentorSlots = new ArrayList<>();
+
+        // 지정한 요일별로 슬롯 목록 생성
+        for(DayOfWeek targetDayOfWeek : reqDto.daysOfWeek()) {
+            mentorSlots.addAll(generateSlotsForDayOfWeek(reqDto, targetDayOfWeek, mentor));
+        }
+        mentorSlotRepository.saveAll(mentorSlots);
+    }
+
+    @Transactional
     public MentorSlotResponse updateMentorSlot(Long slotId, MentorSlotRequest reqDto, Member member) {
-        Mentor mentor = findMentor(member);
+        Mentor mentor = findMentorByMember(member);
         Mentoring mentoring = findMentoring(mentor);
         MentorSlot mentorSlot = findMentorSlot(slotId);
 
@@ -65,7 +109,7 @@ public class MentorSlotService {
         // 활성화된 예약이 있으면 수정 불가
         validateModification(mentorSlot);
 
-        MentorSlotValidator.validateTimeSlot(reqDto.startDateTime(), reqDto.endDateTime());
+        DateTimeValidator.validateTimeSlot(reqDto.startDateTime(), reqDto.endDateTime());
         validateOverlappingExcept(mentor, mentorSlot, reqDto.startDateTime(), reqDto.endDateTime());
 
         mentorSlot.updateTime(reqDto.startDateTime(), reqDto.endDateTime());
@@ -75,7 +119,7 @@ public class MentorSlotService {
 
     @Transactional
     public void deleteMentorSlot(Long slotId, Member member) {
-        Mentor mentor = findMentor(member);
+        Mentor mentor = findMentorByMember(member);
         MentorSlot mentorSlot = findMentorSlot(slotId);
 
         validateOwner(mentorSlot, mentor);
@@ -86,9 +130,45 @@ public class MentorSlotService {
     }
 
 
+    // ===== 반복 슬롯 생성 로직 =====
+
+    /**
+     * 특정 요일에 해당하는 모든 슬롯들을 생성
+     */
+    private List<MentorSlot> generateSlotsForDayOfWeek(MentorSlotRepetitionRequest reqDto, DayOfWeek targetDayOfWeek, Mentor mentor) {
+        List<MentorSlot> mentorSlots = new ArrayList<>();
+        LocalDate currentDate = findNextOrSameDayOfWeek(reqDto.repeatStartDate(), targetDayOfWeek);
+
+        // 해당 요일에 대해 주 단위로 반복하여 슬롯 생성
+        while (!currentDate.isAfter(reqDto.repeatEndDate())) {
+            LocalDateTime startDateTime = LocalDateTime.of(currentDate, reqDto.startTime());
+            LocalDateTime endDateTime = LocalDateTime.of(currentDate, reqDto.endTime());
+
+            validateOverlappingSlots(mentor, startDateTime, endDateTime);
+
+            MentorSlot mentorSlot = MentorSlot.builder()
+                .mentor(mentor)
+                .startDateTime(startDateTime)
+                .endDateTime(endDateTime)
+                .build();
+            mentorSlots.add(mentorSlot);
+
+            currentDate = currentDate.plusWeeks(1);
+        }
+        return mentorSlots;
+    }
+
+    /**
+     * 시작일부터 해당 요일의 첫 번째 날짜를 찾기
+     */
+    private LocalDate findNextOrSameDayOfWeek(LocalDate startDate, DayOfWeek targetDay) {
+        return startDate.with(TemporalAdjusters.nextOrSame(targetDay));
+    }
+
+
     // ===== 헬퍼 메서드 =====
 
-    private Mentor findMentor(Member member) {
+    private Mentor findMentorByMember(Member member) {
         return mentorRepository.findByMemberId(member.getId())
             .orElseThrow(() -> new ServiceException(MentoringErrorCode.NOT_FOUND_MENTOR));
     }
@@ -112,6 +192,12 @@ public class MentorSlotService {
     private static void validateOwner(MentorSlot mentorSlot, Mentor mentor) {
         if (!mentorSlot.isOwnerBy(mentor)) {
             throw new ServiceException(MentorSlotErrorCode.NOT_OWNER);
+        }
+    }
+
+    private void validateMentorExists(Long mentorId) {
+        if (!mentorRepository.existsById(mentorId)) {
+            throw new ServiceException(MentoringErrorCode.NOT_FOUND_MENTOR);
         }
     }
 
