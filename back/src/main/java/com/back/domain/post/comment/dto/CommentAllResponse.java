@@ -16,7 +16,7 @@ public class CommentAllResponse {
         CommentAllResponse response = new CommentAllResponse();
         response.setId(comment.getId());
         response.setContent(comment.getContent());
-        response.setAuthorName(comment.getMember().getName()); // Member에서 이름 가져오기
+        response.setAuthorName(comment.getAuthorName()); // Member에서 이름 가져오기
         response.setCreatedAt(comment.getCreateDate());
         return response;
     }

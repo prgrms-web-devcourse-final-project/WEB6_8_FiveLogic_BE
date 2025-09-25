@@ -12,7 +12,6 @@ public class PostSingleResponse {
     private String authorName;
     private LocalDateTime createdAt;
     private int viewCount;
-    private int like;
 
     public PostSingleResponse(Post post) {
         this.id = post.getId();
@@ -20,6 +19,5 @@ public class PostSingleResponse {
         this.authorName = post.getAuthorName();
         this.createdAt = post.getCreateDate();
         this.viewCount = post.getViewCount();
-        this.like = post.getLiked();
     }
 }

@@ -67,7 +67,6 @@ public class PostInitData implements ApplicationRunner {
         Post post = new Post();
         post.setTitle(title);
         post.setContent(content);
-        post.setAuthorName("테스트유저");
         post.setPostType(type);
         post.setMember(member);
 

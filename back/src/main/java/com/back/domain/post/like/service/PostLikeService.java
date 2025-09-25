@@ -41,7 +41,7 @@ public class PostLikeService {
             // 처음 좋아요
             PostLike newLike = PostLike.create(member, post, PostLike.LikeStatus.LIKE);
             postLikeRepository.save(newLike);
-            //post.setLiked(post.getLiked() + 1);
+
         }
     }
 

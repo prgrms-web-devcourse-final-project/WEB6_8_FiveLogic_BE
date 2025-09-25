@@ -26,7 +26,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom{
         if(keyword != null && !keyword.isBlank()) {
             builder.and(
                     post.title.containsIgnoreCase(keyword)
-                            .or(post.authorName.containsIgnoreCase(keyword))
+                            .or(post.member.name.containsIgnoreCase(keyword))
             );
         }
 

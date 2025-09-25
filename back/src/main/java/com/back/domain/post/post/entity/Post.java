@@ -12,6 +12,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @NoArgsConstructor
@@ -22,8 +23,6 @@ public class Post extends BaseEntity {
     private String title;
     @NotNull
     private String content;
-    @NotNull
-    private String authorName;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Member member;
@@ -41,8 +40,6 @@ public class Post extends BaseEntity {
     private List<PostComment> comments = new ArrayList<>();
 
     private int viewCount;
-
-    private int liked;
 
     private Boolean isMento;
     private String carrer;
@@ -62,12 +59,14 @@ public class Post extends BaseEntity {
     }
 
 
-    public Boolean checkAuthority(Post post, Member member) {
-        boolean eq = true;
-        Long authorId = post.getMember().getId();
-        if (authorId != member.getId()) eq = false;
-        return eq;
+    public Boolean isAuthor( Member member) {
+        return Objects.equals(this.member.getId(), member.getId());
     }
+
+    public String getAuthorName() {
+        return member.getName();
+    }
+
 
     public static void validPostType(String postTypeStr) {
         try {

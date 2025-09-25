@@ -39,8 +39,9 @@ public class PostCommentService {
 
     }
 
+    @Transactional
     public List<CommentAllResponse> getAllPostCommentResponse(Long postId) {
-        postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+        validatePostExists(postId);
 
         List<PostComment> listPostComment = postCommentRepository.findCommentsWithMemberByPostId(postId);
 
@@ -49,10 +50,11 @@ public class PostCommentService {
                 .toList();
     }
 
+    @Transactional
     public void removePostComment(Long postId, CommentDeleteRequest commentDeleteRequest, Member member) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+        validatePostExists(postId);
 
-        PostComment postComment = postCommentRepository.findById(commentDeleteRequest.getCommentId()).orElseThrow(() -> new ServiceException("400", "해당 Id의 댓글이 없습니다."));
+        PostComment postComment = getPostCommentById(commentDeleteRequest.getCommentId());
         Member author = postComment.getMember();
 
 
@@ -66,9 +68,9 @@ public class PostCommentService {
 
     @Transactional
     public void updatePostComment(Long postId, CommentModifyRequest commentModifyRequest, Member member) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+        validatePostExists(postId);
 
-        PostComment postComment = postCommentRepository.findById(commentModifyRequest.getCommentId()).orElseThrow(() -> new ServiceException("400", "해당 Id의 댓글이 없습니다."));
+        PostComment postComment = getPostCommentById(commentModifyRequest.getCommentId());
         Member author = postComment.getMember();
 
 
@@ -78,4 +80,19 @@ public class PostCommentService {
 
         postComment.setContent(commentModifyRequest.getContent());
     }
+
+
+
+    private void validatePostExists(Long postId) {
+        if (!postRepository.existsById(postId)) {
+            throw new ServiceException("400", "해당 Id의 게시글이 없습니다.");
+        }
+    }
+
+    private PostComment getPostCommentById(Long commentId) {
+        return postCommentRepository.findById(commentId).orElseThrow(() -> new ServiceException("400", "해당 Id의 댓글이 없습니다."));
+    }
+
+
+
 }

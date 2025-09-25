@@ -1,7 +1,6 @@
 package com.back.domain.post.post.service;
 
 import com.back.domain.member.member.entity.Member;
-import com.back.domain.post.like.entity.PostLike;
 import com.back.domain.post.like.repository.PostLikeRepository;
 import com.back.domain.post.post.dto.PostAllResponse;
 import com.back.domain.post.post.dto.PostCreateRequest;
@@ -19,15 +18,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class PostService {
 
     private final PostRepository postRepository;
-    private final PostLikeRepository postLikeRepository;
-    private final Rq rq;
 
     public List<Post> getAllPosts() {
         List<Post> posts = postRepository.findAll();
@@ -44,7 +40,6 @@ public class PostService {
         Post post = new Post();
         post.setTitle(postCreateRequest.getTitle());
         post.setContent(postCreateRequest.getContent());
-        post.setAuthorName(member.getName());
         post.setMember(member);
         post.setPostType(postType);
 
@@ -56,7 +51,7 @@ public class PostService {
     @Transactional
     public void removePost(Long postId, Member member) {
         Post post = findById(postId);
-        if (!post.checkAuthority(post, member)) throw new ServiceException("400", "삭제 권한이 없습니다.");
+        if (!post.isAuthor(member)) throw new ServiceException("400", "삭제 권한이 없습니다.");
 
         postRepository.delete(post);
     }
@@ -64,21 +59,12 @@ public class PostService {
     @Transactional
     public void updatePost(long postId, Member member, @Valid PostCreateRequest postCreateRequest) {
         Post post = findById(postId);
-        if (!post.checkAuthority(post, member)) throw new ServiceException("400", "수정 권한이 없습니다.");
+        if (!post.isAuthor(member)) throw new ServiceException("400", "수정 권한이 없습니다.");
 
         post.setTitle(postCreateRequest.getTitle());
         post.setContent(postCreateRequest.getContent());
 
         postRepository.save(post);
-    }
-
-
-    @Transactional()
-    public int showLikeCount(long postId) {
-        Post post = findById(postId);
-
-        int count = post.getLiked();
-        return count;
     }
 
 
@@ -93,8 +79,10 @@ public class PostService {
         return post;
     }
 
+
+
     public List<PostAllResponse> getAllPostResponse() {
-        return postRepository.findAll().stream()
+        return postRepository.findAllWithMember().stream()
                 .map(PostAllResponse::new)
                 .toList();
     }
