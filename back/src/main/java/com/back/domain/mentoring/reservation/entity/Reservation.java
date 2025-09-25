@@ -46,5 +46,17 @@ public class Reservation extends BaseEntity {
         this.mentorSlot = mentorSlot;
         this.preQuestion = preQuestion;
         this.status = ReservationStatus.PENDING;
+
+        // 양방향 동기화
+        mentorSlot.setReservation(this);
+    }
+
+    public void updateStatus(ReservationStatus status) {
+        this.status = status;
+
+        // 양방향 동기화
+        if (status.equals(ReservationStatus.CANCELED) || status.equals(ReservationStatus.REJECTED)) {
+            mentorSlot.removeReservation();
+        }
     }
 }

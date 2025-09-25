@@ -41,6 +41,11 @@ public class MentorSlot extends BaseEntity {
         this.status = MentorSlotStatus.AVAILABLE;
     }
 
+    public void updateTime(LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        this.startDateTime = startDateTime;
+        this.endDateTime = endDateTime;
+    }
+
     // =========================
     // TODO - 현재 상태
     // 1. reservation 필드에는 활성 예약(PENDING, APPROVED)만 세팅
@@ -68,14 +73,28 @@ public class MentorSlot extends BaseEntity {
         }
     }
 
+    public void setReservation(Reservation reservation) {
+        this.reservation = reservation;
+        updateStatus();
+    }
+
+    public void removeReservation() {
+        this.reservation = null;
+        updateStatus();
+    }
+
+    /**
+     * 새로운 예약이 가능한지 확인
+     * - 예약이 없거나
+     * - 예약이 취소/거절된 경우 true
+     */
     public boolean isAvailable() {
         return reservation == null ||
             reservation.getStatus().equals(ReservationStatus.REJECTED) ||
             reservation.getStatus().equals(ReservationStatus.CANCELED);
     }
 
-    public void update(LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        this.startDateTime = startDateTime;
-        this.endDateTime = endDateTime;
+    public boolean isOwnerBy(Mentor mentor) {
+        return this.mentor.equals(mentor);
     }
 }

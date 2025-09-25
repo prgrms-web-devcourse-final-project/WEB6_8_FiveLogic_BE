@@ -25,7 +25,7 @@ public class MentoringController {
     private final Rq rq;
 
     @GetMapping
-    @Operation(summary = "멘토링 목록 조회")
+    @Operation(summary = "멘토링 목록 조회", description = "멘토링 목록을 조회합니다")
     public RsData<MentoringPagingResponse> getMentorings(
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size,
@@ -42,7 +42,7 @@ public class MentoringController {
     }
 
     @GetMapping("/{mentoringId}")
-    @Operation(summary = "멘토링 상세 조회")
+    @Operation(summary = "멘토링 상세 조회", description = "특정 멘토링을 상세 조회합니다.")
     public RsData<MentoringResponse> getMentoring(
         @PathVariable Long mentoringId
     ) {
@@ -57,7 +57,7 @@ public class MentoringController {
 
     @PostMapping
     @PreAuthorize("hasRole('MENTOR')")
-    @Operation(summary = "멘토링 생성")
+    @Operation(summary = "멘토링 생성", description = "멘토링을 생성합니다. 로그인한 멘토만 생성할 수 있습니다.")
     public RsData<MentoringResponse> createMentoring(
         @RequestBody @Valid MentoringRequest reqDto
     ) {
@@ -72,7 +72,7 @@ public class MentoringController {
     }
 
     @PutMapping("/{mentoringId}")
-    @Operation(summary = "멘토링 수정")
+    @Operation(summary = "멘토링 수정", description = "멘토링을 수정합니다. 멘토링 작성자만 접근할 수 있습니다.")
     public RsData<MentoringResponse> updateMentoring(
         @PathVariable Long mentoringId,
         @RequestBody @Valid MentoringRequest reqDto
@@ -88,7 +88,7 @@ public class MentoringController {
     }
 
     @DeleteMapping("/{mentoringId}")
-    @Operation(summary = "멘토링 삭제")
+    @Operation(summary = "멘토링 삭제", description = "멘토링을 삭제합니다. 멘토링 작성자만 접근할 수 있습니다.")
     public RsData<Void> deleteMentoring(
         @PathVariable Long mentoringId
     ) {
