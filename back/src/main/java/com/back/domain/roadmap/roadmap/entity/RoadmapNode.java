@@ -10,10 +10,21 @@ import lombok.Setter;
 import java.util.List;
 
 @Entity
-@Table(name = "roadmap_node")
+@Table(name = "roadmap_node", indexes = {
+        // 노드 순회용 인덱스
+        @Index(name = "idx_roadmap_composite", columnList = "roadmap_id, roadmap_type, step_order"),
+        @Index(name = "idx_roadmap_parent", columnList = "roadmap_id, roadmap_type, parent_id")
+})
 @Getter @Setter
 @NoArgsConstructor
 public class RoadmapNode extends BaseEntity {
+    @Column(name = "roadmap_id", nullable = false)
+    private Long roadmapId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "roadmap_type", nullable = false)
+    private RoadmapType roadmapType;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private RoadmapNode parent;
@@ -33,6 +44,10 @@ public class RoadmapNode extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id")
     private Task task; // 표준 Task
+
+    public enum RoadmapType {
+        MENTOR, JOB
+    }
 
     public RoadmapNode(String rawTaskName, String description, Task task) {
         this.rawTaskName = rawTaskName;
