@@ -40,10 +40,9 @@ public class PostCommentService {
     }
 
     public List<CommentAllResponse> getAllPostCommentResponse(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+        postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
 
-        List<PostComment> listPostComment = post.getComments();
-
+        List<PostComment> listPostComment = postCommentRepository.findCommentsWithMemberByPostId(postId);
 
         return listPostComment.stream()
                 .map(CommentAllResponse::from)
