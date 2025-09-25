@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import subprocess
 from kafka import KafkaConsumer
 from kafka.errors import NoBrokersAvailable
 import boto3
@@ -26,6 +27,32 @@ s3 = boto3.client(
     aws_access_key_id=MINIO_ACCESS_KEY,
     aws_secret_access_key=MINIO_SECRET_KEY
 )
+def is_video(file_path):
+    try:
+        cmd = [
+            "ffprobe",
+            "-v", "error",
+            "-select_streams", "v:0",
+            "-show_entries", "stream=codec_type",
+            "-of", "default=noprint_wrappers=1:nokey=1",
+            file_path
+        ]
+        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode().strip()
+        return output == "video"
+    except Exception:
+        return False
+
+def encode_dash(input_file, output_dir):
+    os.makedirs(output_dir, exist_ok=True)
+    cmd = [
+        "ffmpeg",
+        "-i", input_file,
+        "-c:v", "libx264",
+        "-c:a", "aac",
+        "-f", "dash",
+        os.path.join(output_dir, "manifest.mpd")
+    ]
+    subprocess.run(cmd, check=True)
 
 # Kafka Consumer 연결 재시도
 while True:
@@ -57,5 +84,12 @@ for msg in consumer:
         s3.download_file(bucket, key, download_path)
         print(f"다운로드 완료: {download_path}")
 
+        # 영상인지 확인 후 DASH 인코딩
+        if is_video(download_path):
+            dash_output_dir = os.path.join(DOWNLOAD_DIR, "dash_" + os.path.splitext(key)[0])
+            encode_dash(download_path, dash_output_dir)
+            print(f"DASH 인코딩 완료: {dash_output_dir}")
+        else:
+            print(f"영상 아님, 인코딩 스킵: {download_path}")
     except Exception as e:
         print("오류:", e)
