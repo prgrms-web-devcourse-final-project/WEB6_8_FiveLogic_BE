@@ -28,6 +28,28 @@ public class MentorSlotController {
     private final MentorSlotService mentorSlotService;
     private final Rq rq;
 
+    @GetMapping
+    @PreAuthorize("hasRole('MENTOR')")
+    @Operation(summary = "멘토의 모든 슬롯 목록 조회", description = "멘토가 본인의 모든 슬롯(예약된 슬롯 포함) 목록을 조회합니다.")
+    public RsData<List<MentorSlotDto>> getMyMentorSlots(
+        @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+        @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate
+    ) {
+        Member member = rq.getActor();
+
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atStartOfDay();
+
+        List<MentorSlotDto> resDtoList = mentorSlotService.getMyMentorSlots(member, startDateTime, endDateTime);
+
+        return new RsData<>(
+            "200",
+            "나의 모든 일정 목록을 조회하였습니다.",
+            resDtoList
+        );
+    }
+
+
     @GetMapping("/available/{mentorId}")
     @Operation(summary = "멘토의 예약 가능한 슬롯 목록 조회", description = "멘티가 특정 멘토의 예약 가능한 슬롯 목록을 조회합니다.")
     public RsData<List<MentorSlotDto>> getAvailableMentorSlots(

@@ -31,6 +31,19 @@ public class MentorSlotService {
     private final ReservationRepository reservationRepository;
 
     @Transactional(readOnly = true)
+    public List<MentorSlotDto> getMyMentorSlots(Member member, LocalDateTime startDate, LocalDateTime endDate) {
+        Mentor mentor = findMentorByMember(member);
+
+        DateTimeValidator.validateTime(startDate, endDate);
+
+        List<MentorSlot> availableSlots = mentorSlotRepository.findMySlots(mentor.getId(), startDate, endDate);
+
+        return availableSlots.stream()
+            .map(MentorSlotDto::from)
+            .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<MentorSlotDto> getAvailableMentorSlots(Long mentorId, LocalDateTime startDate, LocalDateTime endDate) {
         validateMentorExists(mentorId);
         DateTimeValidator.validateTime(startDate, endDate);

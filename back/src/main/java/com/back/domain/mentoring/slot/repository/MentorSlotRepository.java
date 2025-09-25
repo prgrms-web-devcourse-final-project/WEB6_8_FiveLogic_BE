@@ -20,6 +20,20 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
         SELECT ms
         FROM MentorSlot ms
         WHERE ms.mentor.id = :mentorId
+        AND ms.startDateTime < :end
+        AND ms.endDateTime >= :start
+        ORDER BY ms.startDateTime ASC
+        """)
+    List<MentorSlot> findMySlots(
+        @Param("mentorId") Long mentorId,
+        @Param("start") LocalDateTime start,
+        @Param("end") LocalDateTime end
+    );
+
+    @Query("""
+        SELECT ms
+        FROM MentorSlot ms
+        WHERE ms.mentor.id = :mentorId
         AND ms.status = 'AVAILABLE'
         AND ms.startDateTime < :end
         AND ms.endDateTime >= :start
