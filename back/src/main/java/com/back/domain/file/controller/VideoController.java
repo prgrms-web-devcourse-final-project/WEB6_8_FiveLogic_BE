@@ -18,16 +18,17 @@ public class VideoController {
 
     // 업로드용 Presigned URL
     @GetMapping("/videos/upload-url")
-    public URL getUploadUrl(@RequestParam String fileName) {
-        return videoService.generateUploadUrl("test-bucket", fileName);
+    public URL getUploadUrl(@RequestParam String bucket, @RequestParam String fileName) {
+        return videoService.generateUploadUrl(bucket, fileName);
     }
 
     // DASH 스트리밍용 URL
     @GetMapping("/videos/dash-urls")
     public Map<String, URL> getDashUrls(
+            @RequestParam String bucket,
             @RequestParam String mpdFile,
             @RequestParam List<String> segmentFiles
     ) {
-        return videoService.generateDashUrls("test-bucket", mpdFile, segmentFiles);
+        return videoService.generateDashUrls(bucket, mpdFile, segmentFiles);
     }
 }
