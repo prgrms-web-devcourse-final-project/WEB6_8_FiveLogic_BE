@@ -30,12 +30,14 @@ public class MemberService {
 
     @Transactional
     public Member joinMentee(String email, String name, String nickname, String password, String interestedField) {
+        // 활성 사용자 중 이메일 중복 체크 (탈퇴한 사용자 제외)
         memberRepository.findByEmail(email).ifPresent(
                 member -> {
                     throw new ServiceException("400-1", "이미 존재하는 이메일입니다.");
                 }
         );
 
+        // 활성 사용자 중 닉네임 중복 체크 (탈퇴한 사용자 제외)
         memberRepository.findByNickname(nickname).ifPresent(
                 member -> {
                     throw new ServiceException("400-3", "이미 존재하는 닉네임입니다.");
@@ -54,12 +56,14 @@ public class MemberService {
 
     @Transactional
     public Member joinMentor(String email, String name, String nickname, String password, String career, Integer careerYears) {
+        // 활성 사용자 중 이메일 중복 체크 (탈퇴한 사용자 제외)
         memberRepository.findByEmail(email).ifPresent(
                 member -> {
                     throw new ServiceException("400-2", "이미 존재하는 이메일입니다.");
                 }
         );
 
+        // 활성 사용자 중 닉네임 중복 체크 (탈퇴한 사용자 제외)
         memberRepository.findByNickname(nickname).ifPresent(
                 member -> {
                     throw new ServiceException("400-4", "이미 존재하는 닉네임입니다.");
@@ -105,11 +109,20 @@ public class MemberService {
         Member member = memberRepository.findById(currentUser.getId())
                 .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
 
-        // 관련 엔티티들 먼저 삭제
-        menteeRepository.findByMemberId(member.getId()).ifPresent(menteeRepository::delete);
-        mentorRepository.findByMemberId(member.getId()).ifPresent(mentorRepository::delete);
+        // 소프트 삭제 처리
+        member.delete();
+        memberRepository.save(member);
 
-        memberRepository.delete(member);
+        // 관련 엔티티들도 소프트 삭제
+        menteeRepository.findByMemberIdIncludingDeleted(member.getId()).ifPresent(mentee -> {
+            mentee.delete();
+            menteeRepository.save(mentee);
+        });
+
+        mentorRepository.findByMemberIdIncludingDeleted(member.getId()).ifPresent(mentor -> {
+            mentor.delete();
+            mentorRepository.save(mentor);
+        });
     }
 
     public boolean isRefreshToken(String token) {
@@ -171,7 +184,7 @@ public class MemberService {
 
     @Transactional
     public void updateMentee(Member currentUser, MenteeUpdateRequest request) {
-        // 닉네임 중복 체크 (본인 제외)
+        // 활성 사용자 중 닉네임 중복 체크 (본인 제외, 탈퇴한 사용자 제외)
         if (!currentUser.getNickname().equals(request.nickname())) {
             memberRepository.findByNickname(request.nickname()).ifPresent(
                     member -> {
@@ -201,7 +214,7 @@ public class MemberService {
 
     @Transactional
     public void updateMentor(Member currentUser, MentorUpdateRequest request) {
-        // 닉네임 중복 체크 (본인 제외)
+        // 활성 사용자 중 닉네임 중복 체크 (본인 제외, 탈퇴한 사용자 제외)
         if (!currentUser.getNickname().equals(request.nickname())) {
             memberRepository.findByNickname(request.nickname()).ifPresent(
                     member -> {

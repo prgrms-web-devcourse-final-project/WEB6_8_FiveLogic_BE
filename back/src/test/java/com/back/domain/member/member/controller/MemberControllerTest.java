@@ -480,8 +480,11 @@ public class MemberControllerTest {
                 .andExpect(cookie().maxAge("accessToken", 0))
                 .andExpect(cookie().maxAge("refreshToken", 0));
 
-        // 탈퇴 후 해당 이메일로 조회했을 때 없어야 함
+        // 소프트 삭제이므로 일반 조회에서는 없어야 함
         assertThat(memberService.findByEmail(email)).isEmpty();
+
+        // 하지만 삭제 포함 조회에서는 존재해야 함 (삭제 상태로)
+        // memberRepository.findByEmailIncludingDeleted(email)로 조회하면 존재해야 함
     }
 
     @Test
@@ -716,6 +719,95 @@ public class MemberControllerTest {
 
         result
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("탈퇴한 회원으로 로그인 시도 - 실패")
+    void t22() throws Exception {
+        // 멘티 회원가입
+        String email = "deleted@example.com";
+        memberService.joinMentee(email, "탈퇴대상", "탈퇴닉네임", "password123", "Backend");
+
+        // 로그인하여 회원 탈퇴
+        ResultActions loginResult = mvc.perform(
+                post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(String.format("""
+                                {
+                                    "email": "%s",
+                                    "password": "password123"
+                                }
+                                """, email))
+        );
+
+        Cookie accessToken = loginResult.andReturn().getResponse().getCookie("accessToken");
+
+        // 회원 탈퇴
+        mvc.perform(delete("/auth/me").cookie(accessToken));
+
+        // 탈퇴한 계정으로 다시 로그인 시도
+        ResultActions result = mvc
+                .perform(
+                        post("/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(String.format("""
+                                        {
+                                            "email": "%s",
+                                            "password": "password123"
+                                        }
+                                        """, email))
+                )
+                .andDo(print());
+
+        result
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resultCode").value("400-3"))
+                .andExpect(jsonPath("$.msg").value("존재하지 않는 이메일입니다."));
+    }
+
+    @Test
+    @DisplayName("탈퇴한 회원과 동일한 이메일로 재가입 가능")
+    void t23() throws Exception {
+        // 멘티 회원가입
+        String email = "reuse@example.com";
+        memberService.joinMentee(email, "첫번째사용자", "첫닉네임", "password123", "Backend");
+
+        // 로그인하여 회원 탈퇴
+        ResultActions loginResult = mvc.perform(
+                post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(String.format("""
+                                {
+                                    "email": "%s",
+                                    "password": "password123"
+                                }
+                                """, email))
+        );
+
+        Cookie accessToken = loginResult.andReturn().getResponse().getCookie("accessToken");
+        mvc.perform(delete("/auth/me").cookie(accessToken));
+
+        // 동일한 이메일로 재가입 시도
+        ResultActions result = mvc
+                .perform(
+                        post("/auth/signup/mentee")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(String.format("""
+                                        {
+                                            "email": "%s",
+                                            "password": "newpassword123",
+                                            "name": "두번째사용자",
+                                            "nickname": "새닉네임",
+                                            "interestedField": "Frontend"
+                                        }
+                                        """, email))
+                )
+                .andDo(print());
+
+        result
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.msg").value("멘티 회원가입 성공"));
     }
 
 }
