@@ -45,6 +45,7 @@ public class MentoringFixture {
         );
     }
 
+    // TODO: saveAll로 변경 필요
     public List<Mentoring> createMentorings(Mentor mentor, int count) {
         return IntStream.range(0, count)
             .mapToObj(i -> createMentoring(mentor))
@@ -68,8 +69,7 @@ public class MentoringFixture {
         return createMentorSlot(mentor,baseDateTime, baseDateTime.minusHours(1));
     }
 
-    public List<MentorSlot> createMentorSlots(Mentor mentor, int days, int slots) {
-        LocalDateTime baseDateTime = LocalDateTime.of(2025, 9, 30, 10, 0);
+    public List<MentorSlot> createMentorSlots(Mentor mentor, LocalDateTime baseDateTime, int days, int slots) {
         List<MentorSlot> mentorSlots = new ArrayList<>();
 
         // days 반복

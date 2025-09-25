@@ -21,6 +21,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -103,7 +104,7 @@ class VideoServiceTest {
         try {
             videoService.getNewsByUuid(uuid);
         } catch (Exception e) {
-            assertThat(e).isInstanceOf(IllegalArgumentException.class);
+            assertThat(e).isInstanceOf(NoSuchElementException.class);
             assertThat(e.getMessage()).isEqualTo("존재하지 않는 비디오입니다.");
         }
     }

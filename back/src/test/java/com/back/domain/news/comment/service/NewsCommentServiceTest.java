@@ -14,8 +14,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.security.access.AccessDeniedException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,7 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class PostCommentServiceTest {
+class NewsCommentServiceTest {
 
     @Mock
     private CommentRepository commentRepository;
@@ -110,11 +112,12 @@ class PostCommentServiceTest {
         when(commentRepository.findById(nonExistentCommentId)).thenReturn(Optional.empty());
 
         // when & then
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        NoSuchElementException exception = assertThrows(NoSuchElementException.class, () -> {
             commentService.updateComment(member, news, nonExistentCommentId, updatedContent);
         });
 
-        assertThat(exception.getMessage()).isEqualTo("Comment not found");
+
+        assertThat(exception.getMessage()).isEqualTo("Comment not found: " + nonExistentCommentId);
         verify(commentRepository, times(1)).findById(nonExistentCommentId);
     }
 
@@ -132,7 +135,7 @@ class PostCommentServiceTest {
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(existingComment));
 
         // when & then
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> {
             commentService.updateComment(otherMember, news, commentId, updatedContent);
         });
 
@@ -193,11 +196,11 @@ class PostCommentServiceTest {
         when(commentRepository.findById(nonExistentCommentId)).thenReturn(Optional.empty());
 
         // when & then
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        NoSuchElementException exception = assertThrows(NoSuchElementException.class, () -> {
             commentService.deleteComment(member, news, nonExistentCommentId);
         });
 
-        assertThat(exception.getMessage()).isEqualTo("Comment not found");
+        assertThat(exception.getMessage()).isEqualTo("Comment not found: " + nonExistentCommentId);
         verify(commentRepository, times(1)).findById(nonExistentCommentId);
         verify(commentRepository, never()).delete(any(Comment.class));
     }
@@ -215,7 +218,7 @@ class PostCommentServiceTest {
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(existingComment));
 
         // when & then
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> {
             commentService.deleteComment(otherMember, news, commentId);
         });
 
