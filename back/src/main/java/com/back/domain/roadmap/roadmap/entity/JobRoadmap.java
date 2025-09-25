@@ -5,6 +5,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "job_roadmap")
@@ -14,12 +18,19 @@ public class JobRoadmap extends BaseEntity {
     @Column(name = "job_id", nullable = false)
     private Long jobId; // Job FK
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "root_node_id", nullable = false)
-    private RoadmapNode rootNode;
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "roadmap_id") // RoadmapNode.roadmapId 참조
+    @SQLRestriction("roadmap_type = 'JOB'")
+    @OrderBy("stepOrder ASC")
+    private List<RoadmapNode> nodes;
 
-    public JobRoadmap(Long jobId, RoadmapNode rootNode) {
+    public JobRoadmap(Long jobId) {
         this.jobId = jobId;
-        this.rootNode = rootNode;
+        this.nodes = new ArrayList<>();
     }
+
+    public RoadmapNode getRootNode() {
+        return nodes.isEmpty() ? null : nodes.get(0);
+    }
+
 }

@@ -9,19 +9,25 @@ import java.util.Optional;
 
 public interface MentorRoadmapRepository extends JpaRepository<MentorRoadmap, Long> {
 
-    @Query("""
-        SELECT mr FROM MentorRoadmap mr
-        JOIN FETCH mr.rootNode rn
-        WHERE mr.id = :id
-        """)
-    Optional<MentorRoadmap> findByIdWithRootNode(@Param("id") Long id);
+    // 사용하지 않는 메서드 - 필요시 활성화
+    // @Query("""
+    //     SELECT mr FROM MentorRoadmap mr
+    //     LEFT JOIN FETCH mr.nodes n
+    //     LEFT JOIN FETCH n.task
+    //     WHERE mr.id = :id
+    //     """)
+    // Optional<MentorRoadmap> findByIdWithNodes(@Param("id") Long id);
 
     @Query("""
         SELECT mr FROM MentorRoadmap mr
+        LEFT JOIN FETCH mr.nodes n
+        LEFT JOIN FETCH n.task
         WHERE mr.mentorId = :mentorId
-        ORDER BY mr.createDate DESC
         """)
-    Optional<MentorRoadmap> findByMentorId(@Param("mentorId") Long mentorId);
+    Optional<MentorRoadmap> findByMentorIdWithNodes(@Param("mentorId") Long mentorId);
+
+    // 기본 정보만 조회하는 메서드도 유지
+    Optional<MentorRoadmap> findByMentorId(Long mentorId);
 
     boolean existsByMentorId(Long mentorId);
 }

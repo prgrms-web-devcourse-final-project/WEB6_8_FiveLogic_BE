@@ -9,20 +9,15 @@ import com.back.global.exception.ServiceException;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
-
-@Tag(name = "MentorRoadmap", description = "멘토 로드맵 관리 API")
 @RestController
 @RequestMapping("/mentor-roadmaps")
 @RequiredArgsConstructor
-@SecurityRequirement(name = "cookieAuth")
+@Tag(name = "MentorRoadmap", description = "멘토 로드맵 관리 API")
 public class MentorRoadmapController {
     private final MentorRoadmapService mentorRoadmapService;
     private final Rq rq;
@@ -34,13 +29,16 @@ public class MentorRoadmapController {
 
                     **주요 특징:**
                     - 멘토는 하나의 로드맵만 생성 가능
-                    - TaskId는 선택사항 (기존 Task와 연결하거나 null 가능)
-                    - TaskName은 필수 (표시용 이름)
-                    - 노드들은 stepOrder 순으로 자동 정렬
+                    - TaskId는 nullable (DB에 있는 Task 중 선택하게 하고, 원하는 Task 없는 경우 null 가능)
+                    - TaskName은 필수 (표시용 이름. DB에 있는 Task 선택시 해당 taskName으로 저장, 없는 경우 입력한 이름으로 저장)
+                    - 노드들은 stepOrder 순으로 자동 정렬(멘토 로드맵은 선형으로만 구성)
 
                     **사용 시나리오:**
-                    1. TaskController로 Task 검색/생성
-                    2. 선택된 TaskId + TaskName으로 로드맵 생성
+                    1. TaskController로 Task 검색
+                    2. Task 선택 시 TaskId와 TaskName 획득
+                    3. Task 없는 경우 TaskId null, TaskName 직접 입력
+                    4. 노드 설명과 입력
+                    5. stepOrder는 1부터 시작하는 연속된 숫자로 자동으로 설정
                     """
     )
     @PostMapping
@@ -59,7 +57,7 @@ public class MentorRoadmapController {
     @Operation(
             summary = "멘토 로드맵 상세 조회",
             description = """
-                    로드맵 ID로 멘토 로드맵 상세 정보를 조회합니다.
+                    멘토 ID로 멘토 로드맵 상세 정보를 조회합니다.
 
                     **반환 정보:**
                     - 로드맵 기본 정보 (제목, 설명, 생성일 등)
@@ -67,48 +65,14 @@ public class MentorRoadmapController {
                     - Task 연결 정보 (표준 Task와 연결된 경우)
                     """
     )
-    @GetMapping("/{id}")
-    public RsData<MentorRoadmapResponse> getById(
-            @Parameter(description = "로드맵 ID", required = true)
-            @PathVariable Long id) {
-
-        MentorRoadmapResponse response = mentorRoadmapService.getById(id);
+    @GetMapping("/{mentorId}")
+    public RsData<MentorRoadmapResponse> getByMentorId(@PathVariable Long mentorId) {
+        MentorRoadmapResponse response = mentorRoadmapService.getByMentorId(mentorId);
 
         return new RsData<>(
                 "200",
                 "멘토 로드맵 조회 성공",
                 response
-        );
-    }
-
-    @Operation(
-            summary = "본인의 멘토 로드맵 조회",
-            description = """
-                    현재 로그인한 멘토의 로드맵을 조회합니다.
-
-                    **응답 케이스:**
-                    - 로드맵이 있는 경우: 200 상태코드로 로드맵 정보 반환
-                    - 로드맵이 없는 경우: 200 상태코드로 null 반환
-                    """
-    )
-    @GetMapping("/my")
-    public RsData<MentorRoadmapResponse> getMy() {
-        Member member = validateMentorAuth();
-
-        Optional<MentorRoadmapResponse> responseOpt = mentorRoadmapService.getByMentorId(member.getId());
-
-        if (responseOpt.isEmpty()) {
-            return new RsData<>(
-                    "200",
-                    "생성된 로드맵이 없습니다.",
-                    null
-            );
-        }
-
-        return new RsData<>(
-                "200",
-                "내 로드맵 조회 성공",
-                responseOpt.get()
         );
     }
 
@@ -126,9 +90,7 @@ public class MentorRoadmapController {
                     """
     )
     @DeleteMapping("/{id}")
-    public RsData<Void> delete(
-            @Parameter(description = "로드맵 ID", required = true)
-            @PathVariable Long id) {
+    public RsData<Void> delete( @PathVariable Long id) {
 
         Member member = validateMentorAuth();
 
