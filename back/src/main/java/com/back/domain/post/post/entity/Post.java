@@ -2,6 +2,7 @@ package com.back.domain.post.post.entity;
 
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.post.comment.entity.PostComment;
+import com.back.global.exception.ServiceException;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -58,5 +59,21 @@ public class Post extends BaseEntity {
     public void removeComment(PostComment comment) {
         comments.remove(comment);
         comment.setPost(null);
+    }
+
+
+    public Boolean checkAuthority(Post post, Member member) {
+        boolean eq = true;
+        Long authorId = post.getMember().getId();
+        if (authorId != member.getId()) eq = false;
+        return eq;
+    }
+
+    public static void validPostType(String postTypeStr) {
+        try {
+            Post.PostType.valueOf(postTypeStr);
+        } catch (IllegalArgumentException e) {
+            throw new ServiceException("400-2", "유효하지 않은 PostType입니다.");
+        }
     }
 }

@@ -1,9 +1,12 @@
 package com.back.domain.post.post.dto;
 
-public class PostLikedResponse {
-    int liked;
+import lombok.Data;
 
-    public PostLikedResponse(int liked) {
-        this.liked= liked;
+@Data
+public class PostLikedResponse {
+    private int likeCount;
+
+    public PostLikedResponse(int likeCount) {
+        this.likeCount = likeCount;
     }
 }
