@@ -1,6 +1,7 @@
 package com.back.domain.mentoring.slot.controller;
 
 import com.back.domain.member.member.entity.Member;
+import com.back.domain.mentoring.slot.dto.MentorSlotDto;
 import com.back.domain.mentoring.slot.dto.request.MentorSlotRequest;
 import com.back.domain.mentoring.slot.dto.response.MentorSlotResponse;
 import com.back.domain.mentoring.slot.service.MentorSlotService;
@@ -10,8 +11,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/mentor-slot")
@@ -21,6 +27,25 @@ public class MentorSlotController {
 
     private final MentorSlotService mentorSlotService;
     private final Rq rq;
+
+    @GetMapping("/available/{mentorId}")
+    @Operation(summary = "멘토의 예약 가능한 슬롯 목록 조회", description = "멘티가 특정 멘토의 예약 가능한 슬롯 목록을 조회합니다.")
+    public RsData<List<MentorSlotDto>> getAvailableMentorSlots(
+        @PathVariable Long mentorId,
+        @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+        @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate
+    ) {
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atStartOfDay();
+
+        List<MentorSlotDto> resDtoList = mentorSlotService.getAvailableMentorSlots(mentorId, startDateTime, endDateTime);
+
+        return new RsData<>(
+            "200",
+            "멘토의 예약 가능 일정 목록을 조회하였습니다.",
+            resDtoList
+        );
+    }
 
     @GetMapping("/{slotId}")
     @Operation(summary = "멘토 슬롯 조회", description = "특정 멘토 슬롯을 조회합니다.")

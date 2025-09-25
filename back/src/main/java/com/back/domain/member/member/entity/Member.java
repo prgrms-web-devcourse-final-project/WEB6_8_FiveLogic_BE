@@ -1,17 +1,19 @@
 package com.back.domain.member.member.entity;
 
 import com.back.global.jpa.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.UUID;
 
 @Entity
 @Getter
 @NoArgsConstructor
 public class Member extends BaseEntity {
+    @Column(unique = true, nullable = false, length = 36)
+    private String publicId;
+
     @Column(unique = true, nullable = false)
     private String email;
 
@@ -50,5 +52,12 @@ public class Member extends BaseEntity {
         this.name = name;
         this.nickname = nickname;
         this.role = role;
+    }
+
+    @PrePersist
+    public void generatePublicId() {
+        if (this.publicId == null) {
+            this.publicId = UUID.randomUUID().toString();
+        }
     }
 }

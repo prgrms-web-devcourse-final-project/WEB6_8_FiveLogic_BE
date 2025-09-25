@@ -73,6 +73,42 @@ class MentorSlotControllerTest {
         mentorSlots = mentoringFixture.createMentorSlots(mentor, baseDateTime, 2, 3);
     }
 
+    // ===== 슬롯 상세 조회 =====
+    @Test
+    @DisplayName("멘토의 예약 가능한 슬롯 목록 조회(멘티) 성공")
+    void getAvailableMentorSlotsSuccess() throws Exception {
+        // 캘린더 기준 (월)
+        LocalDateTime startDate = LocalDateTime.of(2025, 8, 31, 0, 0);
+        LocalDateTime endDate = LocalDateTime.of(2025, 10, 5, 0, 0);
+
+        // 경계값
+        mentoringFixture.createMentorSlot(mentor, endDate.minusMinutes(1), endDate.plusMinutes(10));
+        mentoringFixture.createMentorSlot(mentor, startDate.minusMinutes(10), startDate);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        Member menteeMember = memberFixture.createMenteeMember();
+        String token  = authTokenService.genAccessToken(menteeMember);
+
+        ResultActions resultActions = mvc.perform(
+                get(MENTOR_SLOT_URL + "/available/" + mentor.getId())
+                    .cookie(new Cookie(TOKEN, token))
+                    .param("startDate", startDate.format(formatter))
+                    .param("endDate", endDate.format(formatter))
+            )
+            .andDo(print());
+
+        resultActions
+            .andExpect(status().isOk())
+            .andExpect(handler().handlerType(MentorSlotController.class))
+            .andExpect(handler().methodName("getAvailableMentorSlots"))
+            .andExpect(jsonPath("$.resultCode").value("200"))
+            .andExpect(jsonPath("$.msg").value("멘토의 예약 가능 일정 목록을 조회하였습니다."))
+            .andExpect(jsonPath("$.data").isArray())
+            .andExpect(jsonPath("$.data.length()").value(8));
+    }
+
+
     // ===== 슬롯 조회 =====
     @Test
     @DisplayName("멘토 슬롯 조회 성공")

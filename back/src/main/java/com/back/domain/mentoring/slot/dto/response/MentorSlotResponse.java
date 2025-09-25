@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 
 public record MentorSlotResponse(
-    @Schema(description = "멘토링 슬롯 ID")
+    @Schema(description = "멘토 슬롯 ID")
     Long mentorSlotId,
 
     @Schema(description = "멘토 ID")

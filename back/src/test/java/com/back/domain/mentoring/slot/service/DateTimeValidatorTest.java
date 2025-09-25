@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class MentorSlotValidatorTest {
+class DateTimeValidatorTest {
 
     @Test
     @DisplayName("시작 일시, 종료 일시 기입 시 정상 처리")
@@ -19,7 +19,7 @@ class MentorSlotValidatorTest {
         LocalDateTime end = LocalDateTime.now().plusHours(2);
 
         // when & then
-        assertDoesNotThrow(() -> MentorSlotValidator.validateNotNull(start, end));
+        assertDoesNotThrow(() -> DateTimeValidator.validateNotNull(start, end));
     }
 
     @Test
@@ -30,7 +30,7 @@ class MentorSlotValidatorTest {
 
         // when & then
         ServiceException exception = assertThrows(ServiceException.class,
-            () -> MentorSlotValidator.validateNotNull(null, end));
+            () -> DateTimeValidator.validateNotNull(null, end));
 
         assertEquals(MentorSlotErrorCode.START_TIME_REQUIRED.getCode(), exception.getResultCode());
     }
@@ -43,48 +43,48 @@ class MentorSlotValidatorTest {
 
         // when & then
         ServiceException exception = assertThrows(ServiceException.class,
-            () -> MentorSlotValidator.validateNotNull(start, null));
+            () -> DateTimeValidator.validateNotNull(start, null));
 
         assertEquals(MentorSlotErrorCode.END_TIME_REQUIRED.getCode(), exception.getResultCode());
     }
 
     @Test
-    @DisplayName("현재 이후의 시작 일시, 종료 일시 기입 시 정상 처리")
-    void validateTimeRange_success() {
-        // given
-        LocalDateTime start = LocalDateTime.now().plusHours(1);
-        LocalDateTime end = start.plusHours(1);
-
-        // when & then
-        assertDoesNotThrow(() -> MentorSlotValidator.validateTimeRange(start, end));
-    }
-
-    @Test
-    @DisplayName("시작 일시가 현재보다 이전이면 예외 발생")
-    void validateTimeRange_fail_startTimeInPast() {
-        // given
-        LocalDateTime start = LocalDateTime.now().minusHours(1);
-        LocalDateTime end = LocalDateTime.now().plusHours(1);
-
-        // when & then
-        ServiceException exception = assertThrows(ServiceException.class,
-            () -> MentorSlotValidator.validateTimeRange(start, end));
-
-        assertEquals(MentorSlotErrorCode.START_TIME_IN_PAST.getCode(), exception.getResultCode());
-    }
-
-    @Test
     @DisplayName("종료 일시가 시작 일시보다 이전이면 예외 발생")
-    void validateTimeRange_fail_endTimeBeforeStart() {
+    void validateEndTimeAfterStart_fail() {
         // given
         LocalDateTime start = LocalDateTime.now().plusHours(2);
         LocalDateTime end = LocalDateTime.now().plusHours(1);
 
         // when & then
         ServiceException exception = assertThrows(ServiceException.class,
-            () -> MentorSlotValidator.validateTimeRange(start, end));
+            () -> DateTimeValidator.validateEndTimeAfterStart(start, end));
 
         assertEquals(MentorSlotErrorCode.END_TIME_BEFORE_START.getCode(), exception.getResultCode());
+    }
+
+    @Test
+    @DisplayName("현재 이후의 시작 일시, 종료 일시 기입 시 정상 처리")
+    void validateStartTimeNotInPast_success() {
+        // given
+        LocalDateTime start = LocalDateTime.now().plusHours(1);
+        LocalDateTime end = start.plusHours(1);
+
+        // when & then
+        assertDoesNotThrow(() -> DateTimeValidator.validateStartTimeNotInPast(start));
+    }
+
+    @Test
+    @DisplayName("시작 일시가 현재보다 이전이면 예외 발생")
+    void validateStartTimeNotInPast_fail() {
+        // given
+        LocalDateTime start = LocalDateTime.now().minusHours(1);
+        LocalDateTime end = LocalDateTime.now().plusHours(1);
+
+        // when & then
+        ServiceException exception = assertThrows(ServiceException.class,
+            () -> DateTimeValidator.validateStartTimeNotInPast(start));
+
+        assertEquals(MentorSlotErrorCode.START_TIME_IN_PAST.getCode(), exception.getResultCode());
     }
 
     @Test
@@ -95,7 +95,7 @@ class MentorSlotValidatorTest {
         LocalDateTime end = start.plusHours(1);
 
         // when & then
-        assertDoesNotThrow(() -> MentorSlotValidator.validateMinimumDuration(start, end));
+        assertDoesNotThrow(() -> DateTimeValidator.validateMinimumDuration(start, end));
     }
 
     @Test
@@ -106,7 +106,7 @@ class MentorSlotValidatorTest {
         LocalDateTime end = start.plusMinutes(20);
 
         // when & then
-        assertDoesNotThrow(() -> MentorSlotValidator.validateMinimumDuration(start, end));
+        assertDoesNotThrow(() -> DateTimeValidator.validateMinimumDuration(start, end));
     }
 
     @Test
@@ -118,7 +118,7 @@ class MentorSlotValidatorTest {
 
         // when & then
         ServiceException exception = assertThrows(ServiceException.class,
-            () -> MentorSlotValidator.validateMinimumDuration(start, end));
+            () -> DateTimeValidator.validateMinimumDuration(start, end));
 
         assertEquals(MentorSlotErrorCode.INSUFFICIENT_SLOT_DURATION.getCode(), exception.getResultCode());
     }
@@ -131,7 +131,7 @@ class MentorSlotValidatorTest {
         LocalDateTime end = start.plusMinutes(30);
 
         // when & then
-        assertDoesNotThrow(() -> MentorSlotValidator.validateTimeSlot(start, end));
+        assertDoesNotThrow(() -> DateTimeValidator.validateTimeSlot(start, end));
     }
 
     @Test
@@ -142,7 +142,7 @@ class MentorSlotValidatorTest {
 
         // when & then
         ServiceException exception = assertThrows(ServiceException.class,
-            () -> MentorSlotValidator.validateTimeSlot(null, end));
+            () -> DateTimeValidator.validateTimeSlot(null, end));
 
         assertEquals(MentorSlotErrorCode.START_TIME_REQUIRED.getCode(), exception.getResultCode());
     }

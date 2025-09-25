@@ -6,7 +6,7 @@ import com.back.global.exception.ServiceException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-public class MentorSlotValidator {
+public class DateTimeValidator {
 
     private static final int MIN_SLOT_DURATION = 20;
 
@@ -19,10 +19,13 @@ public class MentorSlotValidator {
         }
     }
 
-    public static void validateTimeRange(LocalDateTime start, LocalDateTime end) {
+    public static void validateEndTimeAfterStart(LocalDateTime start, LocalDateTime end) {
         if (!end.isAfter(start)) {
             throw new ServiceException(MentorSlotErrorCode.END_TIME_BEFORE_START);
         }
+    }
+
+    public static void validateStartTimeNotInPast(LocalDateTime start) {
         if (start.isBefore(LocalDateTime.now())) {
             throw new ServiceException(MentorSlotErrorCode.START_TIME_IN_PAST);
         }
@@ -35,9 +38,16 @@ public class MentorSlotValidator {
         }
     }
 
+    public static void validateTime(LocalDateTime start, LocalDateTime end) {
+        validateNotNull(start, end);
+        validateEndTimeAfterStart(start, end);
+    }
+
     public static void validateTimeSlot(LocalDateTime start, LocalDateTime end) {
         validateNotNull(start, end);
-        validateTimeRange(start, end);
+        validateEndTimeAfterStart(start, end);
+
+        validateStartTimeNotInPast(start);
         validateMinimumDuration(start, end);
     }
 }

@@ -7,6 +7,7 @@ import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
+import com.back.domain.mentoring.slot.dto.MentorSlotDto;
 import com.back.domain.mentoring.slot.dto.request.MentorSlotRequest;
 import com.back.domain.mentoring.slot.dto.response.MentorSlotResponse;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
@@ -30,6 +31,18 @@ public class MentorSlotService {
     private final ReservationRepository reservationRepository;
 
     @Transactional(readOnly = true)
+    public List<MentorSlotDto> getAvailableMentorSlots(Long mentorId, LocalDateTime startDate, LocalDateTime endDate) {
+        validateMentorExists(mentorId);
+        DateTimeValidator.validateTime(startDate, endDate);
+
+        List<MentorSlot> availableSlots = mentorSlotRepository.findAvailableSlots(mentorId, startDate, endDate);
+
+        return availableSlots.stream()
+            .map(MentorSlotDto::from)
+            .toList();
+    }
+
+    @Transactional(readOnly = true)
     public MentorSlotResponse getMentorSlot(Long slotId) {
         MentorSlot mentorSlot = findMentorSlot(slotId);
         Mentoring mentoring = findMentoring(mentorSlot.getMentor());
@@ -39,10 +52,10 @@ public class MentorSlotService {
 
     @Transactional
     public MentorSlotResponse createMentorSlot(MentorSlotRequest reqDto, Member member) {
-        Mentor mentor = findMentor(member);
+        Mentor mentor = findMentorByMember(member);
         Mentoring mentoring = findMentoring(mentor);
 
-        MentorSlotValidator.validateTimeSlot(reqDto.startDateTime(), reqDto.endDateTime());
+        DateTimeValidator.validateTimeSlot(reqDto.startDateTime(), reqDto.endDateTime());
         validateOverlappingSlots(mentor, reqDto.startDateTime(), reqDto.endDateTime());
 
         MentorSlot mentorSlot = MentorSlot.builder()
@@ -57,7 +70,7 @@ public class MentorSlotService {
 
     @Transactional
     public MentorSlotResponse updateMentorSlot(Long slotId, MentorSlotRequest reqDto, Member member) {
-        Mentor mentor = findMentor(member);
+        Mentor mentor = findMentorByMember(member);
         Mentoring mentoring = findMentoring(mentor);
         MentorSlot mentorSlot = findMentorSlot(slotId);
 
@@ -65,7 +78,7 @@ public class MentorSlotService {
         // 활성화된 예약이 있으면 수정 불가
         validateModification(mentorSlot);
 
-        MentorSlotValidator.validateTimeSlot(reqDto.startDateTime(), reqDto.endDateTime());
+        DateTimeValidator.validateTimeSlot(reqDto.startDateTime(), reqDto.endDateTime());
         validateOverlappingExcept(mentor, mentorSlot, reqDto.startDateTime(), reqDto.endDateTime());
 
         mentorSlot.updateTime(reqDto.startDateTime(), reqDto.endDateTime());
@@ -75,7 +88,7 @@ public class MentorSlotService {
 
     @Transactional
     public void deleteMentorSlot(Long slotId, Member member) {
-        Mentor mentor = findMentor(member);
+        Mentor mentor = findMentorByMember(member);
         MentorSlot mentorSlot = findMentorSlot(slotId);
 
         validateOwner(mentorSlot, mentor);
@@ -88,7 +101,7 @@ public class MentorSlotService {
 
     // ===== 헬퍼 메서드 =====
 
-    private Mentor findMentor(Member member) {
+    private Mentor findMentorByMember(Member member) {
         return mentorRepository.findByMemberId(member.getId())
             .orElseThrow(() -> new ServiceException(MentoringErrorCode.NOT_FOUND_MENTOR));
     }
@@ -112,6 +125,12 @@ public class MentorSlotService {
     private static void validateOwner(MentorSlot mentorSlot, Mentor mentor) {
         if (!mentorSlot.isOwnerBy(mentor)) {
             throw new ServiceException(MentorSlotErrorCode.NOT_OWNER);
+        }
+    }
+
+    private void validateMentorExists(Long mentorId) {
+        if (!mentorRepository.existsById(mentorId)) {
+            throw new ServiceException(MentoringErrorCode.NOT_FOUND_MENTOR);
         }
     }
 
