@@ -1,4 +1,4 @@
-package com.back.domain.mentoring.slot.dto;
+package com.back.domain.mentoring.slot.dto.response;
 
 import com.back.domain.mentoring.slot.constant.MentorSlotStatus;
 import com.back.domain.mentoring.slot.entity.MentorSlot;

@@ -50,7 +50,7 @@ class MentoringControllerTest {
     @Autowired private AuthTokenService authTokenService;
 
     private static final String TOKEN = "accessToken";
-    private static final String MENTORING_URL = "/mentoring";
+    private static final String MENTORING_URL = "/mentorings";
 
     private Mentor mentor;
     private Mentee mentee;

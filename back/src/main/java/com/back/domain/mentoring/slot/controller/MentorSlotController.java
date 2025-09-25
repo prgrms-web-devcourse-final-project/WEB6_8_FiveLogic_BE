@@ -1,8 +1,9 @@
 package com.back.domain.mentoring.slot.controller;
 
 import com.back.domain.member.member.entity.Member;
-import com.back.domain.mentoring.slot.dto.MentorSlotDto;
+import com.back.domain.mentoring.slot.dto.request.MentorSlotRepetitionRequest;
 import com.back.domain.mentoring.slot.dto.request.MentorSlotRequest;
+import com.back.domain.mentoring.slot.dto.response.MentorSlotDto;
 import com.back.domain.mentoring.slot.dto.response.MentorSlotResponse;
 import com.back.domain.mentoring.slot.service.MentorSlotService;
 import com.back.global.rq.Rq;
@@ -20,7 +21,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/mentor-slot")
+@RequestMapping("/mentor-slots")
 @RequiredArgsConstructor
 @Tag(name = "MentorSlotController", description = "멘토 슬롯(멘토의 예약 가능 일정) API")
 public class MentorSlotController {
@@ -48,7 +49,6 @@ public class MentorSlotController {
             resDtoList
         );
     }
-
 
     @GetMapping("/available/{mentorId}")
     @Operation(summary = "멘토의 예약 가능한 슬롯 목록 조회", description = "멘티가 특정 멘토의 예약 가능한 슬롯 목록을 조회합니다.")
@@ -96,6 +96,21 @@ public class MentorSlotController {
             "201",
             "멘토의 예약 가능 일정을 등록했습니다.",
             resDto
+        );
+    }
+
+    @PostMapping("/repetition")
+    @PreAuthorize("hasRole('MENTOR')")
+    @Operation(summary = "반복 슬롯 생성", description = "멘토 슬롯을 반복 생성합니다. 로그인한 멘토만 생성할 수 있습니다.")
+    public RsData<Void> createMentorSlotRepetition(
+        @RequestBody @Valid MentorSlotRepetitionRequest reqDto
+    ) {
+        Member member = rq.getActor();
+        mentorSlotService.createMentorSlotRepetition(reqDto, member);
+
+        return new RsData<>(
+            "201",
+            "반복 일정을 등록했습니다."
         );
     }
 
