@@ -151,22 +151,106 @@ public class InformationPostControllerTest {
     }
 
     @Test
-    @DisplayName("게시글 다건조회")
+    @DisplayName("게시글 조회 - 페이징 처리")
     void t3() throws Exception {
+        // 테스트용 게시글 먼저 생성
+        mvc.perform(
+                post("/post/infor")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                                "memberId": 1,
+                                "postType": "INFORMATIONPOST",
+                                "title": "페이징 테스트 제목 1",
+                                "content": "페이징 테스트 내용 1"
+                            }
+                            """)
+        );
+
+        mvc.perform(
+                post("/post/infor")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                                "memberId": 1,
+                                "postType": "INFORMATIONPOST",
+                                "title": "페이징 테스트 제목 2",
+                                "content": "페이징 테스트 내용 2"
+                            }
+                            """)
+        );
+
+        // 페이징 조회 테스트 - 기본값
         ResultActions resultActions = mvc
                 .perform(
                         get("/post/infor")
                 )
                 .andDo(print());
 
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("getPostWithPage"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").exists())
+                .andExpect(jsonPath("$.data.posts").isArray())
+                .andExpect(jsonPath("$.data.currentPage").value(0))
+                .andExpect(jsonPath("$.data.totalElements").exists())
+                .andExpect(jsonPath("$.msg").value("게시글이 조회 되었습니다."));
+    }
+
+    @Test
+    @DisplayName("게시글 조회 - 페이징 처리 (파라미터 지정)")
+    void t3_1() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/post/infor")
+                                .param("page", "0")
+                                .param("size", "5")
+                )
+                .andDo(print());
 
         resultActions
                 .andExpect(handler().handlerType(InformationPostController.class))
-                .andExpect(handler().methodName("getAllPost"))
+                .andExpect(handler().methodName("getPostWithPage"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.msg").value("게시글 다건 조회 성공"))
-                .andExpect(jsonPath("$.data").exists());
+                .andExpect(jsonPath("$.data.posts").isArray())
+                .andExpect(jsonPath("$.data.currentPage").value(0))
+                .andExpect(jsonPath("$.data.totalPage").exists())
+                .andExpect(jsonPath("$.data.hasNext").exists());
+    }
+
+    @Test
+    @DisplayName("게시글 조회 - 키워드 검색")
+    void t3_2() throws Exception {
+        // 검색 대상 게시글 생성
+        mvc.perform(
+                post("/post/infor")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                                "memberId": 1,
+                                "postType": "INFORMATIONPOST",
+                                "title": "Spring Boot 검색용 제목",
+                                "content": "Spring Boot 검색용 내용"
+                            }
+                            """)
+        );
+
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/post/infor")
+                                .param("keyword", "Spring")
+                                .param("page", "0")
+                                .param("size", "10")
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("getPostWithPage"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.posts").isArray())
+                .andExpect(jsonPath("$.msg").value("게시글이 조회 되었습니다."));
     }
 
     @Test
@@ -224,7 +308,7 @@ public class InformationPostControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        delete("/post/infor/{post_id}", 5L)
+                        delete("/post/infor/{post_id}", 7L)
                 )
                 .andDo(print());
 
@@ -270,7 +354,7 @@ public class InformationPostControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        put("/post/infor/{post_id}", 6L)
+                        put("/post/infor/{post_id}", 8L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                             {                        

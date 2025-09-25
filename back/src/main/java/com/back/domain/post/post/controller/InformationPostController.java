@@ -8,7 +8,12 @@ import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +25,19 @@ public class InformationPostController {
     private final PostService postService;
     private final Rq rq;
 
+
+    @Operation(summary = "게시글 조회 - 페이징 처리")
+    @GetMapping
+    public RsData<PostPagingResponse> getPostWithPage(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword
+    ) {
+        Page<PostDto> postPage = postService.getPosts(keyword, page,size);
+        PostPagingResponse resDto = PostPagingResponse.from(postPage);
+
+        return new RsData<>("200", "게시글이 조회 되었습니다.", resDto);
+    }
 
     @Operation(summary = "게시글 생성")
     @PostMapping
@@ -34,7 +52,7 @@ public class InformationPostController {
     }
 
     @Operation(summary = "게시글 다건 조회")
-    @GetMapping
+    @GetMapping("/all")
     public RsData<List<PostAllResponse>> getAllPost() {
         List<PostAllResponse> postAllResponse = postService.getAllPostResponse();
 
