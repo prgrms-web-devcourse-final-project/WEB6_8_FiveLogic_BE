@@ -7,6 +7,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.S3Configuration;
 
 import java.net.URI;
 
@@ -28,6 +29,7 @@ public class S3Config {
                 )
                 .endpointOverride(URI.create(ENDPOINT))
                 .region(REGION)
+                .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build())
                 .build();
     }
 
@@ -41,6 +43,7 @@ public class S3Config {
                 )
                 .endpointOverride(URI.create(ENDPOINT))
                 .region(REGION)
+                .forcePathStyle(true)
                 .build();
     }
 }
