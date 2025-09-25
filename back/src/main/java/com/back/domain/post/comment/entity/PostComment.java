@@ -9,6 +9,8 @@ import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Objects;
+
 @Entity
 @Getter
 @Setter
@@ -22,5 +24,15 @@ public class PostComment extends BaseEntity {
     private Member member;
 
     private String role;
+
+    public Boolean isAuthor( Member member) {
+        return Objects.equals(this.member.getId(), member.getId());
+    }
+
+    public String getAuthorName() {
+        return member.getName();
+    }
+
+
 
 }

@@ -2,6 +2,7 @@ package com.back.domain.post.post.entity;
 
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.post.comment.entity.PostComment;
+import com.back.global.exception.ServiceException;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -11,6 +12,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @NoArgsConstructor
@@ -21,8 +23,6 @@ public class Post extends BaseEntity {
     private String title;
     @NotNull
     private String content;
-    @NotNull
-    private String authorName;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Member member;
@@ -41,8 +41,6 @@ public class Post extends BaseEntity {
 
     private int viewCount;
 
-    private int liked;
-
     private Boolean isMento;
     private String carrer;
 
@@ -58,5 +56,23 @@ public class Post extends BaseEntity {
     public void removeComment(PostComment comment) {
         comments.remove(comment);
         comment.setPost(null);
+    }
+
+
+    public Boolean isAuthor( Member member) {
+        return Objects.equals(this.member.getId(), member.getId());
+    }
+
+    public String getAuthorName() {
+        return member.getName();
+    }
+
+
+    public static void validPostType(String postTypeStr) {
+        try {
+            Post.PostType.valueOf(postTypeStr);
+        } catch (IllegalArgumentException e) {
+            throw new ServiceException("400-2", "유효하지 않은 PostType입니다.");
+        }
     }
 }

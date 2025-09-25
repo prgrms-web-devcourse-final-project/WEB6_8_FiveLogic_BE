@@ -12,7 +12,6 @@ public class PostAllResponse {
     private String authorName;
     private LocalDateTime createdAt;
     private int viewCount;
-    private int like;
 
     public PostAllResponse(Post post) {
         this.id = post.getId();
@@ -20,7 +19,6 @@ public class PostAllResponse {
         this.authorName = post.getAuthorName();
         this.createdAt = post.getCreateDate();
         this.viewCount = post.getViewCount();
-        this.like = post.getLiked();
     }
 
 }

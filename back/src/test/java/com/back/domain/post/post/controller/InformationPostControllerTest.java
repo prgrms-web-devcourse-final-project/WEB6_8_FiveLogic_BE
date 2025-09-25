@@ -2,6 +2,7 @@ package com.back.domain.post.post.controller;
 
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
+import com.back.domain.post.like.service.PostLikeService;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.service.PostService;
 import com.back.global.security.SecurityUser;
@@ -39,6 +40,9 @@ public class InformationPostControllerTest {
 
     @Autowired
     private MemberService memberService;
+
+    @Autowired
+    private PostLikeService postLikeService;
 
     @Autowired
     private MockMvc mvc;
@@ -416,6 +420,114 @@ public class InformationPostControllerTest {
                 .andExpect(handler().methodName("updatePost"))
                 .andExpect(jsonPath("$.resultCode").value("400-1"))
                 .andExpect(jsonPath("$.msg").value("title-NotBlank-제목은 null 혹은 공백일 수 없습니다."));
+    }
+
+    @Test
+    @DisplayName("게시글 좋아요 성공")
+    void t12() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/post/infor/{post_id}/liked", 1L)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("likePost"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
+                .andExpect(jsonPath("$.msg").value("게시글 좋아요 성공"));
+    }
+
+    @Test
+    @DisplayName("게시글 좋아요 조회")
+    void t13() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/post/infor/{post_id}/liked", 1L)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("getLike"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
+                .andExpect(jsonPath("$.msg").value("게시글 좋아요 조회 성공"))
+                .andExpect(jsonPath("$.data.likeCount").exists());
+    }
+
+    @Test
+    @DisplayName("게시글 싫어요 성공")
+    void t14() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/post/infor/{post_id}/disliked", 1L)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("disLikePost"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
+                .andExpect(jsonPath("$.msg").value("게시글 싫어요 성공"));
+    }
+
+    @Test
+    @DisplayName("게시글 싫어요 조회")
+    void t15() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/post/infor/{post_id}/Disliked", 1L)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("getDisLike"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
+                .andExpect(jsonPath("$.msg").value("게시글 싫어요 조회 성공"))
+                .andExpect(jsonPath("$.data.likeCount").exists());
+    }
+
+    @Test
+    @DisplayName("좋아요 -> 싫어요 토글 테스트")
+    void t16() throws Exception {
+        // 먼저 좋아요
+        mvc.perform(post("/post/infor/{post_id}/liked", 1L))
+                .andExpect(jsonPath("$.msg").value("게시글 좋아요 성공"));
+
+        // 싫어요로 변경
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/post/infor/{post_id}/disliked", 1L)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("disLikePost"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
+                .andExpect(jsonPath("$.msg").value("게시글 싫어요 성공"));
+    }
+
+    @Test
+    @DisplayName("좋아요 중복 클릭 - 좋아요 취소")
+    void t17() throws Exception {
+        // 첫 번째 좋아요
+        mvc.perform(post("/post/infor/{post_id}/liked", 1L))
+                .andExpect(jsonPath("$.msg").value("게시글 좋아요 성공"));
+
+        // 두 번째 좋아요 (취소)
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/post/infor/{post_id}/liked", 1L)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("likePost"))
+                .andExpect(jsonPath("$.resultCode").value("200"))
+                .andExpect(jsonPath("$.msg").value("게시글 좋아요 성공"));
     }
 
 }

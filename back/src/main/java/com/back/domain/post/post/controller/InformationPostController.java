@@ -1,6 +1,7 @@
 package com.back.domain.post.post.controller;
 
 import com.back.domain.member.member.entity.Member;
+import com.back.domain.post.like.service.PostLikeService;
 import com.back.domain.post.post.dto.*;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.service.PostService;
@@ -22,6 +23,7 @@ import java.util.List;
 @RequestMapping("post/infor")
 @RequiredArgsConstructor
 public class InformationPostController {
+    private final PostLikeService postLikeService;
     private final PostService postService;
     private final Rq rq;
 
@@ -90,27 +92,36 @@ public class InformationPostController {
         return new RsData<>("200", "게시글 수정 성공", null);
     }
 
-    @Operation(summary = "게시글 좋아요 + ")
+    @Operation(summary = "게시글 좋아요")
     @PostMapping("/{post_id}/liked")
     public RsData<Void> likePost(@PathVariable Long post_id) {
-        postService.likePost(post_id);
+        postLikeService.likePost(post_id);
 
         return new RsData<>("200", "게시글 좋아요 성공", null);
     }
 
     @Operation(summary = "게시글 좋아요 (Show)")
     @GetMapping("/{post_id}/liked")
-    public RsData<PostLikedResponse> getlike(@PathVariable Long post_id) {
-        int likeCount = postService.showLikeCount(post_id);
+    public RsData<PostLikedResponse> getLike(@PathVariable Long post_id) {
+        int likeCount = postLikeService.showLikeCount(post_id);
         PostLikedResponse postLikedResponse = new PostLikedResponse(likeCount);
 
         return new RsData<>("200", "게시글 좋아요 조회 성공", postLikedResponse);
     }
 
+    @Operation(summary = "게시글 싫어요 (Show)")
+    @GetMapping("/{post_id}/Disliked")
+    public RsData<PostLikedResponse> getDisLike(@PathVariable Long post_id) {
+        int likeCount = postLikeService.showDisLikeCount(post_id);
+        PostLikedResponse postLikedResponse = new PostLikedResponse(likeCount);
+
+        return new RsData<>("200", "게시글 싫어요 조회 성공", postLikedResponse);
+    }
+
     @Operation(summary = "게시글 싫어요")
     @PostMapping("/{post_id}/disliked")
     public RsData<PostLikedResponse> disLikePost(@PathVariable Long post_id) {
-        postService.disLikePost(post_id);
+        postLikeService.disLikePost(post_id);
 
         return new RsData<>("200", "게시글 싫어요 성공", null);
     }
