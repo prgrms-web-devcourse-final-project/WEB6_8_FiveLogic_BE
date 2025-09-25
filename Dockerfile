@@ -1,11 +1,19 @@
 FROM python:3.11-slim
 
-RUN apt-get update && apt-get install -y ffmpeg libsasl2-dev libssl-dev python3-dev
-
-RUN pip install confluent-kafka
-
 WORKDIR /app
 
-COPY sh/ffmpeg/transcode.py .
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python", "transcode.py"]
+COPY consumer.py .
+
+ENV KAFKA_TOPIC=s3-events
+ENV KAFKA_BOOTSTRAP=kafka:9092
+ENV MINIO_ENDPOINT=http://minio:9000
+ENV MINIO_ACCESS_KEY=minioadmin
+ENV MINIO_SECRET_KEY=minioadmin
+ENV DOWNLOAD_DIR=/downloads
+
+VOLUME ["/downloads"]
+
+CMD ["python", "consumer.py"]
