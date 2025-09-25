@@ -4,11 +4,10 @@ import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "task_alias")
-@Getter @Setter
+@Getter
 @NoArgsConstructor
 public class TaskAlias extends BaseEntity {
     @Column(name = "name", nullable = false, unique = true)
@@ -21,5 +20,13 @@ public class TaskAlias extends BaseEntity {
     public TaskAlias(String name) {
         this.name = name;
         this.task = null; // 기본적으로 연결된 Task가 없음 (pending 상태)
+    }
+
+    public void linkToTask(Task task) {
+        this.task = task;
+    }
+
+    public boolean isPending() {
+        return this.task == null;
     }
 }

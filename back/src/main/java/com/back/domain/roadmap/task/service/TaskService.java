@@ -34,7 +34,7 @@ public class TaskService {
     @Transactional
     public TaskAlias createAlias(Task task, String aliasName) {
         TaskAlias alias = new TaskAlias(aliasName);
-        alias.setTask(task);
+        alias.linkToTask(task);
         return taskAliasRepository.save(alias);
     }
 
@@ -46,24 +46,10 @@ public class TaskService {
 
     @Transactional
     public TaskAlias createPendingAlias(String taskName){
-        // 1. 먼저 Alias가 존재하는지 확인 (Pending 포함)
-        Optional<TaskAlias> existingAliasOpt = taskAliasRepository.findByNameIgnoreCase(taskName);
-        if (existingAliasOpt.isPresent()) {
-            TaskAlias existingAlias = existingAliasOpt.get();
-            if (existingAlias.getTask() != null) {
-                throw new ServiceException("400", "이미 등록된 task의 별칭입니다.");
-            } else {
-                throw new ServiceException("400", "이미 제안된 task입니다.");
-            }
-        }
+        // Task나 TaskAlias에 이미 존재하는 이름인지 검증
+        validateNewPendingAliasName(taskName);
 
-        // 2. Alias가 없다면, Task 테이블에 직접 존재하는지 확인
-        Optional<Task> existingTaskOpt = taskRepository.findByNameIgnoreCase(taskName);
-        if(existingTaskOpt.isPresent()){
-            throw new ServiceException("400", "이미 등록된 task입니다.");
-        }
-
-        // 3. 모두 해당 없으면 새로운 pending alias 생성
+        // 모든 검증 통과 시 새로운 pending alias 생성
         TaskAlias pendingAlias = new TaskAlias(taskName);
         return taskAliasRepository.save(pendingAlias);
     }
@@ -80,41 +66,26 @@ public class TaskService {
     // Pending alias를 기존 Task와 연결
     @Transactional
     public TaskAlias linkPendingAlias(Long aliasId, Long taskId) {
-        TaskAlias pendingAlias = taskAliasRepository.findById(aliasId)
-                .orElseThrow(() -> new ServiceException("404", "해당 별칭이 존재하지 않습니다."));
+        TaskAlias pendingAlias = findPendingAliasById(aliasId);
+        Task task = findTaskById(taskId);
 
-        if (pendingAlias.getTask() != null) {
-            throw new ServiceException("400", "이미 연결된 별칭입니다.");
-        }
-
-        Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new ServiceException("404", "해당 Task가 존재하지 않습니다."));
-
-        pendingAlias.setTask(task);
+        pendingAlias.linkToTask(task);
         return taskAliasRepository.save(pendingAlias);
     }
 
     // Pending alias를 새로운 Task로 생성
     @Transactional
     public Task createTaskFromPending(Long aliasId) {
-        TaskAlias pendingAlias = taskAliasRepository.findById(aliasId)
-                .orElseThrow(() -> new ServiceException("404", "해당 별칭이 존재하지 않습니다."));
-
-        if (pendingAlias.getTask() != null) {
-            throw new ServiceException("400", "이미 연결된 별칭입니다.");
-        }
+        TaskAlias pendingAlias = findPendingAliasById(aliasId);
 
         // 동일한 이름의 Task가 이미 존재하는지 확인
-        Optional<Task> existingTask = taskRepository.findByNameIgnoreCase(pendingAlias.getName());
-        if (existingTask.isPresent()) {
-            throw new ServiceException("400", "이미 존재하는 Task 이름입니다.");
-        }
+        validateTaskNameForCreation(pendingAlias.getName());
 
         // 새 Task 생성
         Task newTask = create(pendingAlias.getName());
 
         // pending alias를 새 Task와 연결
-        pendingAlias.setTask(newTask);
+        pendingAlias.linkToTask(newTask);
         taskAliasRepository.save(pendingAlias);
 
         return newTask;
@@ -123,13 +94,52 @@ public class TaskService {
     // Pending alias 삭제
     @Transactional
     public void deletePendingAlias(Long aliasId) {
-        TaskAlias pendingAlias = taskAliasRepository.findById(aliasId)
+        TaskAlias pendingAlias = findPendingAliasById(aliasId);
+        taskAliasRepository.delete(pendingAlias);
+    }
+
+    // === 검증 로직 메서드들 ===
+
+    // TaskAlias를 ID로 조회하고 Pending 상태인지 검증
+    private TaskAlias findPendingAliasById(Long aliasId) {
+        TaskAlias alias = taskAliasRepository.findById(aliasId)
                 .orElseThrow(() -> new ServiceException("404", "해당 별칭이 존재하지 않습니다."));
 
-        if (pendingAlias.getTask() != null) {
-            throw new ServiceException("400", "연결된 별칭은 삭제할 수 없습니다.");
+        if (!alias.isPending()) {
+            throw new ServiceException("400", "이미 연결된 별칭입니다.");
         }
 
-        taskAliasRepository.delete(pendingAlias);
+        return alias;
+    }
+
+    // Task를 ID로 조회
+    private Task findTaskById(Long taskId) {
+        return taskRepository.findById(taskId)
+                .orElseThrow(() -> new ServiceException("404", "해당 Task가 존재하지 않습니다."));
+    }
+
+    // Task와 TaskAlias 모두 중복 검증 (새로운 pending alias 생성 시 사용)
+    private void validateNewPendingAliasName(String taskName) {
+        // 1. TaskAlias 테이블에서 중복 확인 (Pending 포함)
+        Optional<TaskAlias> existingAliasOpt = taskAliasRepository.findByNameIgnoreCase(taskName);
+        if (existingAliasOpt.isPresent()) {
+            TaskAlias existingAlias = existingAliasOpt.get();
+            if (!existingAlias.isPending()) {
+                throw new ServiceException("400", "이미 등록된 Task의 별칭입니다.");
+            } else {
+                throw new ServiceException("400", "이미 제안된 Task명입니다.");
+            }
+        }
+
+        // 2. Task 테이블에서 중복 검증
+        validateTaskNameForCreation(taskName);
+    }
+
+    // 동일한 이름의 Task가 이미 존재하는지 확인 (pending alias를 새 Task로 등록할 때 사용)
+    private void validateTaskNameForCreation(String taskName) {
+        Optional<Task> existingTaskOpt = taskRepository.findByNameIgnoreCase(taskName);
+        if (existingTaskOpt.isPresent()) {
+            throw new ServiceException("400", "이미 등록된 Task명입니다.");
+        }
     }
 }

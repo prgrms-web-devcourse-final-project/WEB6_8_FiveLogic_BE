@@ -303,7 +303,7 @@ class TaskControllerTest {
                 .andExpect(handler().methodName("createPendingAlias"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.resultCode").value("400"))
-                .andExpect(jsonPath("$.msg").value("이미 등록된 task입니다."));
+                .andExpect(jsonPath("$.msg").value("이미 등록된 Task명입니다."));
     }
 
     @Test
@@ -328,7 +328,7 @@ class TaskControllerTest {
                 .andExpect(handler().methodName("createPendingAlias"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.resultCode").value("400"))
-                .andExpect(jsonPath("$.msg").value("이미 등록된 task의 별칭입니다."));
+                .andExpect(jsonPath("$.msg").value("이미 등록된 Task의 별칭입니다."));
     }
 
     @Test
@@ -356,7 +356,7 @@ class TaskControllerTest {
                 .andExpect(handler().methodName("createPendingAlias"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.resultCode").value("400"))
-                .andExpect(jsonPath("$.msg").value("이미 제안된 task입니다."));
+                .andExpect(jsonPath("$.msg").value("이미 제안된 Task명입니다."));
     }
 
     @Test
