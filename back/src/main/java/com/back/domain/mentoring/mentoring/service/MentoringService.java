@@ -9,8 +9,6 @@ import com.back.domain.mentoring.mentoring.dto.response.MentoringResponse;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
-import com.back.domain.mentoring.reservation.repository.ReservationRepository;
-import com.back.domain.mentoring.slot.repository.MentorSlotRepository;
 import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,8 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class MentoringService {
     private final MentoringRepository mentoringRepository;
-    private final ReservationRepository reservationRepository;
-    private final MentorSlotRepository mentorSlotRepository;
+    private final MentoringStorage mentoringStorage;
 
     @Transactional(readOnly = true)
     public Page<MentoringWithTagsDto> getMentorings(String keyword, int page, int size) {
@@ -36,7 +33,7 @@ public class MentoringService {
 
     @Transactional(readOnly = true)
     public MentoringResponse getMentoring(Long mentoringId)  {
-        Mentoring mentoring = findMentoring(mentoringId);
+        Mentoring mentoring = mentoringStorage.findMentoring(mentoringId);
 
         return new MentoringResponse(
             MentoringDetailDto.from(mentoring),
@@ -69,7 +66,7 @@ public class MentoringService {
 
     @Transactional
     public MentoringResponse updateMentoring(Long mentoringId, MentoringRequest reqDto, Mentor mentor) {
-        Mentoring mentoring = findMentoring(mentoringId);
+        Mentoring mentoring = mentoringStorage.findMentoring(mentoringId);
 
         validateOwner(mentoring, mentor);
 
@@ -83,29 +80,20 @@ public class MentoringService {
 
     @Transactional
     public void deleteMentoring(Long mentoringId, Mentor mentor) {
-        Mentoring mentoring = findMentoring(mentoringId);
+        Mentoring mentoring = mentoringStorage.findMentoring(mentoringId);
 
         validateOwner(mentoring, mentor);
 
         // 예약 이력이 있을 시 삭제 불가
-        if (reservationRepository.existsByMentoringId(mentoring.getId())) {
+        if (mentoringStorage.hasReservationsForMentoring(mentoring.getId())) {
             throw new ServiceException(MentoringErrorCode.CANNOT_DELETE_MENTORING);
         }
 
         // 멘토 슬롯 있을 시 일괄 삭제 (추후 1:N 변경 시 제거 필요)
-        if (mentorSlotRepository.existsByMentorId(mentor.getId())) {
-            mentorSlotRepository.deleteAllByMentorId(mentor.getId());
+        if (mentoringStorage.hasMentorSlotsForMentor(mentor.getId())) {
+            mentoringStorage.deleteMentorSlotsData(mentor.getId());
         }
-        // 멘토 삭제
         mentoringRepository.delete(mentoring);
-    }
-
-
-    // ===== 헬퍼 메서드 =====
-
-    private Mentoring findMentoring(Long mentoringId) {
-        return mentoringRepository.findById(mentoringId)
-            .orElseThrow(() -> new ServiceException(MentoringErrorCode.NOT_FOUND_MENTORING));
     }
 
 

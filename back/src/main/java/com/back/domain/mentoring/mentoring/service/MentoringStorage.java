@@ -19,6 +19,8 @@ public class MentoringStorage {
     private final MentorSlotRepository mentorSlotRepository;
     private final ReservationRepository reservationRepository;
 
+    // ===== find 메서드 =====
+
     public Mentoring findMentoring(Long mentoringId) {
         return mentoringRepository.findById(mentoringId)
             .orElseThrow(() -> new ServiceException(MentoringErrorCode.NOT_FOUND_MENTORING));
@@ -27,5 +29,23 @@ public class MentoringStorage {
     public MentorSlot findMentorSlot(Long slotId) {
         return mentorSlotRepository.findById(slotId)
             .orElseThrow(() -> new ServiceException(MentorSlotErrorCode.NOT_FOUND_MENTOR_SLOT));
+    }
+
+
+    // ==== exists 메서드 =====
+
+    public boolean hasReservationsForMentoring(Long mentoringId) {
+        return reservationRepository.existsByMentoringId(mentoringId);
+    }
+
+    public boolean hasMentorSlotsForMentor(Long mentorId) {
+        return mentorSlotRepository.existsByMentorId(mentorId);
+    }
+
+
+    // ===== 데이터 조작 메서드 =====
+
+    public void deleteMentorSlotsData(Long mentorId) {
+        mentorSlotRepository.deleteAllByMentorId(mentorId);
     }
 }
