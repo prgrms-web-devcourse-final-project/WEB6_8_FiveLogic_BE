@@ -1,7 +1,7 @@
-package com.back.domain.file.service;
+package com.back.domain.file.video.service;
 
-import com.back.domain.file.entity.Video;
-import com.back.domain.file.repository.VideoRepository;
+import com.back.domain.file.video.entity.Video;
+import com.back.domain.file.video.repository.VideoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;

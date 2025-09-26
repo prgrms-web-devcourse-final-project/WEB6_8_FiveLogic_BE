@@ -1,4 +1,4 @@
-package com.back.domain.file.entity;
+package com.back.domain.file.video.entity;
 
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.Column;

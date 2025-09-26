@@ -1,7 +1,8 @@
 package com.back.domain.file.service;
 
-import com.back.domain.file.entity.Video;
-import com.back.domain.file.repository.VideoRepository;
+import com.back.domain.file.video.entity.Video;
+import com.back.domain.file.video.repository.VideoRepository;
+import com.back.domain.file.video.service.VideoService;
 import com.back.fixture.VideoFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

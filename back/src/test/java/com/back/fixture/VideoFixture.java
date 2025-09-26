@@ -1,6 +1,6 @@
 package com.back.fixture;
 
-import com.back.domain.file.entity.Video;
+import com.back.domain.file.video.entity.Video;
 
 import java.util.UUID;
 

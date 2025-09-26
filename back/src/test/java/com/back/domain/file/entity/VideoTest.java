@@ -1,5 +1,6 @@
 package com.back.domain.file.entity;
 
+import com.back.domain.file.video.entity.Video;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

@@ -1,6 +1,6 @@
 package com.back.domain.news.news.entity;
 
-import com.back.domain.file.entity.Video;
+import com.back.domain.file.video.entity.Video;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.news.comment.entity.Comment;
 import com.back.domain.news.like.entity.Like;

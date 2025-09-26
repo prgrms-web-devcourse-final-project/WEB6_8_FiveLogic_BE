@@ -1,4 +1,4 @@
-package com.back.domain.file.dto.controller;
+package com.back.domain.file.video.dto.controller;
 
 import java.net.URL;
 import java.time.Instant;

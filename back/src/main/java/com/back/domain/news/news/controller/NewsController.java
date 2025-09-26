@@ -1,7 +1,7 @@
 package com.back.domain.news.news.controller;
 
-import com.back.domain.file.entity.Video;
-import com.back.domain.file.service.VideoService;
+import com.back.domain.file.video.entity.Video;
+import com.back.domain.file.video.service.VideoService;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.news.like.service.LikeService;
 import com.back.domain.news.news.dto.*;
