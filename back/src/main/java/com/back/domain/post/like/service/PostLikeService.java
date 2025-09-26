@@ -5,9 +5,11 @@ import com.back.domain.post.like.entity.PostLike;
 import com.back.domain.post.like.repository.PostLikeRepository;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.service.PostService;
+import com.back.domain.post.rq.PostDetailFacade;
 import com.back.global.rq.Rq;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -16,8 +18,8 @@ import java.util.Optional;
 public class PostLikeService {
     private final Rq rq;
     private final PostLikeRepository postLikeRepository;
-    private final PostService postService;
-
+   //private final PostDetailFacade postDetailFacade;
+    private final PostService postService; // 리팩토링 대상
 
     @Transactional
     public void likePost(long postId) {
@@ -70,11 +72,25 @@ public class PostLikeService {
         }
     }
 
-    public int showDisLikeCount(Long postId) {
+    public int getDisLikeCount(Long postId) {
         return postLikeRepository.countDislikesByPostId(postId);
     }
 
-    public int showLikeCount(Long postId) {
+    public int getLikeCount(Long postId) {
         return postLikeRepository.countLikesByPostId(postId);
+    }
+
+    public String getPresentStatus(Long postId) {
+        Member member = rq.getActor();
+        Post post = postService.findById(postId);
+
+        Optional<PostLike> existingLike = postLikeRepository.findByMemberAndPost(member, post);
+
+        if (existingLike.isPresent()) {
+            PostLike postLike = existingLike.get();
+            return postLike.getStatus().name();
+        }
+
+        return "NONE"; // 좋아요/싫어요 안한 상태
     }
 }
