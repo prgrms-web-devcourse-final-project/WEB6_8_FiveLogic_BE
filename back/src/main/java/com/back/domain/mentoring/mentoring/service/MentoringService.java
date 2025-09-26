@@ -1,9 +1,7 @@
 package com.back.domain.mentoring.mentoring.service;
 
-import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.mentor.dto.MentorDetailDto;
 import com.back.domain.member.mentor.entity.Mentor;
-import com.back.domain.member.mentor.repository.MentorRepository;
 import com.back.domain.mentoring.mentoring.dto.MentoringDetailDto;
 import com.back.domain.mentoring.mentoring.dto.MentoringWithTagsDto;
 import com.back.domain.mentoring.mentoring.dto.request.MentoringRequest;
@@ -25,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class MentoringService {
     private final MentoringRepository mentoringRepository;
-    private final MentorRepository mentorRepository;
     private final ReservationRepository reservationRepository;
     private final MentorSlotRepository mentorSlotRepository;
 
@@ -40,18 +37,15 @@ public class MentoringService {
     @Transactional(readOnly = true)
     public MentoringResponse getMentoring(Long mentoringId)  {
         Mentoring mentoring = findMentoring(mentoringId);
-        Mentor mentor = mentoring.getMentor();
 
         return new MentoringResponse(
             MentoringDetailDto.from(mentoring),
-            MentorDetailDto.from(mentor)
+            MentorDetailDto.from(mentoring.getMentor())
         );
     }
 
     @Transactional
-    public MentoringResponse createMentoring(MentoringRequest reqDto, Member member) {
-        Mentor mentor = findMentor(member);
-
+    public MentoringResponse createMentoring(MentoringRequest reqDto, Mentor mentor) {
         // 멘토당 멘토링 1개 제한 체크 (추후 1:N 변경 시 제거 필요)
         if (mentoringRepository.existsByMentorId(mentor.getId())) {
             throw new ServiceException(MentoringErrorCode.ALREADY_EXISTS_MENTORING);
@@ -74,8 +68,7 @@ public class MentoringService {
     }
 
     @Transactional
-    public MentoringResponse updateMentoring(Long mentoringId, MentoringRequest reqDto, Member member) {
-        Mentor mentor = findMentor(member);
+    public MentoringResponse updateMentoring(Long mentoringId, MentoringRequest reqDto, Mentor mentor) {
         Mentoring mentoring = findMentoring(mentoringId);
 
         validateOwner(mentoring, mentor);
@@ -89,8 +82,7 @@ public class MentoringService {
     }
 
     @Transactional
-    public void deleteMentoring(Long mentoringId, Member member) {
-        Mentor mentor = findMentor(member);
+    public void deleteMentoring(Long mentoringId, Mentor mentor) {
         Mentoring mentoring = findMentoring(mentoringId);
 
         validateOwner(mentoring, mentor);
@@ -110,11 +102,6 @@ public class MentoringService {
 
 
     // ===== 헬퍼 메서드 =====
-
-    private Mentor findMentor(Member member) {
-        return mentorRepository.findByMemberId(member.getId())
-            .orElseThrow(() -> new ServiceException(MentoringErrorCode.NOT_FOUND_MENTOR));
-    }
 
     private Mentoring findMentoring(Long mentoringId) {
         return mentoringRepository.findById(mentoringId)

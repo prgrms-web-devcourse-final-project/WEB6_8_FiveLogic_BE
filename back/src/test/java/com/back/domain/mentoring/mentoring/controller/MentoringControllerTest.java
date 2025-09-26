@@ -218,7 +218,7 @@ class MentoringControllerTest {
 
         performCreateMentoring(token)
             .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.resultCode").value("404-1"))
+            .andExpect(jsonPath("$.resultCode").value("404-2"))
             .andExpect(jsonPath("$.msg").value("멘토를 찾을 수 없습니다."));
     }
 
