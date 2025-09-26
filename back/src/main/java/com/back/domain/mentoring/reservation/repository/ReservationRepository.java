@@ -3,7 +3,11 @@ package com.back.domain.mentoring.reservation.repository;
 import com.back.domain.mentoring.reservation.entity.Reservation;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
+    Optional<Reservation> findTopByOrderByIdDesc();
+
     boolean existsByMentoringId(Long mentoringId);
 
     /**

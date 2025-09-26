@@ -1,7 +1,6 @@
 package com.back.domain.mentoring.slot.entity;
 
 import com.back.domain.member.mentor.entity.Mentor;
-import com.back.domain.mentoring.reservation.constant.ReservationStatus;
 import com.back.domain.mentoring.reservation.entity.Reservation;
 import com.back.domain.mentoring.slot.constant.MentorSlotStatus;
 import com.back.global.jpa.BaseEntity;
@@ -80,7 +79,7 @@ public class MentorSlot extends BaseEntity {
 
     public void removeReservation() {
         this.reservation = null;
-        updateStatus();
+        this.status = MentorSlotStatus.AVAILABLE;
     }
 
     /**
@@ -89,9 +88,7 @@ public class MentorSlot extends BaseEntity {
      * - 예약이 취소/거절된 경우 true
      */
     public boolean isAvailable() {
-        return reservation == null ||
-            reservation.getStatus().equals(ReservationStatus.REJECTED) ||
-            reservation.getStatus().equals(ReservationStatus.CANCELED);
+        return reservation == null;
     }
 
     public boolean isOwnerBy(Mentor mentor) {
