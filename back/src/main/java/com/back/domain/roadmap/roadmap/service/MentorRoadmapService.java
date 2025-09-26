@@ -4,11 +4,9 @@ import com.back.domain.roadmap.roadmap.dto.request.MentorRoadmapCreateRequest;
 import com.back.domain.roadmap.roadmap.dto.request.RoadmapNodeRequest;
 import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapCreateResponse;
 import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapResponse;
-import com.back.domain.roadmap.roadmap.dto.response.RoadmapNodeResponse;
 import com.back.domain.roadmap.roadmap.entity.MentorRoadmap;
 import com.back.domain.roadmap.roadmap.entity.RoadmapNode;
 import com.back.domain.roadmap.roadmap.repository.MentorRoadmapRepository;
-import com.back.domain.roadmap.roadmap.repository.RoadmapNodeRepository;
 import com.back.domain.roadmap.task.entity.Task;
 import com.back.domain.roadmap.task.repository.TaskRepository;
 import com.back.global.exception.ServiceException;
@@ -28,7 +26,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MentorRoadmapService {
     private final MentorRoadmapRepository mentorRoadmapRepository;
-    private final RoadmapNodeRepository roadmapNodeRepository;
     private final TaskRepository taskRepository;
 
     // 멘토 로드맵 생성
@@ -41,10 +38,10 @@ public class MentorRoadmapService {
 
         // 노드가 최소 1개인지 검증
         if (request.nodes().isEmpty()) {
-            throw new ServiceException("400", "적어도 하나 이상의 노드를 포함해야 로드맵을 생성할 수 있습니다."); // 수정
+            throw new ServiceException("400", "적어도 하나 이상의 노드를 포함해야 로드맵을 생성할 수 있습니다.");
         }
 
-        // Task 유효성 검증 + 캐싱 (중복 조회 방지)
+        // 입력된 Task 유효성 검증 + 캐싱 (중복 조회 방지)
         Map<Long, Task> validatedTasksMap = getValidatedTasksMap(request.nodes());
 
         // MentorRoadmap 생성
@@ -76,33 +73,12 @@ public class MentorRoadmapService {
 
     // 멘토 ID로 멘토 로드맵 상세 조회
     @Transactional(readOnly = true)
-    public MentorRoadmapResponse getByMentorId(Long mentorId) {
+    public MentorRoadmapResponse getById(Long id) {
         // 로드맵과 노드들을 한 번에 조회 (성능 최적화)
-        MentorRoadmap mentorRoadmap = mentorRoadmapRepository.findByMentorIdWithNodes(mentorId)
+        MentorRoadmap mentorRoadmap = mentorRoadmapRepository.findByIdWithNodes(id)
                 .orElseThrow(() -> new ServiceException("404", "로드맵을 찾을 수 없습니다."));
 
-        // 서비스에서 데이터 변환 로직 처리
-        List<RoadmapNodeResponse> nodeResponses = mentorRoadmap.getNodes().stream()
-                .map(node -> new RoadmapNodeResponse(
-                    node.getId(),
-                    node.getTask() != null ? node.getTask().getId() : null,
-                    node.getRawTaskName(),
-                    node.getTask() != null ? node.getTask().getName() : null,
-                    node.getDescription(),
-                    node.getStepOrder(),
-                    node.getTask() != null
-                ))
-                .toList();
-
-        return new MentorRoadmapResponse(
-            mentorRoadmap.getId(),
-            mentorRoadmap.getMentorId(),
-            mentorRoadmap.getTitle(),
-            mentorRoadmap.getDescription(),
-            nodeResponses,
-            mentorRoadmap.getCreateDate(),
-            mentorRoadmap.getModifyDate()
-        );
+        return MentorRoadmapResponse.from(mentorRoadmap);
     }
 
     // 멘토 로드맵 삭제
@@ -122,11 +98,7 @@ public class MentorRoadmapService {
         log.info("멘토 로드맵 삭제 완료 - 멘토 ID: {}, 로드맵 ID: {}", mentorId, roadmapId);
     }
 
-    /**
-     * Task 유효성 검증 + 결과 캐싱 (중복 조회 방지)
-     * @param nodeRequests 노드 요청 목록
-     * @return taskId -> Task 매핑 맵 (null taskId 제외)
-     */
+   // Task 유효성 검증 + 결과 캐싱 (중복 조회 방지)
     private Map<Long, Task> getValidatedTasksMap(List<RoadmapNodeRequest> nodeRequests) {
         List<Long> taskIds = nodeRequests.stream()
                 .map(RoadmapNodeRequest::taskId)
@@ -156,12 +128,7 @@ public class MentorRoadmapService {
         return existingTaskMap;
     }
 
-    /**
-     * 캐싱된 Task 정보를 활용하여 모든 노드 생성 (중복 조회 방지)
-     * @param nodeRequests 노드 요청 목록
-     * @param tasksMap 캐싱된 Task 정보
-     * @return 생성된 RoadmapNode 목록
-     */
+    // 캐싱된 Task 정보를 활용하여 모든 노드 생성 (중복 조회 방지)
     private List<RoadmapNode> createAllNodesWithCachedTasks(
             List<RoadmapNodeRequest> nodeRequests,
             Map<Long, Task> tasksMap

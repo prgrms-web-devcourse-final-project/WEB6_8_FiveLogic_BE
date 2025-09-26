@@ -9,14 +9,13 @@ import java.util.Optional;
 
 public interface MentorRoadmapRepository extends JpaRepository<MentorRoadmap, Long> {
 
-    // 사용하지 않는 메서드 - 필요시 활성화
-    // @Query("""
-    //     SELECT mr FROM MentorRoadmap mr
-    //     LEFT JOIN FETCH mr.nodes n
-    //     LEFT JOIN FETCH n.task
-    //     WHERE mr.id = :id
-    //     """)
-    // Optional<MentorRoadmap> findByIdWithNodes(@Param("id") Long id);
+     @Query("""
+         SELECT mr FROM MentorRoadmap mr
+         LEFT JOIN FETCH mr.nodes n
+         LEFT JOIN FETCH n.task
+         WHERE mr.id = :id
+         """)
+     Optional<MentorRoadmap> findByIdWithNodes(@Param("id") Long id);
 
     @Query("""
         SELECT mr FROM MentorRoadmap mr

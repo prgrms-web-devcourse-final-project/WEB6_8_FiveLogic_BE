@@ -5,8 +5,6 @@ import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.util.List;
 
 @Entity
@@ -15,7 +13,7 @@ import java.util.List;
         @Index(name = "idx_roadmap_composite", columnList = "roadmap_id, roadmap_type, step_order"),
         @Index(name = "idx_roadmap_parent", columnList = "roadmap_id, roadmap_type, parent_id")
 })
-@Getter @Setter
+@Getter
 @NoArgsConstructor
 public class RoadmapNode extends BaseEntity {
     @Column(name = "roadmap_id", nullable = false)
@@ -58,5 +56,22 @@ public class RoadmapNode extends BaseEntity {
     public void addChild(RoadmapNode child) {
         children.add(child);
         child.setParent(this);
+    }
+
+    // 현재 사용되는 setter들을 대체하는 메서드들
+    public void setRoadmapId(Long roadmapId) {
+        this.roadmapId = roadmapId;
+    }
+
+    public void setRoadmapType(RoadmapType roadmapType) {
+        this.roadmapType = roadmapType;
+    }
+
+    public void setStepOrder(int stepOrder) {
+        this.stepOrder = stepOrder;
+    }
+
+    public void setParent(RoadmapNode parent) {
+        this.parent = parent;
     }
 }

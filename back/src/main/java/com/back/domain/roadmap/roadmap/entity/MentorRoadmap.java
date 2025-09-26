@@ -12,7 +12,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "mentor_roadmap")
-@Getter @Setter
+@Getter
 @NoArgsConstructor
 public class MentorRoadmap extends BaseEntity {
     @Column(name = "title", nullable = false)
@@ -61,6 +61,19 @@ public class MentorRoadmap extends BaseEntity {
         if (this.getId() != null) {
             nodes.forEach(node -> node.setRoadmapId(this.getId()));
         }
+    }
+
+    // 제목 수정 (비즈니스 로직)
+    public void updateTitle(String newTitle) {
+        if (newTitle == null || newTitle.trim().isEmpty()) {
+            throw new IllegalArgumentException("로드맵 제목은 필수입니다.");
+        }
+        this.title = newTitle.trim();
+    }
+
+    // 설명 수정 (비즈니스 로직)
+    public void updateDescription(String newDescription) {
+        this.description = newDescription;
     }
 
 }
