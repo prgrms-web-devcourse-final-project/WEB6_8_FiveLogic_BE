@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-public record MentorRoadmapCreateRequest(
+public record MentorRoadmapSaveRequest(
         @NotBlank(message = "로드맵 제목은 필수입니다.")
         @Size(max = 100, message = "로드맵 제목은 100자를 초과할 수 없습니다.")
         String title,

@@ -5,6 +5,8 @@ import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -28,7 +30,7 @@ public class RoadmapNode extends BaseEntity {
     private RoadmapNode parent;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<RoadmapNode> children;
+    private List<RoadmapNode> children = new ArrayList<>();
 
     @Column(name = "step_order", nullable = false)
     private int stepOrder = 0;
@@ -47,31 +49,27 @@ public class RoadmapNode extends BaseEntity {
         MENTOR, JOB
     }
 
-    public RoadmapNode(String rawTaskName, String description, Task task) {
+    public RoadmapNode(String rawTaskName, String description, Task task, int stepOrder, long roadmapId, RoadmapType roadmapType) {
         this.rawTaskName = rawTaskName;
         this.description = description;
         this.task = task;
-    }
-
-    public void addChild(RoadmapNode child) {
-        children.add(child);
-        child.setParent(this);
-    }
-
-    // 현재 사용되는 setter들을 대체하는 메서드들
-    public void setRoadmapId(Long roadmapId) {
+        this.stepOrder = stepOrder;
         this.roadmapId = roadmapId;
-    }
-
-    public void setRoadmapType(RoadmapType roadmapType) {
         this.roadmapType = roadmapType;
     }
 
-    public void setStepOrder(int stepOrder) {
-        this.stepOrder = stepOrder;
+    public void addChild(RoadmapNode child) {
+        if (child == null) {
+            throw new IllegalArgumentException("자식 노드는 null일 수 없습니다.");
+        }
+        if (this.children == null) {
+            this.children = new ArrayList<>();
+        }
+        this.children.add(child);
+        child.setParent(this);
     }
 
-    public void setParent(RoadmapNode parent) {
+    private void setParent(RoadmapNode parent) {
         this.parent = parent;
     }
 }

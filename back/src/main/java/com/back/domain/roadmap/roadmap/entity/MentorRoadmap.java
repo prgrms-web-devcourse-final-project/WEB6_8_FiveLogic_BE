@@ -4,7 +4,6 @@ import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.util.ArrayList;
@@ -42,12 +41,12 @@ public class MentorRoadmap extends BaseEntity {
         return nodes.isEmpty() ? null : nodes.get(0);
     }
 
-    // 노드 추가 헬퍼 메서드 (저장 후 사용)
+    // 노드 추가 헬퍼 메서드 (이미 완전히 초기화된 노드 추가)
     public void addNode(RoadmapNode node) {
-        if (this.getId() != null) {
-            node.setRoadmapId(this.getId());
+        if (node == null) {
+            throw new IllegalArgumentException("추가할 노드는 null일 수 없습니다.");
         }
-        node.setRoadmapType(RoadmapNode.RoadmapType.MENTOR);
+        // 노드는 이미 생성자에서 완전히 초기화되어 전달됨
         this.nodes.add(node);
     }
 
@@ -56,12 +55,6 @@ public class MentorRoadmap extends BaseEntity {
         nodes.forEach(this::addNode);
     }
 
-    // 저장 후 roadmapId 설정 (cascade 사용 시 필요)
-    public void updateNodesWithRoadmapId() {
-        if (this.getId() != null) {
-            nodes.forEach(node -> node.setRoadmapId(this.getId()));
-        }
-    }
 
     // 제목 수정 (비즈니스 로직)
     public void updateTitle(String newTitle) {
@@ -76,4 +69,7 @@ public class MentorRoadmap extends BaseEntity {
         this.description = newDescription;
     }
 
+    public void clearNodes() {
+        this.nodes.clear();
+    }
 }

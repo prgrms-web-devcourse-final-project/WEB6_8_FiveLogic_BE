@@ -1,8 +1,8 @@
 package com.back.domain.roadmap.roadmap.controller;
 
 import com.back.domain.member.member.entity.Member;
-import com.back.domain.roadmap.roadmap.dto.request.MentorRoadmapCreateRequest;
-import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapCreateResponse;
+import com.back.domain.roadmap.roadmap.dto.request.MentorRoadmapSaveRequest;
+import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapSaveResponse;
 import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapResponse;
 import com.back.domain.roadmap.roadmap.service.MentorRoadmapService;
 import com.back.global.exception.ServiceException;
@@ -40,10 +40,10 @@ public class MentorRoadmapController {
                     """
     )
     @PostMapping
-    public RsData<MentorRoadmapCreateResponse> create(@Valid @RequestBody MentorRoadmapCreateRequest request) {
+    public RsData<MentorRoadmapSaveResponse> create(@Valid @RequestBody MentorRoadmapSaveRequest request) {
         Member member = validateMentorAuth();
 
-        MentorRoadmapCreateResponse response = mentorRoadmapService.create(member.getId(), request);
+        MentorRoadmapSaveResponse response = mentorRoadmapService.create(member.getId(), request);
 
         return new RsData<>(
                 "201",
@@ -62,13 +62,27 @@ public class MentorRoadmapController {
                     - 모든 노드 정보 (stepOrder 순으로 정렬)
                     """
     )
-    @GetMapping("/{Id}")
+    @GetMapping("/{id}")
     public RsData<MentorRoadmapResponse> getByMentorId(@PathVariable Long id) {
         MentorRoadmapResponse response = mentorRoadmapService.getById(id);
 
         return new RsData<>(
                 "200",
                 "멘토 로드맵 조회 성공",
+                response
+        );
+    }
+
+    @Operation(summary = "멘토 로드맵 수정", description = "로드맵 ID로 로드맵을 찾아 수정합니다. 본인이 생성한 로드맵만 수정할 수 있습니다.")
+    @PutMapping("/{id}")
+    public RsData<MentorRoadmapSaveResponse> update(@PathVariable Long id, @Valid @RequestBody MentorRoadmapSaveRequest request) {
+        Member member = validateMentorAuth();
+
+        MentorRoadmapSaveResponse response = mentorRoadmapService.update(id, member.getId(), request);
+
+        return new RsData<>(
+                "200",
+                "멘토 로드맵이 성공적으로 수정되었습니다.",
                 response
         );
     }
