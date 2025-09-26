@@ -39,7 +39,6 @@ public class VideoService {
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 비디오입니다."));
     }
 
-    //HeadObjectRequest 고려
     public URL generateUploadUrl(String bucket, String objectKey) {
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucket)

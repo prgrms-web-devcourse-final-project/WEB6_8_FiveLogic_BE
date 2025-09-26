@@ -7,13 +7,11 @@ import com.back.domain.news.news.entity.News;
 import com.back.domain.news.news.repository.NewsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class LikeService {
     private final LikeRepository likeRepository;
     private final NewsRepository newsRepository;
