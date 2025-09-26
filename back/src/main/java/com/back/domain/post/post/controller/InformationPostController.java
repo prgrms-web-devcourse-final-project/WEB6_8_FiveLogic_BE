@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("post/infor")
+@RequestMapping("/post")
 @RequiredArgsConstructor
 public class InformationPostController {
     private final PostLikeService postLikeService;
@@ -27,14 +27,14 @@ public class InformationPostController {
 
 
     @Operation(summary = "게시글 조회 - 페이징 처리")
-    @GetMapping
+    @GetMapping("/page/{postType}")
     public RsData<PostPagingResponse> getPostWithPage(
+            @PathVariable Post.PostType postType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword
     ) {
-        Post.PostType postTyp = Post.PostType.INFORMATIONPOST;
-        Page<PostDto> postPage = postService.getPosts(keyword, page,size, postTyp);
+        Page<PostDto> postPage = postService.getPosts(keyword, page,size, postType);
         PostPagingResponse resDto = PostPagingResponse.from(postPage);
 
         return new RsData<>("200", "게시글이 조회 되었습니다.", resDto);
@@ -109,7 +109,7 @@ public class InformationPostController {
     }
 
     @Operation(summary = "게시글 싫어요 (Show)")
-    @GetMapping("/{post_id}/Disliked")
+    @GetMapping("/{post_id}/disliked")
     public RsData<PostLikedResponse> getDisLike(@PathVariable Long post_id) {
         int likeCount = postLikeService.getDisLikeCount(post_id);
         PostLikedResponse postLikedResponse = new PostLikedResponse(likeCount);
@@ -125,6 +125,8 @@ public class InformationPostController {
         return new RsData<>("200", "게시글 싫어요 성공", null);
     }
 
+
+    @Operation(summary = "게시글 상세페이지")
     @GetMapping("/Detail/{post_id}")
     public RsData<PostDetailResponse> getPostDetail(@PathVariable Long post_id) {
 

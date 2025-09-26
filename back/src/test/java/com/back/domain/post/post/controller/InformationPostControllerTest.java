@@ -75,7 +75,7 @@ public class InformationPostControllerTest {
     void t1() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        post("/post/infor")
+                        post("/post")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
@@ -106,7 +106,7 @@ public class InformationPostControllerTest {
     void t6() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        post("/post/infor")
+                        post("/post")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
@@ -133,7 +133,7 @@ public class InformationPostControllerTest {
     void t2() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        post("/post/infor")
+                        post("/post")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
@@ -159,7 +159,7 @@ public class InformationPostControllerTest {
     void t3() throws Exception {
         // 테스트용 게시글 먼저 생성
         mvc.perform(
-                post("/post/infor")
+                post("/post")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                             {
@@ -172,7 +172,7 @@ public class InformationPostControllerTest {
         );
 
         mvc.perform(
-                post("/post/infor")
+                post("/post")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                             {
@@ -187,7 +187,7 @@ public class InformationPostControllerTest {
         // 페이징 조회 테스트 - 기본값
         ResultActions resultActions = mvc
                 .perform(
-                        get("/post/infor")
+                        get("/post/page/{postType}", "INFORMATIONPOST")
                 )
                 .andDo(print());
 
@@ -197,7 +197,7 @@ public class InformationPostControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.posts").isArray())
-                .andExpect(jsonPath("$.data.currentPage").value(1))
+                .andExpect(jsonPath("$.data.currentPage").value(0))
                 .andExpect(jsonPath("$.data.totalElements").exists())
                 .andExpect(jsonPath("$.msg").value("게시글이 조회 되었습니다."));
     }
@@ -207,7 +207,7 @@ public class InformationPostControllerTest {
     void t3_1() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        get("/post/infor")
+                        get("/post/page/{postType}", "INFORMATIONPOST")
                                 .param("page", "0")
                                 .param("size", "5")
                 )
@@ -228,7 +228,7 @@ public class InformationPostControllerTest {
     void t3_2() throws Exception {
         // 검색 대상 게시글 생성
         mvc.perform(
-                post("/post/infor")
+                post("/post")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                             {
@@ -242,7 +242,7 @@ public class InformationPostControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        get("/post/infor")
+                        get("/post/page/{postType}", "INFORMATIONPOST")
                                 .param("keyword", "Spring")
                                 .param("page", "0")
                                 .param("size", "10")
@@ -262,7 +262,7 @@ public class InformationPostControllerTest {
     void t4() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        get("/post/infor/{post_id}", 1L)
+                        get("/post/{post_id}", 1L)
                 )
                 .andDo(print());
 
@@ -282,7 +282,7 @@ public class InformationPostControllerTest {
     void t5() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        get("/post/infor/{post_id}", 999L)
+                        get("/post/{post_id}", 999L)
                 )
                 .andDo(print());
 
@@ -297,7 +297,7 @@ public class InformationPostControllerTest {
     @DisplayName("게시글 삭제")
     void t7() throws Exception {
         mvc.perform(
-                post("/post/infor")
+                post("/post")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                             {
@@ -312,7 +312,7 @@ public class InformationPostControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        delete("/post/infor/{post_id}", 7L)
+                        delete("/post/{post_id}", 7L)
                 )
                 .andDo(print());
 
@@ -328,7 +328,7 @@ public class InformationPostControllerTest {
     void t8() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        delete("/post/infor/{post_id}", 3L)
+                        delete("/post/{post_id}", 3L)
                 )
                 .andDo(print());
 
@@ -343,7 +343,7 @@ public class InformationPostControllerTest {
     @DisplayName("게시글 수정")
     void t9() throws Exception {
         mvc.perform(
-                post("/post/infor")
+                post("/post")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                             {
@@ -358,7 +358,7 @@ public class InformationPostControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        put("/post/infor/{post_id}", 8L)
+                        put("/post/{post_id}", 8L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                             {                        
@@ -381,7 +381,7 @@ public class InformationPostControllerTest {
     void t10() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        put("/post/infor/{post_id}", 2L)
+                        put("/post/{post_id}", 2L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                             {                        
@@ -404,7 +404,7 @@ public class InformationPostControllerTest {
     void t11() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        put("/post/infor/{post_id}", 6L)
+                        put("/post/{post_id}", 6L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                             {                        
@@ -427,7 +427,7 @@ public class InformationPostControllerTest {
     void t12() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        post("/post/infor/{post_id}/liked", 1L)
+                        post("/post/{post_id}/liked", 1L)
                 )
                 .andDo(print());
 
@@ -443,7 +443,7 @@ public class InformationPostControllerTest {
     void t13() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        get("/post/infor/{post_id}/liked", 1L)
+                        get("/post/{post_id}/liked", 1L)
                 )
                 .andDo(print());
 
@@ -460,7 +460,7 @@ public class InformationPostControllerTest {
     void t14() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        post("/post/infor/{post_id}/disliked", 1L)
+                        post("/post/{post_id}/disliked", 1L)
                 )
                 .andDo(print());
 
@@ -476,7 +476,7 @@ public class InformationPostControllerTest {
     void t15() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        get("/post/infor/{post_id}/Disliked", 1L)
+                        get("/post/{post_id}/disliked", 1L)
                 )
                 .andDo(print());
 
@@ -492,13 +492,13 @@ public class InformationPostControllerTest {
     @DisplayName("좋아요 -> 싫어요 토글 테스트")
     void t16() throws Exception {
         // 먼저 좋아요
-        mvc.perform(post("/post/infor/{post_id}/liked", 1L))
+        mvc.perform(post("/post/{post_id}/liked", 1L))
                 .andExpect(jsonPath("$.msg").value("게시글 좋아요 성공"));
 
         // 싫어요로 변경
         ResultActions resultActions = mvc
                 .perform(
-                        post("/post/infor/{post_id}/disliked", 1L)
+                        post("/post/{post_id}/disliked", 1L)
                 )
                 .andDo(print());
 
@@ -513,13 +513,13 @@ public class InformationPostControllerTest {
     @DisplayName("좋아요 중복 클릭 - 좋아요 취소")
     void t17() throws Exception {
         // 첫 번째 좋아요
-        mvc.perform(post("/post/infor/{post_id}/liked", 1L))
+        mvc.perform(post("/post/{post_id}/liked", 1L))
                 .andExpect(jsonPath("$.msg").value("게시글 좋아요 성공"));
 
         // 두 번째 좋아요 (취소)
         ResultActions resultActions = mvc
                 .perform(
-                        post("/post/infor/{post_id}/liked", 1L)
+                        post("/post/{post_id}/liked", 1L)
                 )
                 .andDo(print());
 
@@ -535,11 +535,11 @@ public class InformationPostControllerTest {
     void t18() throws Exception {
 
         // 좋아요 추가하여 좋아요 정보도 함께 조회되는지 확인
-        mvc.perform(post("/post/infor/{post_id}/liked", 1L));
+        mvc.perform(post("/post/{post_id}/liked", 1L));
 
         ResultActions resultActions = mvc
                 .perform(
-                        get("/post/infor/Detail/{post_id}", 1L)
+                        get("/post/Detail/{post_id}", 1L)
                 )
                 .andDo(print());
 
@@ -566,7 +566,7 @@ public class InformationPostControllerTest {
     void t19() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        get("/post/infor/Detail/{post_id}", 999L)
+                        get("/post/Detail/{post_id}", 999L)
                 )
                 .andDo(print());
 
