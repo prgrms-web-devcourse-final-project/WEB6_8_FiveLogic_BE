@@ -21,44 +21,33 @@ public class Video extends BaseEntity {
     @Column(name = "transcoding_results")
     private String transcodingResults;
 
-    private String originalPath;
-
-    private Integer views;
-
-    private String originalFileName;
+    private String path;
 
     private Integer duration;
 
     private Long fileSize;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Video(String uuid, String transcodingResults, String originalPath, Integer views, String originalFileName, Integer duration, Long fileSize) {
+    private Video(String uuid, String transcodingResults, String path, Integer duration, Long fileSize) {
         this.uuid = uuid;
         this.transcodingResults = transcodingResults;
-        this.originalPath = originalPath;
-        this.views = views;
-        this.originalFileName = originalFileName;
+        this.path = path;
         this.duration = duration;
         this.fileSize = fileSize;
     }
 
-    public static Video create(String uuid, String transcodingResults, String originalPath, String originalFileName, Integer duration, Long fileSize) {
+    public static Video create(String uuid, String transcodingResults, String path, Integer duration, Long fileSize) {
         if (uuid == null || uuid.isBlank()) {
             throw new IllegalArgumentException("uuid cannot be null or empty");
         }
-        if (originalPath == null || originalPath.isBlank()) {
-            throw new IllegalArgumentException("originalPath cannot be null or empty");
-        }
-        if (originalFileName == null || originalFileName.isBlank()) {
-            throw new IllegalArgumentException("originalFileName cannot be null or empty");
+        if (path == null || path.isBlank()) {
+            throw new IllegalArgumentException("path cannot be null or empty");
         }
 
         return Video.builder()
                 .uuid(uuid)
                 .transcodingResults(transcodingResults)
-                .originalPath(originalPath)
-                .views(0)
-                .originalFileName(originalFileName)
+                .path(path)
                 .duration(duration)
                 .fileSize(fileSize)
                 .build();
