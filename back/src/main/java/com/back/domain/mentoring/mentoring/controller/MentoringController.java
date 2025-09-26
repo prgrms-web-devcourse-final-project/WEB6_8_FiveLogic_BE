@@ -1,7 +1,7 @@
 package com.back.domain.mentoring.mentoring.controller;
 
 import com.back.domain.member.member.entity.Member;
-import com.back.domain.mentoring.mentoring.dto.MentoringDto;
+import com.back.domain.mentoring.mentoring.dto.MentoringWithTagsDto;
 import com.back.domain.mentoring.mentoring.dto.request.MentoringRequest;
 import com.back.domain.mentoring.mentoring.dto.response.MentoringPagingResponse;
 import com.back.domain.mentoring.mentoring.dto.response.MentoringResponse;
@@ -31,7 +31,7 @@ public class MentoringController {
         @RequestParam(defaultValue = "10") int size,
         @RequestParam(required = false) String keyword
     ) {
-        Page<MentoringDto> mentoringPage = mentoringService.getMentorings(keyword, page, size);
+        Page<MentoringWithTagsDto> mentoringPage = mentoringService.getMentorings(keyword, page, size);
         MentoringPagingResponse resDto = MentoringPagingResponse.from(mentoringPage);
 
         return new RsData<>(

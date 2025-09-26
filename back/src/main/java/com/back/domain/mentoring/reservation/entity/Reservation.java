@@ -57,6 +57,12 @@ public class Reservation extends BaseEntity {
         // 양방향 동기화
         if (status.equals(ReservationStatus.CANCELED) || status.equals(ReservationStatus.REJECTED)) {
             mentorSlot.removeReservation();
+        } else {
+            mentorSlot.updateStatus();
         }
+    }
+
+    public boolean isMentee(Mentee mentee) {
+        return this.mentee.equals(mentee);
     }
 }
