@@ -64,11 +64,12 @@ public class PostInitData implements ApplicationRunner {
     private void createPost(String title, String content, Member member, Post.PostType type) {
         validPostType(String.valueOf(type));
 
-        Post post = new Post();
-        post.setTitle(title);
-        post.setContent(content);
-        post.setPostType(type);
-        post.setMember(member);
+        Post post = Post.builder()
+                        .title(title)
+                        .content(content)
+                        .member(member)
+                        .postType(type)
+                        .build();
 
         postRepository.save(post);
     }

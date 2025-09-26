@@ -6,6 +6,7 @@ import com.back.global.exception.ServiceException;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -42,9 +43,19 @@ public class Post extends BaseEntity {
     private int viewCount;
 
     private Boolean isMento;
-    private String carrer;
+    private String career;
 
     private Boolean isResolve;
+
+    @Builder
+    public Post(String title, String content, Member member, PostType postType, List<PostComment> comments) {
+        this.title = title;
+        this.content = content;
+        this.member = member;
+        this.postType = postType;
+        this.comments = comments != null ? comments : new ArrayList<>();
+        this.viewCount = 0;
+    }
 
 
 

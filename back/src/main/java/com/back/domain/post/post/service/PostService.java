@@ -35,11 +35,17 @@ public class PostService {
         Post.validPostType(postTypeStr);
         Post.PostType postType = Post.PostType.valueOf(postTypeStr);
 
-        Post post = new Post();
-        post.setTitle(postCreateRequest.getTitle());
-        post.setContent(postCreateRequest.getContent());
-        post.setMember(member);
-        post.setPostType(postType);
+        Post post = Post.builder()
+                .title(postCreateRequest.getTitle())
+                .content(postCreateRequest.getContent())
+                .member(member)
+                .postType(postType)
+                .build();
+
+//        post.setTitle(postCreateRequest.getTitle());
+//        post.setContent(postCreateRequest.getContent());
+//        post.setMember(member);
+//        post.setPostType(postType);
 
         postRepository.save(post);
 
