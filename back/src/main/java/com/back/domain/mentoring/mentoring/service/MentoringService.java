@@ -5,7 +5,7 @@ import com.back.domain.member.mentor.dto.MentorDto;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.member.mentor.repository.MentorRepository;
 import com.back.domain.mentoring.mentoring.dto.MentoringDetailDto;
-import com.back.domain.mentoring.mentoring.dto.MentoringDto;
+import com.back.domain.mentoring.mentoring.dto.MentoringWithTagsDto;
 import com.back.domain.mentoring.mentoring.dto.request.MentoringRequest;
 import com.back.domain.mentoring.mentoring.dto.response.MentoringResponse;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
@@ -30,11 +30,11 @@ public class MentoringService {
     private final MentorSlotRepository mentorSlotRepository;
 
     @Transactional(readOnly = true)
-    public Page<MentoringDto> getMentorings(String keyword, int page, int size) {
+    public Page<MentoringWithTagsDto> getMentorings(String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
         return mentoringRepository.searchMentorings(keyword, pageable)
-            .map(MentoringDto::from);
+            .map(MentoringWithTagsDto::from);
     }
 
     @Transactional(readOnly = true)

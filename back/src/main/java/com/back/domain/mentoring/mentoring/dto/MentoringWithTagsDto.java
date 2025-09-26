@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
-public record MentoringDto(
+public record MentoringWithTagsDto(
     @Schema(description = "멘토링 ID")
     Long mentoringId,
     @Schema(description = "멘토링 제목")
@@ -13,8 +13,8 @@ public record MentoringDto(
     @Schema(description = "멘토링 태그")
     List<String> tags
 ) {
-    public static MentoringDto from(Mentoring mentoring) {
-        return new MentoringDto(
+    public static MentoringWithTagsDto from(Mentoring mentoring) {
+        return new MentoringWithTagsDto(
             mentoring.getId(),
             mentoring.getTitle(),
             mentoring.getTags()
