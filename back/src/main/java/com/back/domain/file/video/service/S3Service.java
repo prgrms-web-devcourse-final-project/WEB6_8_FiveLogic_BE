@@ -24,7 +24,7 @@ public class S3Service {
     private final S3Presigner presigner;
     private final S3Client s3Client;
 
-    public URL generateUploadUrl(String bucket, String objectKey) {
+    public URL generateUploadUrl(String bucket, String objectKey, Integer expireMinutes) {
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(objectKey)
@@ -32,7 +32,7 @@ public class S3Service {
 
         PresignedPutObjectRequest presignedRequest =
                 presigner.presignPutObject(builder -> builder
-                        .signatureDuration(Duration.ofMinutes(30))
+                        .signatureDuration(Duration.ofMinutes(expireMinutes))
                         .putObjectRequest(request));
 
         URL url = presignedRequest.url();
@@ -41,6 +41,10 @@ public class S3Service {
         }
 
         return url;
+    }
+
+    public URL generateUploadUrl(String bucket, String objectKey) {
+        return generateUploadUrl(bucket, objectKey, 30);
     }
 
     public URL generateDownloadUrl(String bucket, String objectKey) {
