@@ -1,6 +1,7 @@
 package com.back.domain.mentoring.reservation.controller;
 
-import com.back.domain.member.member.entity.Member;
+import com.back.domain.member.member.service.MemberStorage;
+import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.mentoring.reservation.dto.request.ReservationRequest;
 import com.back.domain.mentoring.reservation.dto.response.ReservationResponse;
 import com.back.domain.mentoring.reservation.service.ReservationService;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ReservationController {
 
     private final ReservationService reservationService;
+    private final MemberStorage memberStorage;
     private final Rq rq;
 
     @PostMapping
@@ -31,8 +33,9 @@ public class ReservationController {
     public RsData<ReservationResponse> createReservation(
         @RequestBody @Valid ReservationRequest reqDto
     ) {
-        Member member = rq.getActor();
-        ReservationResponse resDto = reservationService.createReservation(member, reqDto);
+        Mentee mentee = memberStorage.findMenteeByMember(rq.getActor());
+
+        ReservationResponse resDto = reservationService.createReservation(mentee, reqDto);
 
         return new RsData<>(
             "201",

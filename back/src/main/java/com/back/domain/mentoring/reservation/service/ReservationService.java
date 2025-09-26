@@ -1,6 +1,5 @@
 package com.back.domain.mentoring.reservation.service;
 
-import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.service.MentoringStorage;
@@ -25,8 +24,7 @@ public class ReservationService {
     private final MentoringStorage mentoringStorage;
 
     @Transactional
-    public ReservationResponse createReservation(Member menteeMember, ReservationRequest reqDto) {
-        Mentee mentee = mentoringStorage.findMenteeByMember(menteeMember);
+    public ReservationResponse createReservation(Mentee mentee, ReservationRequest reqDto) {
         Mentoring mentoring = mentoringStorage.findMentoring(reqDto.mentoringId());
         MentorSlot mentorSlot = mentoringStorage.findMentorSlot(reqDto.mentorSlotId());
 
