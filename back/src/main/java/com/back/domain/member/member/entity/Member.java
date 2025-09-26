@@ -14,13 +14,13 @@ public class Member extends BaseEntity {
     @Column(unique = true, nullable = false, length = 36)
     private String publicId;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String email;
 
     @Column(nullable = false)
     private String name;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String nickname;
 
     @Column(nullable = false)
@@ -30,6 +30,9 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private Role role;
 
+    @Column(nullable = false)
+    private Boolean isDeleted = false;
+
     public enum Role {
         MENTOR, MENTEE, ADMIN
     }
@@ -38,12 +41,21 @@ public class Member extends BaseEntity {
         this.nickname = nickname;
     }
 
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    public void updateEmail(String email) {
+        this.email = email;
+    }
+
     public Member(String email, String password, String name, String nickname, Role role) {
         this.email = email;
         this.password = password;
         this.name = name;
         this.nickname = nickname;
         this.role = role;
+        this.isDeleted = false;
     }
 
     public Member(Long id, String email, String name, String nickname, Role role) {
@@ -52,6 +64,11 @@ public class Member extends BaseEntity {
         this.name = name;
         this.nickname = nickname;
         this.role = role;
+        this.isDeleted = false;
+    }
+
+    public void delete() {
+        this.isDeleted = true;
     }
 
     @PrePersist

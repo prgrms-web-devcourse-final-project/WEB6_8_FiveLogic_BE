@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-public class MemberControllerTest {
+public class MemberAuthControllerTest {
     @Autowired
     private MemberService memberService;
 
@@ -57,7 +57,7 @@ public class MemberControllerTest {
         Member member = memberService.findByEmail("user1@example.com").get();
 
         resultActions
-                .andExpect(handler().handlerType(MemberController.class))
+                .andExpect(handler().handlerType(MemberAuthController.class))
                 .andExpect(handler().methodName("signupMentee"))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.resultCode").value("200-1"))
@@ -80,7 +80,7 @@ public class MemberControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(MemberController.class))
+                .andExpect(handler().handlerType(MemberAuthController.class))
                 .andExpect(handler().methodName("sendMentorVerification"))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.resultCode").value("200-2"))
@@ -117,7 +117,7 @@ public class MemberControllerTest {
         Member member = memberService.findByEmail(email).get();
 
         resultActions
-                .andExpect(handler().handlerType(MemberController.class))
+                .andExpect(handler().handlerType(MemberAuthController.class))
                 .andExpect(handler().methodName("signupMentor"))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.resultCode").value("200-3"))
@@ -152,7 +152,7 @@ public class MemberControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(MemberController.class))
+                .andExpect(handler().handlerType(MemberAuthController.class))
                 .andExpect(handler().methodName("signupMentor"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.resultCode").value("400-2"))
@@ -183,7 +183,7 @@ public class MemberControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(MemberController.class))
+                .andExpect(handler().handlerType(MemberAuthController.class))
                 .andExpect(handler().methodName("signupMentee"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.resultCode").value("400-1"))
@@ -221,7 +221,7 @@ public class MemberControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(MemberController.class))
+                .andExpect(handler().handlerType(MemberAuthController.class))
                 .andExpect(handler().methodName("signupMentor"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.resultCode").value("400-2"))
@@ -399,7 +399,7 @@ public class MemberControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(MemberController.class))
+                .andExpect(handler().handlerType(MemberAuthController.class))
                 .andExpect(handler().methodName("signupMentee"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.resultCode").value("400-3"))
@@ -437,7 +437,7 @@ public class MemberControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(MemberController.class))
+                .andExpect(handler().handlerType(MemberAuthController.class))
                 .andExpect(handler().methodName("signupMentor"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.resultCode").value("400-4"))
@@ -468,7 +468,7 @@ public class MemberControllerTest {
         // 회원 탈퇴 요청
         ResultActions result = mvc
                 .perform(
-                        delete("/auth/me")
+                        post("/auth/me/withdraw")
                                 .cookie(accessToken)
                 )
                 .andDo(print());
@@ -480,8 +480,11 @@ public class MemberControllerTest {
                 .andExpect(cookie().maxAge("accessToken", 0))
                 .andExpect(cookie().maxAge("refreshToken", 0));
 
-        // 탈퇴 후 해당 이메일로 조회했을 때 없어야 함
+        // 소프트 삭제이므로 일반 조회에서는 없어야 함
         assertThat(memberService.findByEmail(email)).isEmpty();
+
+        // 하지만 삭제 포함 조회에서는 존재해야 함 (삭제 상태로)
+        // memberRepository.findByEmailIncludingDeleted(email)로 조회하면 존재해야 함
     }
 
     @Test
@@ -489,233 +492,13 @@ public class MemberControllerTest {
     void t13() throws Exception {
         // 로그인 없이 회원 탈퇴 시도
         ResultActions result = mvc
-                .perform(delete("/auth/me"))
+                .perform(post("/auth/me/withdraw"))
                 .andDo(print());
 
         result
                 .andExpect(status().isUnauthorized());
     }
 
-    @Test
-    @DisplayName("멘티 마이페이지 조회 성공")
-    void t14() throws Exception {
-        String email = "mentee@example.com";
-        memberService.joinMentee(email, "멘티유저", "멘티닉네임", "password123", "Backend");
-
-        ResultActions loginResult = mvc.perform(
-                post("/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(String.format("""
-                                {
-                                    "email": "%s",
-                                    "password": "password123"
-                                }
-                                """, email))
-        );
-
-        Cookie accessToken = loginResult.andReturn().getResponse().getCookie("accessToken");
-
-        ResultActions result = mvc
-                .perform(
-                        get("/auth/me/mentee")
-                                .cookie(accessToken)
-                )
-                .andDo(print());
-
-        result
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resultCode").value("200-9"))
-                .andExpect(jsonPath("$.msg").value("멘티 정보 조회 성공"))
-                .andExpect(jsonPath("$.data.email").value(email))
-                .andExpect(jsonPath("$.data.name").value("멘티유저"))
-                .andExpect(jsonPath("$.data.nickname").value("멘티닉네임"));
-    }
-
-    @Test
-    @DisplayName("멘티 정보 수정 성공")
-    void t15() throws Exception {
-        // 멘티 회원가입
-        String email = "mentee2@example.com";
-        memberService.joinMentee(email, "멘티유저2", "멘티닉네임2", "password123", "Frontend");
-
-        // 로그인하여 쿠키 받기
-        ResultActions loginResult = mvc.perform(
-                post("/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(String.format("""
-                                {
-                                    "email": "%s",
-                                    "password": "password123"
-                                }
-                                """, email))
-        );
-
-        Cookie accessToken = loginResult.andReturn().getResponse().getCookie("accessToken");
-
-        // 멘티 정보 수정
-        ResultActions result = mvc
-                .perform(
-                        put("/auth/me/mentee")
-                                .cookie(accessToken)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
-                                        {
-                                            "nickname": "새로운닉네임",
-                                            "interestedField": "Mobile"
-                                        }
-                                        """)
-                )
-                .andDo(print());
-
-        result
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resultCode").value("200-10"))
-                .andExpect(jsonPath("$.msg").value("멘티 정보 수정 성공"));
-    }
-
-    @Test
-    @DisplayName("멘토 마이페이지 조회 성공")
-    void t16() throws Exception {
-        // 멘토 회원가입
-        String email = "mentor@example.com";
-        memberService.joinMentor(email, "멘토유저", "멘토닉네임", "password123", "Backend", 5);
-
-        // 로그인하여 쿠키 받기
-        ResultActions loginResult = mvc.perform(
-                post("/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(String.format("""
-                                {
-                                    "email": "%s",
-                                    "password": "password123"
-                                }
-                                """, email))
-        );
-
-        Cookie accessToken = loginResult.andReturn().getResponse().getCookie("accessToken");
-
-        // 멘토 마이페이지 조회
-        ResultActions result = mvc
-                .perform(
-                        get("/auth/me/mentor")
-                                .cookie(accessToken)
-                )
-                .andDo(print());
-
-        result
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resultCode").value("200-11"))
-                .andExpect(jsonPath("$.msg").value("멘토 정보 조회 성공"))
-                .andExpect(jsonPath("$.data.email").value(email))
-                .andExpect(jsonPath("$.data.name").value("멘토유저"))
-                .andExpect(jsonPath("$.data.nickname").value("멘토닉네임"))
-                .andExpect(jsonPath("$.data.careerYears").value(5));
-    }
-
-    @Test
-    @DisplayName("멘토 정보 수정 성공")
-    void t17() throws Exception {
-        // 멘토 회원가입
-        String email = "mentor2@example.com";
-        memberService.joinMentor(email, "멘토유저2", "멘토닉네임2", "password123", "Frontend", 3);
-
-        // 로그인하여 쿠키 받기
-        ResultActions loginResult = mvc.perform(
-                post("/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(String.format("""
-                                {
-                                    "email": "%s",
-                                    "password": "password123"
-                                }
-                                """, email))
-        );
-
-        Cookie accessToken = loginResult.andReturn().getResponse().getCookie("accessToken");
-
-        // 멘토 정보 수정
-        ResultActions result = mvc
-                .perform(
-                        put("/auth/me/mentor")
-                                .cookie(accessToken)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
-                                        {
-                                            "nickname": "새로운멘토닉네임",
-                                            "career": "Fullstack",
-                                            "careerYears": 7
-                                        }
-                                        """)
-                )
-                .andDo(print());
-
-        result
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resultCode").value("200-12"))
-                .andExpect(jsonPath("$.msg").value("멘토 정보 수정 성공"));
-    }
-
-    @Test
-    @DisplayName("로그인하지 않은 상태에서 멘티 마이페이지 접근 - 실패")
-    void t18() throws Exception {
-        ResultActions result = mvc
-                .perform(get("/auth/me/mentee"))
-                .andDo(print());
-
-        result
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @DisplayName("로그인하지 않은 상태에서 멘토 마이페이지 접근 - 실패")
-    void t19() throws Exception {
-        ResultActions result = mvc
-                .perform(get("/auth/me/mentor"))
-                .andDo(print());
-
-        result
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @DisplayName("로그인하지 않은 상태에서 멘티 정보 수정 - 실패")
-    void t20() throws Exception {
-        ResultActions result = mvc
-                .perform(
-                        put("/auth/me/mentee")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
-                                        {
-                                            "nickname": "새로운닉네임",
-                                            "interestedField": "Mobile"
-                                        }
-                                        """)
-                )
-                .andDo(print());
-
-        result
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    @DisplayName("로그인하지 않은 상태에서 멘토 정보 수정 - 실패")
-    void t21() throws Exception {
-        ResultActions result = mvc
-                .perform(
-                        put("/auth/me/mentor")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
-                                        {
-                                            "nickname": "새로운멘토닉네임",
-                                            "career": "Fullstack",
-                                            "careerYears": 7
-                                        }
-                                        """)
-                )
-                .andDo(print());
-
-        result
-                .andExpect(status().isUnauthorized());
-    }
+    // TODO: 마이페이지 관련 테스트들은 MemberMyPageControllerTest로 이동됨
 
 }

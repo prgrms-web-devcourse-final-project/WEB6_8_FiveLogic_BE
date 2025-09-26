@@ -24,15 +24,23 @@ public class Mentor extends BaseEntity {
     @Column(name = "career_years")
     private Integer careerYears;
 
+    @Column(nullable = false)
+    private Boolean isDeleted = false;
+
     @Builder
     public Mentor(Member member, Long jobId, Double rate, Integer careerYears) {
         this.member = member;
         this.jobId = jobId;
         this.rate = rate;
         this.careerYears = careerYears;
+        this.isDeleted = false;
     }
 
     public void updateCareerYears(Integer careerYears) {
         this.careerYears = careerYears;
+    }
+
+    public void delete() {
+        this.isDeleted = true;
     }
 }

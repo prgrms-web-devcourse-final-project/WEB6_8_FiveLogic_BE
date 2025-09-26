@@ -1,9 +1,6 @@
 package com.back.domain.member.member.service;
 
-import com.back.domain.member.member.dto.MenteeMyPageResponse;
-import com.back.domain.member.member.dto.MenteeUpdateRequest;
-import com.back.domain.member.member.dto.MentorMyPageResponse;
-import com.back.domain.member.member.dto.MentorUpdateRequest;
+import com.back.domain.member.member.dto.*;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.repository.MemberRepository;
 import com.back.domain.member.mentee.entity.Mentee;
@@ -30,12 +27,14 @@ public class MemberService {
 
     @Transactional
     public Member joinMentee(String email, String name, String nickname, String password, String interestedField) {
+        // 활성 사용자 중 이메일 중복 체크 (탈퇴한 사용자 제외)
         memberRepository.findByEmail(email).ifPresent(
                 member -> {
                     throw new ServiceException("400-1", "이미 존재하는 이메일입니다.");
                 }
         );
 
+        // 활성 사용자 중 닉네임 중복 체크 (탈퇴한 사용자 제외)
         memberRepository.findByNickname(nickname).ifPresent(
                 member -> {
                     throw new ServiceException("400-3", "이미 존재하는 닉네임입니다.");
@@ -54,12 +53,14 @@ public class MemberService {
 
     @Transactional
     public Member joinMentor(String email, String name, String nickname, String password, String career, Integer careerYears) {
+        // 활성 사용자 중 이메일 중복 체크 (탈퇴한 사용자 제외)
         memberRepository.findByEmail(email).ifPresent(
                 member -> {
                     throw new ServiceException("400-2", "이미 존재하는 이메일입니다.");
                 }
         );
 
+        // 활성 사용자 중 닉네임 중복 체크 (탈퇴한 사용자 제외)
         memberRepository.findByNickname(nickname).ifPresent(
                 member -> {
                     throw new ServiceException("400-4", "이미 존재하는 닉네임입니다.");
@@ -105,11 +106,20 @@ public class MemberService {
         Member member = memberRepository.findById(currentUser.getId())
                 .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
 
-        // 관련 엔티티들 먼저 삭제
-        menteeRepository.findByMemberId(member.getId()).ifPresent(menteeRepository::delete);
-        mentorRepository.findByMemberId(member.getId()).ifPresent(mentorRepository::delete);
+        // 소프트 삭제 처리
+        member.delete();
+        memberRepository.save(member);
 
-        memberRepository.delete(member);
+        // 관련 엔티티들도 소프트 삭제
+        menteeRepository.findByMemberIdIncludingDeleted(member.getId()).ifPresent(mentee -> {
+            mentee.delete();
+            menteeRepository.save(mentee);
+        });
+
+        mentorRepository.findByMemberIdIncludingDeleted(member.getId()).ifPresent(mentor -> {
+            mentor.delete();
+            mentorRepository.save(mentor);
+        });
     }
 
     public boolean isRefreshToken(String token) {
@@ -171,16 +181,8 @@ public class MemberService {
 
     @Transactional
     public void updateMentee(Member currentUser, MenteeUpdateRequest request) {
-        // 닉네임 중복 체크 (본인 제외)
-        if (!currentUser.getNickname().equals(request.nickname())) {
-            memberRepository.findByNickname(request.nickname()).ifPresent(
-                    member -> {
-                        if (!member.getId().equals(currentUser.getId())) {
-                            throw new ServiceException("400-3", "이미 존재하는 닉네임입니다.");
-                        }
-                    }
-            );
-        }
+        // 닉네임 중복 체크
+        validateNicknameDuplicate(request.nickname(), currentUser);
 
         // Member 정보 업데이트 (닉네임)
         Member member = memberRepository.findById(currentUser.getId())
@@ -201,16 +203,8 @@ public class MemberService {
 
     @Transactional
     public void updateMentor(Member currentUser, MentorUpdateRequest request) {
-        // 닉네임 중복 체크 (본인 제외)
-        if (!currentUser.getNickname().equals(request.nickname())) {
-            memberRepository.findByNickname(request.nickname()).ifPresent(
-                    member -> {
-                        if (!member.getId().equals(currentUser.getId())) {
-                            throw new ServiceException("400-4", "이미 존재하는 닉네임입니다.");
-                        }
-                    }
-            );
-        }
+        // 닉네임 중복 체크
+        validateNicknameDuplicate(request.nickname(), currentUser);
 
         Mentor mentor = mentorRepository.findByMemberId(currentUser.getId())
                 .orElseThrow(() -> new ServiceException("404-3", "멘토 정보를 찾을 수 없습니다."));
@@ -228,4 +222,94 @@ public class MemberService {
 
         // TODO: career를 jobId로 매핑하는 로직 필요 (현재는 기존 jobId 유지)
     }
+
+
+    public MemberSearchResponse getMemberForAdmin(Long memberId) {
+        Member member = memberRepository.findByIdIncludingDeleted(memberId)
+                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+
+        Mentor mentor = null;
+        Mentee mentee = null;
+
+        if (member.getRole() == Member.Role.MENTOR) {
+            mentor = mentorRepository.findByMemberIdIncludingDeleted(member.getId()).orElse(null);
+        } else if (member.getRole() == Member.Role.MENTEE) {
+            mentee = menteeRepository.findByMemberIdIncludingDeleted(member.getId()).orElse(null);
+        }
+
+        return MemberSearchResponse.from(member, mentor, mentee);
+    }
+
+    @Transactional
+    public void deleteMemberByAdmin(Long memberId) {
+        Member member = memberRepository.findByIdIncludingDeleted(memberId)
+                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+
+        // 이미 탈퇴한 회원인지 확인
+        if (member.getIsDeleted()) {
+            throw new ServiceException("400-1", "이미 탈퇴한 회원입니다.");
+        }
+
+        // 소프트 삭제 처리
+        member.delete();
+        memberRepository.save(member);
+
+        // 관련 엔티티들도 소프트 삭제
+        menteeRepository.findByMemberIdIncludingDeleted(member.getId()).ifPresent(mentee -> {
+            mentee.delete();
+            menteeRepository.save(mentee);
+        });
+
+        mentorRepository.findByMemberIdIncludingDeleted(member.getId()).ifPresent(mentor -> {
+            mentor.delete();
+            mentorRepository.save(mentor);
+        });
+    }
+
+    @Transactional
+    public void updateMemberByAdmin(Long memberId, String name, String nickname, String email,
+                                   String career, Integer careerYears, String interestedField) {
+        Member member = memberRepository.findByIdIncludingDeleted(memberId)
+                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+
+        // 중복 체크
+        validateEmailDuplicate(email, member);
+        validateNicknameDuplicate(nickname, member);
+
+        // Member 정보 업데이트
+        if (name != null) member.updateName(name);
+        if (nickname != null) member.updateNickname(nickname);
+        if (email != null) member.updateEmail(email);
+
+        memberRepository.save(member);
+
+        // 역할별 추가 정보 업데이트
+        if (member.getRole() == Member.Role.MENTOR && (career != null || careerYears != null)) {
+            Mentor mentor = mentorRepository.findByMemberIdIncludingDeleted(member.getId())
+                    .orElse(null);
+            if (mentor != null) {
+                if (careerYears != null) mentor.updateCareerYears(careerYears);
+                mentorRepository.save(mentor);
+            }
+        } else if (member.getRole() == Member.Role.MENTEE && interestedField != null) {
+            // TODO: interestedField 업데이트 로직 필요 (Mentee 엔티티에 업데이트 메서드가 있을 때)
+        }
+    }
+
+    private void validateEmailDuplicate(String email, Member currentMember) {
+        if (email == null || email.equals(currentMember.getEmail())) return;
+
+        if (memberRepository.findByEmail(email).isPresent()) {
+            throw new ServiceException("400-1", "이미 존재하는 이메일입니다.");
+        }
+    }
+
+    private void validateNicknameDuplicate(String nickname, Member currentMember) {
+        if (nickname == null || nickname.equals(currentMember.getNickname())) return;
+
+        if (memberRepository.findByNickname(nickname).isPresent()) {
+            throw new ServiceException("400-3", "이미 존재하는 닉네임입니다.");
+        }
+    }
+
 }

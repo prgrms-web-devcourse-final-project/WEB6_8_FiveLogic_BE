@@ -18,9 +18,17 @@ public class Mentee extends BaseEntity {
     @Column(name = "job_id")
     private Long jobId;
 
+    @Column(nullable = false)
+    private Boolean isDeleted = false;
+
     @Builder
     public Mentee(Member member, Long jobId) {
         this.member = member;
         this.jobId = jobId;
+        this.isDeleted = false;
+    }
+
+    public void delete() {
+        this.isDeleted = true;
     }
 }
