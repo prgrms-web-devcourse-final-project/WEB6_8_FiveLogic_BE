@@ -2,9 +2,7 @@ package com.back.domain.mentoring.slot.service;
 
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
-import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
-import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
-import com.back.domain.mentoring.reservation.repository.ReservationRepository;
+import com.back.domain.mentoring.mentoring.service.MentoringStorage;
 import com.back.domain.mentoring.slot.dto.request.MentorSlotRepetitionRequest;
 import com.back.domain.mentoring.slot.dto.request.MentorSlotRequest;
 import com.back.domain.mentoring.slot.dto.response.MentorSlotDto;
@@ -29,8 +27,7 @@ import java.util.List;
 public class MentorSlotService {
 
     private final MentorSlotRepository mentorSlotRepository;
-    private final MentoringRepository mentoringRepository;
-    private final ReservationRepository reservationRepository;
+    private final MentoringStorage mentorStorage;
 
     @Transactional(readOnly = true)
     public List<MentorSlotDto> getMyMentorSlots(Mentor mentor, LocalDateTime startDate, LocalDateTime endDate) {
@@ -56,15 +53,15 @@ public class MentorSlotService {
 
     @Transactional(readOnly = true)
     public MentorSlotResponse getMentorSlot(Long slotId) {
-        MentorSlot mentorSlot = findMentorSlot(slotId);
-        Mentoring mentoring = findMentoring(mentorSlot.getMentor());
+        MentorSlot mentorSlot = mentorStorage.findMentorSlot(slotId);
+        Mentoring mentoring = mentorStorage.findMentoringByMentor(mentorSlot.getMentor());
 
         return MentorSlotResponse.from(mentorSlot, mentoring);
     }
 
     @Transactional
     public MentorSlotResponse createMentorSlot(MentorSlotRequest reqDto, Mentor mentor) {
-        Mentoring mentoring = findMentoring(mentor);
+        Mentoring mentoring = mentorStorage.findMentoringByMentor(mentor);
 
         DateTimeValidator.validateTimeSlot(reqDto.startDateTime(), reqDto.endDateTime());
         validateOverlappingSlots(mentor, reqDto.startDateTime(), reqDto.endDateTime());
@@ -92,8 +89,8 @@ public class MentorSlotService {
 
     @Transactional
     public MentorSlotResponse updateMentorSlot(Long slotId, MentorSlotRequest reqDto, Mentor mentor) {
-        Mentoring mentoring = findMentoring(mentor);
-        MentorSlot mentorSlot = findMentorSlot(slotId);
+        Mentoring mentoring = mentorStorage.findMentoringByMentor(mentor);
+        MentorSlot mentorSlot = mentorStorage.findMentorSlot(slotId);
 
         validateOwner(mentorSlot, mentor);
         // 활성화된 예약이 있으면 수정 불가
@@ -109,7 +106,7 @@ public class MentorSlotService {
 
     @Transactional
     public void deleteMentorSlot(Long slotId, Mentor mentor) {
-        MentorSlot mentorSlot = findMentorSlot(slotId);
+        MentorSlot mentorSlot = mentorStorage.findMentorSlot(slotId);
 
         validateOwner(mentorSlot, mentor);
         // 예약 기록 존재 여부 검증 (모든 예약 기록 확인)
@@ -152,22 +149,6 @@ public class MentorSlotService {
      */
     private LocalDate findNextOrSameDayOfWeek(LocalDate startDate, DayOfWeek targetDay) {
         return startDate.with(TemporalAdjusters.nextOrSame(targetDay));
-    }
-
-
-    // ===== 헬퍼 메서드 =====
-
-    private Mentoring findMentoring(Mentor mentor) {
-        List<Mentoring> mentorings = mentoringRepository.findByMentorId(mentor.getId());
-        if (mentorings.isEmpty()) {
-            throw new ServiceException(MentoringErrorCode.NOT_FOUND_MENTORING);
-        }
-        return mentorings.getFirst();
-    }
-
-    private MentorSlot findMentorSlot(Long slotId) {
-        return mentorSlotRepository.findById(slotId)
-            .orElseThrow(() -> new ServiceException(MentorSlotErrorCode.NOT_FOUND_MENTOR_SLOT));
     }
 
 
@@ -215,7 +196,7 @@ public class MentorSlotService {
      * - 히스토리 보존
      */
     private void validateNoReservationHistory(Long slotId) {
-        if (reservationRepository.existsByMentorSlotId(slotId)) {
+        if (mentorStorage.hasReservationForMentorSlot(slotId)) {
             throw new ServiceException(MentorSlotErrorCode.CANNOT_DELETE_RESERVED_SLOT);
         }
     }
