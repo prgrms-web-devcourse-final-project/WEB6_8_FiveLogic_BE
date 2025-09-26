@@ -1,4 +1,4 @@
-package com.back.domain.file.s3.service;
+package com.back.domain.file.video.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
