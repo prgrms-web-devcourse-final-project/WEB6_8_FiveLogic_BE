@@ -1,6 +1,7 @@
 server:
   port: 8080
   forward-headers-strategy: native
+
 spring:
   application:
     name: back
@@ -8,6 +9,9 @@ spring:
     import: optional:file:.env[.properties]
   profiles:
     active: dev
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
   output:
     ansi:
       enabled: always
@@ -32,12 +36,13 @@ spring:
         use_sql_comments: true
         default_batch_fetch_size: 100
     open-in-view: false
+
 springdoc: #Swagger ??
   default-produces-media-type: application/json;charset=UTF-8
   swagger-ui:
     path: /swagger-ui.html
   api-docs:
-    path: /api-docs
+    path: /v3/api-docs
 logging:
   level:
     org.hibernate.orm.jdbc.bind: TRACE

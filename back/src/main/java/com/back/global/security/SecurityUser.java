@@ -9,20 +9,25 @@ import java.util.Collection;
 
 public class SecurityUser extends User {
     @Getter
-    private int id;
+    private Long id;
 
     @Getter
     private String name;
 
+    @Getter
+    private String nickname;
+
     public SecurityUser(
-            int id,
+            Long id,
             String username,
             String password,
             String name,
+            String nickname,
             Collection<? extends GrantedAuthority> authorities
     ) {
         super(username, password != null ? password : "", authorities);
         this.id = id;
         this.name = name;
+        this.nickname = nickname;
     }
 }

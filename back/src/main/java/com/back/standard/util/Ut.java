@@ -8,7 +8,9 @@ import io.jsonwebtoken.security.Keys;
 
 import javax.crypto.SecretKey;
 import java.security.Key;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 public class Ut {
@@ -81,6 +83,20 @@ public class Ut {
                 return objectMapper.writeValueAsString(object);
             } catch (Exception e) {
                 return defaultValue;
+            }
+        }
+
+        public static <T> List<T> toList(String json, Class<T> elementClass) {
+            if (json == null || json.isEmpty()) {
+                return new ArrayList<>();
+            }
+            try {
+                return objectMapper.readValue(
+                    json,
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, elementClass)
+                );
+            } catch (Exception e) {
+                return new ArrayList<>();
             }
         }
     }
