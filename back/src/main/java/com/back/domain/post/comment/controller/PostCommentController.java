@@ -9,6 +9,7 @@ import com.back.domain.post.comment.service.PostCommentService;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/post/comment")
+
 public class PostCommentController {
     @Autowired
     private Rq rq;

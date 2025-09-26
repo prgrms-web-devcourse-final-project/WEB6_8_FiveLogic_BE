@@ -197,7 +197,7 @@ public class InformationPostControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.posts").isArray())
-                .andExpect(jsonPath("$.data.currentPage").value(0))
+                .andExpect(jsonPath("$.data.currentPage").value(1))
                 .andExpect(jsonPath("$.data.totalElements").exists())
                 .andExpect(jsonPath("$.msg").value("게시글이 조회 되었습니다."));
     }

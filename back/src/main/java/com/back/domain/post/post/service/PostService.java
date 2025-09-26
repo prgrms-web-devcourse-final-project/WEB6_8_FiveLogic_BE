@@ -80,10 +80,10 @@ public class PostService {
     }
 
 
-    public Page<PostDto> getPosts(String keyword, int page, int size) {
+    public Page<PostDto> getPosts(String keyword, int page, int size ,Post.PostType postType) {
         Pageable pageable = PageRequest.of(page, size);
 
-        return postRepository.searchPosts(keyword, pageable).map(PostDto::from);
+        return postRepository.searchPosts(keyword, pageable, postType).map(PostDto::from);
     }
 
     public Post findById(Long postId) {

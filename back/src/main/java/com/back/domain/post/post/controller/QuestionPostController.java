@@ -17,24 +17,25 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("post/infor")
+@RequestMapping("/post/question")
 @RequiredArgsConstructor
-public class InformationPostController {
+public class QuestionPostController {
+
     private final PostLikeService postLikeService;
     private final PostService postService;
     private final Rq rq;
     private final PostDetailFacade postDetailFacade;
 
 
-    @Operation(summary = "게시글 조회 - 페이징 처리")
+    @Operation(summary = "질문 게시글 조회 - 페이징 처리")
     @GetMapping
     public RsData<PostPagingResponse> getPostWithPage(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String keyword
     ) {
-        Post.PostType postTyp = Post.PostType.INFORMATIONPOST;
-        Page<PostDto> postPage = postService.getPosts(keyword, page,size, postTyp);
+        Post.PostType postTyp = Post.PostType.QUESTIONPOST;
+        Page<PostDto> postPage = postService.getPosts(keyword, page,size,postTyp);
         PostPagingResponse resDto = PostPagingResponse.from(postPage);
 
         return new RsData<>("200", "게시글이 조회 되었습니다.", resDto);
@@ -44,7 +45,7 @@ public class InformationPostController {
     @PostMapping
     public RsData<PostCreateResponse> createPost(
             @Valid @RequestBody PostCreateRequest postCreateRequest
-            ) {
+    ) {
         Member member = rq.getActor();
         Post post = postService.createPost(postCreateRequest, member);
         PostCreateResponse postCreateResponse = PostCreateResponse.from(post);
@@ -132,4 +133,5 @@ public class InformationPostController {
 
         return new RsData<>("200", "게시글 상세 조회 성공", response);
     }
+
 }
