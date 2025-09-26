@@ -6,6 +6,7 @@ import com.back.global.exception.ServiceException;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,7 +18,6 @@ import java.util.Objects;
 @Entity
 @NoArgsConstructor
 @Getter
-@Setter
 public class Post extends BaseEntity {
     @NotNull(message = "제목은 null일 수 없습니다.")
     private String title;
@@ -42,20 +42,30 @@ public class Post extends BaseEntity {
     private int viewCount;
 
     private Boolean isMento;
-    private String carrer;
+    private String career;
 
     private Boolean isResolve;
+
+    @Builder
+    public Post(String title, String content, Member member, PostType postType, List<PostComment> comments) {
+        this.title = title;
+        this.content = content;
+        this.member = member;
+        this.postType = postType;
+        this.comments = comments != null ? comments : new ArrayList<>();
+        this.viewCount = 0;
+    }
 
 
 
     public void addComment(PostComment comment) {
         comments.add(comment);
-        comment.setPost(this);
+        comment.updatePost(this);
     }
 
     public void removeComment(PostComment comment) {
         comments.remove(comment);
-        comment.setPost(null);
+        comment.updatePost(null);
     }
 
 
@@ -74,5 +84,23 @@ public class Post extends BaseEntity {
         } catch (IllegalArgumentException e) {
             throw new ServiceException("400-2", "유효하지 않은 PostType입니다.");
         }
+    }
+
+    public void updateTitle(String title) {
+        if(title == null || title.isBlank()) {
+            throw new ServiceException("400-3", "제목은 null이거나 공백일 수 없습니다.");
+        }
+        this.title = title;
+    }
+
+    public void updateContent(String content) {
+        if(content == null || content.isBlank()) {
+            throw new ServiceException("400-4", "내용은 null이거나 공백일 수 없습니다.");
+        }
+        this.content = content;
+    }
+
+    public void increaseViewCount() {
+        this.viewCount ++;
     }
 }

@@ -1,4 +1,4 @@
-package com.back.global.init;
+package com.back.global.initData;
 
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
@@ -64,11 +64,12 @@ public class PostInitData implements ApplicationRunner {
     private void createPost(String title, String content, Member member, Post.PostType type) {
         validPostType(String.valueOf(type));
 
-        Post post = new Post();
-        post.setTitle(title);
-        post.setContent(content);
-        post.setPostType(type);
-        post.setMember(member);
+        Post post = Post.builder()
+                        .title(title)
+                        .content(content)
+                        .member(member)
+                        .postType(type)
+                        .build();
 
         postRepository.save(post);
     }
@@ -77,11 +78,12 @@ public class PostInitData implements ApplicationRunner {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
 
-        PostComment postComment = new PostComment();
-        postComment.setContent(content);
-        postComment.setMember(member);
-        postComment.setRole(String.valueOf(member.getRole()));
-        postComment.setPost(post);  // 직접 설정
+        PostComment postComment = PostComment.builder()
+                .post(post)
+                .content(content)
+                .member(member)
+                .role(member.getRole().name())
+                .build();
 
         postCommentRepository.save(postComment);
 

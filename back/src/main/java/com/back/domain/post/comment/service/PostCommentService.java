@@ -27,11 +27,12 @@ public class PostCommentService {
     public void createComment(Member member, Long postId, CommentCreateRequest commentCreateRequest) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
 
-        PostComment postComment = new PostComment();
-
-        postComment.setContent(commentCreateRequest.getComment());
-        postComment.setMember(member);
-        postComment.setRole(String.valueOf(member.getRole()));
+        PostComment postComment = PostComment.builder()
+                .post(post)
+                .content(commentCreateRequest.getComment())
+                .member(member)
+                .role(member.getRole().name())
+                .build();
 
         post.addComment(postComment);
 
@@ -78,7 +79,7 @@ public class PostCommentService {
             throw new ServiceException("400", "수정 권한이 없습니다.");
         }
 
-        postComment.setContent(commentModifyRequest.getContent());
+        postComment.updateContent(commentModifyRequest.getContent());
     }
 
 
