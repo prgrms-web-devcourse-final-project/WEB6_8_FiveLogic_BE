@@ -47,7 +47,7 @@ public class S3Service {
         return generateUploadUrl(bucket, objectKey, 30);
     }
 
-    public URL generateDownloadUrl(String bucket, String objectKey) {
+    public URL generateDownloadUrl(String bucket, String objectKey, Integer expireHours) {
         if (!isExist(bucket, objectKey)) {
             throw new NoSuchElementException("요청한 파일이 존재하지 않습니다: " + objectKey);
         }
@@ -59,7 +59,7 @@ public class S3Service {
 
         PresignedGetObjectRequest presignedRequest =
                 presigner.presignGetObject(builder -> builder
-                        .signatureDuration(Duration.ofHours(1))
+                        .signatureDuration(Duration.ofMinutes(expireHours))
                         .getObjectRequest(request));
 
         URL url = presignedRequest.url();
@@ -68,6 +68,10 @@ public class S3Service {
         }
 
         return url;
+    }
+
+    public URL generateDownloadUrl(String bucket, String objectKey) {
+        return generateDownloadUrl(bucket, objectKey, 60);
     }
 
     // DASH용 인덱스 + 세그먼트 URL 발급
