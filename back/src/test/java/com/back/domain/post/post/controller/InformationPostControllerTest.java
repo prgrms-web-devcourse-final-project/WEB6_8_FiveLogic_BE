@@ -530,4 +530,51 @@ public class InformationPostControllerTest {
                 .andExpect(jsonPath("$.msg").value("게시글 좋아요 성공"));
     }
 
+    @Test
+    @DisplayName("게시글 상세 조회 성공")
+    void t18() throws Exception {
+
+        // 좋아요 추가하여 좋아요 정보도 함께 조회되는지 확인
+        mvc.perform(post("/post/infor/{post_id}/liked", 1L));
+
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/post/infor/Detail/{post_id}", 1L)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("getPostDetail"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200"))
+                .andExpect(jsonPath("$.msg").value("게시글 상세 조회 성공"))
+                .andExpect(jsonPath("$.data").exists())
+                .andExpect(jsonPath("$.data.id").value(1L))
+                .andExpect(jsonPath("$.data.title").exists())
+                .andExpect(jsonPath("$.data.content").exists())
+                .andExpect(jsonPath("$.data.authorName").exists())
+                .andExpect(jsonPath("$.data.viewCount").exists())
+                .andExpect(jsonPath("$.data.comments").isArray())
+                .andExpect(jsonPath("$.data.likeCount").exists())
+                .andExpect(jsonPath("$.data.dislikeCount").exists())
+                .andExpect(jsonPath("$.data.userLikeStatus").exists());
+    }
+
+    @Test
+    @DisplayName("게시글 상세 조회 실패 - 존재하지 않는 게시글")
+    void t19() throws Exception {
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/post/infor/Detail/{post_id}", 999L)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().methodName("getPostDetail"))
+                .andExpect(jsonPath("$.resultCode").value("400"))
+                .andExpect(jsonPath("$.msg").value("해당 Id의 게시글이 없습니다."));
+    }
+
 }
