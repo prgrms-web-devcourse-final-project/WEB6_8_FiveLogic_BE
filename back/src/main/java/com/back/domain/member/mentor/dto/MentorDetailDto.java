@@ -3,7 +3,7 @@ package com.back.domain.member.mentor.dto;
 import com.back.domain.member.mentor.entity.Mentor;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-public record MentorDto (
+public record MentorDetailDto(
     @Schema(description = "멘토 ID")
     Long mentorId,
     @Schema(description = "멘토명")
@@ -14,8 +14,8 @@ public record MentorDto (
     @Schema(description = "연차")
     Integer careerYears
 ) {
-    public static MentorDto from(Mentor mentor) {
-        return new MentorDto(
+    public static MentorDetailDto from(Mentor mentor) {
+        return new MentorDetailDto(
             mentor.getId(),
             mentor.getMember().getName(),
             mentor.getRate(),

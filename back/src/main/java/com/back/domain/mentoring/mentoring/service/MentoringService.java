@@ -1,7 +1,7 @@
 package com.back.domain.mentoring.mentoring.service;
 
 import com.back.domain.member.member.entity.Member;
-import com.back.domain.member.mentor.dto.MentorDto;
+import com.back.domain.member.mentor.dto.MentorDetailDto;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.member.mentor.repository.MentorRepository;
 import com.back.domain.mentoring.mentoring.dto.MentoringDetailDto;
@@ -44,7 +44,7 @@ public class MentoringService {
 
         return new MentoringResponse(
             MentoringDetailDto.from(mentoring),
-            MentorDto.from(mentor)
+            MentorDetailDto.from(mentor)
         );
     }
 
@@ -69,7 +69,7 @@ public class MentoringService {
 
         return new MentoringResponse(
             MentoringDetailDto.from(mentoring),
-            MentorDto.from(mentor)
+            MentorDetailDto.from(mentor)
         );
     }
 
@@ -84,7 +84,7 @@ public class MentoringService {
 
         return new MentoringResponse(
             MentoringDetailDto.from(mentoring),
-            MentorDto.from(mentor)
+            MentorDetailDto.from(mentor)
         );
     }
 
