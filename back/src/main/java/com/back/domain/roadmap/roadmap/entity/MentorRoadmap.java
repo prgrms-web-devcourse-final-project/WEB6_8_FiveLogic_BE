@@ -4,11 +4,14 @@ import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "mentor_roadmap")
-@Getter @Setter
+@Getter
 @NoArgsConstructor
 public class MentorRoadmap extends BaseEntity {
     @Column(name = "title", nullable = false)
@@ -20,14 +23,53 @@ public class MentorRoadmap extends BaseEntity {
     @Column(name = "mentor_id", nullable = false)
     private Long mentorId; // Mentor 엔티티 FK
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "root_node_id", nullable = false)
-    private RoadmapNode rootNode;
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "roadmap_id")
+    @SQLRestriction("roadmap_type = 'MENTOR'")
+    @OrderBy("stepOrder ASC")
+    private List<RoadmapNode> nodes;
 
-    public MentorRoadmap(Long mentorId, String title, String description, RoadmapNode rootNode) {
+
+    public MentorRoadmap(Long mentorId, String title, String description) {
         this.mentorId = mentorId;
         this.title = title;
         this.description = description;
-        this.rootNode = rootNode;
+        this.nodes = new ArrayList<>();
+    }
+
+    public RoadmapNode getRootNode() {
+        return nodes.isEmpty() ? null : nodes.get(0);
+    }
+
+    // 노드 추가 헬퍼 메서드 (이미 완전히 초기화된 노드 추가)
+    public void addNode(RoadmapNode node) {
+        if (node == null) {
+            throw new IllegalArgumentException("추가할 노드는 null일 수 없습니다.");
+        }
+        // 노드는 이미 생성자에서 완전히 초기화되어 전달됨
+        this.nodes.add(node);
+    }
+
+    // 여러 노드 일괄 추가
+    public void addNodes(List<RoadmapNode> nodes) {
+        nodes.forEach(this::addNode);
+    }
+
+
+    // 제목 수정 (비즈니스 로직)
+    public void updateTitle(String newTitle) {
+        if (newTitle == null || newTitle.trim().isEmpty()) {
+            throw new IllegalArgumentException("로드맵 제목은 필수입니다.");
+        }
+        this.title = newTitle.trim();
+    }
+
+    // 설명 수정 (비즈니스 로직)
+    public void updateDescription(String newDescription) {
+        this.description = newDescription;
+    }
+
+    public void clearNodes() {
+        this.nodes.clear();
     }
 }
