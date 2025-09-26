@@ -13,9 +13,7 @@ import java.util.UUID;
 public class VideoService {
     private final VideoRepository videoRepository;
 
-
-    public Video createVideo(String transcodingStatus, String originalPath, String originalFilename, Integer duration, Long fileSize) {
-        String uuid = UUID.randomUUID().toString();
+    public Video createVideo(String uuid, String transcodingStatus, String originalPath, String originalFilename, Integer duration, Long fileSize) {
         Video video = Video.create(uuid, transcodingStatus, originalPath, originalFilename, duration, fileSize);
         return videoRepository.save(video);
     }
