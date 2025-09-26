@@ -2,11 +2,13 @@ package com.back.domain.mentoring.slot.controller;
 
 import com.back.domain.member.member.service.MemberStorage;
 import com.back.domain.member.mentor.entity.Mentor;
+import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.slot.dto.request.MentorSlotRepetitionRequest;
 import com.back.domain.mentoring.slot.dto.request.MentorSlotRequest;
 import com.back.domain.mentoring.slot.dto.response.MentorSlotDto;
 import com.back.domain.mentoring.slot.dto.response.MentorSlotResponse;
 import com.back.domain.mentoring.slot.service.MentorSlotService;
+import com.back.global.exception.ServiceException;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
@@ -59,7 +61,9 @@ public class MentorSlotController {
         @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
         @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate
     ) {
-        memberStorage.validateMentorExists(mentorId);
+        if (!memberStorage.existsMentorById(mentorId)) {
+            throw new ServiceException(MentoringErrorCode.NOT_FOUND_MENTOR);
+        }
 
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atStartOfDay();

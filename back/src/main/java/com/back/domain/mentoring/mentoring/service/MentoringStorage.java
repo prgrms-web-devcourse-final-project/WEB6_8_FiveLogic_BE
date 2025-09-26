@@ -14,6 +14,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * Mentoring 관련 도메인들의 데이터 접근을 캡슐화
+ * - 도메인 간 직접 Repository 참조를 방지
+ * - 연관 엔티티 조회/검증/삭제 로직 제공
+ */
 @Component
 @RequiredArgsConstructor
 public class MentoringStorage {
@@ -29,7 +34,7 @@ public class MentoringStorage {
             .orElseThrow(() -> new ServiceException(MentoringErrorCode.NOT_FOUND_MENTORING));
     }
 
-    // 멘토:멘토링 1:N으로 변경 시 삭제 예정
+    // TODO : 멘토:멘토링 1:N으로 변경 시 삭제 예정
     public Mentoring findMentoringByMentor(Mentor mentor) {
         return findMentoringsByMentorId(mentor.getId()).getFirst();
     }

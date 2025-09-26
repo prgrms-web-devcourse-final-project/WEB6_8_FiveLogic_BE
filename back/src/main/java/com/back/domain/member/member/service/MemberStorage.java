@@ -6,7 +6,6 @@ import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentee.repository.MenteeRepository;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.member.mentor.repository.MentorRepository;
-import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -39,14 +38,5 @@ public class MemberStorage {
 
     public boolean existsMentorById(Long mentorId) {
         return mentorRepository.existsById(mentorId);
-    }
-
-
-    // ==== 검증 메서드 =====
-
-    public void validateMentorExists(Long mentorId) {
-        if (!existsMentorById(mentorId)) {
-            throw new ServiceException(MentoringErrorCode.NOT_FOUND_MENTOR);
-        }
     }
 }
