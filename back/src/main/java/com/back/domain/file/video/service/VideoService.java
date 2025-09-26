@@ -6,15 +6,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.NoSuchElementException;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class VideoService {
     private final VideoRepository videoRepository;
 
-    public Video createVideo(String uuid, String transcodingStatus, String originalPath, String originalFilename, Integer duration, Long fileSize) {
-        Video video = Video.create(uuid, transcodingStatus, originalPath, originalFilename, duration, fileSize);
+    public Video createVideo(String uuid, String transcodingStatus, String originalPath, Integer duration, Long fileSize) {
+        Video video = Video.create(uuid, transcodingStatus, originalPath, duration, fileSize);
         return videoRepository.save(video);
     }
 
