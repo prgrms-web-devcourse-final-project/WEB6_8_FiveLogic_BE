@@ -83,7 +83,6 @@ public class VideoFixture {
                 uuid,
                 transcodingResults,
                 originalPath,
-                originalFileName,
                 duration,
                 fileSize
         );
