@@ -5,16 +5,13 @@ import com.back.domain.post.like.service.PostLikeService;
 import com.back.domain.post.post.dto.*;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.service.PostService;
+import com.back.domain.post.rq.PostDetailFacade;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,6 +23,7 @@ public class InformationPostController {
     private final PostLikeService postLikeService;
     private final PostService postService;
     private final Rq rq;
+    private final PostDetailFacade postDetailFacade;
 
 
     @Operation(summary = "게시글 조회 - 페이징 처리")
@@ -103,7 +101,7 @@ public class InformationPostController {
     @Operation(summary = "게시글 좋아요 (Show)")
     @GetMapping("/{post_id}/liked")
     public RsData<PostLikedResponse> getLike(@PathVariable Long post_id) {
-        int likeCount = postLikeService.showLikeCount(post_id);
+        int likeCount = postLikeService.getLikeCount(post_id);
         PostLikedResponse postLikedResponse = new PostLikedResponse(likeCount);
 
         return new RsData<>("200", "게시글 좋아요 조회 성공", postLikedResponse);
@@ -112,7 +110,7 @@ public class InformationPostController {
     @Operation(summary = "게시글 싫어요 (Show)")
     @GetMapping("/{post_id}/Disliked")
     public RsData<PostLikedResponse> getDisLike(@PathVariable Long post_id) {
-        int likeCount = postLikeService.showDisLikeCount(post_id);
+        int likeCount = postLikeService.getDisLikeCount(post_id);
         PostLikedResponse postLikedResponse = new PostLikedResponse(likeCount);
 
         return new RsData<>("200", "게시글 싫어요 조회 성공", postLikedResponse);
@@ -124,5 +122,13 @@ public class InformationPostController {
         postLikeService.disLikePost(post_id);
 
         return new RsData<>("200", "게시글 싫어요 성공", null);
+    }
+
+    @GetMapping("/Detail/{post_id}")
+    public RsData<PostDetailResponse> getPostDetail(@PathVariable Long post_id) {
+
+        PostDetailResponse response = postDetailFacade.getDetailWithViewIncrement(post_id);
+
+        return new RsData<>("200", "게시글 상세 조회 성공", response);
     }
 }
