@@ -1,8 +1,6 @@
 package com.back.domain.mentoring.slot.service;
 
-import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.mentor.entity.Mentor;
-import com.back.domain.member.mentor.repository.MentorRepository;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
@@ -31,14 +29,11 @@ import java.util.List;
 public class MentorSlotService {
 
     private final MentorSlotRepository mentorSlotRepository;
-    private final MentorRepository mentorRepository;
     private final MentoringRepository mentoringRepository;
     private final ReservationRepository reservationRepository;
 
     @Transactional(readOnly = true)
-    public List<MentorSlotDto> getMyMentorSlots(Member member, LocalDateTime startDate, LocalDateTime endDate) {
-        Mentor mentor = findMentorByMember(member);
-
+    public List<MentorSlotDto> getMyMentorSlots(Mentor mentor, LocalDateTime startDate, LocalDateTime endDate) {
         DateTimeValidator.validateTime(startDate, endDate);
 
         List<MentorSlot> availableSlots = mentorSlotRepository.findMySlots(mentor.getId(), startDate, endDate);
@@ -50,7 +45,6 @@ public class MentorSlotService {
 
     @Transactional(readOnly = true)
     public List<MentorSlotDto> getAvailableMentorSlots(Long mentorId, LocalDateTime startDate, LocalDateTime endDate) {
-        validateMentorExists(mentorId);
         DateTimeValidator.validateTime(startDate, endDate);
 
         List<MentorSlot> availableSlots = mentorSlotRepository.findAvailableSlots(mentorId, startDate, endDate);
@@ -69,8 +63,7 @@ public class MentorSlotService {
     }
 
     @Transactional
-    public MentorSlotResponse createMentorSlot(MentorSlotRequest reqDto, Member member) {
-        Mentor mentor = findMentorByMember(member);
+    public MentorSlotResponse createMentorSlot(MentorSlotRequest reqDto, Mentor mentor) {
         Mentoring mentoring = findMentoring(mentor);
 
         DateTimeValidator.validateTimeSlot(reqDto.startDateTime(), reqDto.endDateTime());
@@ -87,9 +80,7 @@ public class MentorSlotService {
     }
 
     @Transactional
-    public void createMentorSlotRepetition(MentorSlotRepetitionRequest reqDto, Member member) {
-        Mentor mentor = findMentorByMember(member);
-
+    public void createMentorSlotRepetition(MentorSlotRepetitionRequest reqDto, Mentor mentor) {
         List<MentorSlot> mentorSlots = new ArrayList<>();
 
         // 지정한 요일별로 슬롯 목록 생성
@@ -100,8 +91,7 @@ public class MentorSlotService {
     }
 
     @Transactional
-    public MentorSlotResponse updateMentorSlot(Long slotId, MentorSlotRequest reqDto, Member member) {
-        Mentor mentor = findMentorByMember(member);
+    public MentorSlotResponse updateMentorSlot(Long slotId, MentorSlotRequest reqDto, Mentor mentor) {
         Mentoring mentoring = findMentoring(mentor);
         MentorSlot mentorSlot = findMentorSlot(slotId);
 
@@ -118,8 +108,7 @@ public class MentorSlotService {
     }
 
     @Transactional
-    public void deleteMentorSlot(Long slotId, Member member) {
-        Mentor mentor = findMentorByMember(member);
+    public void deleteMentorSlot(Long slotId, Mentor mentor) {
         MentorSlot mentorSlot = findMentorSlot(slotId);
 
         validateOwner(mentorSlot, mentor);
@@ -168,11 +157,6 @@ public class MentorSlotService {
 
     // ===== 헬퍼 메서드 =====
 
-    private Mentor findMentorByMember(Member member) {
-        return mentorRepository.findByMemberId(member.getId())
-            .orElseThrow(() -> new ServiceException(MentoringErrorCode.NOT_FOUND_MENTOR));
-    }
-
     private Mentoring findMentoring(Mentor mentor) {
         List<Mentoring> mentorings = mentoringRepository.findByMentorId(mentor.getId());
         if (mentorings.isEmpty()) {
@@ -192,12 +176,6 @@ public class MentorSlotService {
     private static void validateOwner(MentorSlot mentorSlot, Mentor mentor) {
         if (!mentorSlot.isOwnerBy(mentor)) {
             throw new ServiceException(MentorSlotErrorCode.NOT_OWNER);
-        }
-    }
-
-    private void validateMentorExists(Long mentorId) {
-        if (!mentorRepository.existsById(mentorId)) {
-            throw new ServiceException(MentoringErrorCode.NOT_FOUND_MENTOR);
         }
     }
 
