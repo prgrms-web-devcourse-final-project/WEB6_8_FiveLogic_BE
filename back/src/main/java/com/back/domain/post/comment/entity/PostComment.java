@@ -45,6 +45,9 @@ public class PostComment extends BaseEntity {
 
 
     public void updateContent(String content) {
+        if (content == null || content.trim().isEmpty()) {
+            throw new IllegalArgumentException("댓글을 입력해주세요");
+        }
         this.content = content;
     }
 

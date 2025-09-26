@@ -18,7 +18,6 @@ import java.util.Objects;
 @Entity
 @NoArgsConstructor
 @Getter
-@Setter
 public class Post extends BaseEntity {
     @NotNull(message = "제목은 null일 수 없습니다.")
     private String title;
@@ -85,5 +84,23 @@ public class Post extends BaseEntity {
         } catch (IllegalArgumentException e) {
             throw new ServiceException("400-2", "유효하지 않은 PostType입니다.");
         }
+    }
+
+    public void updateTitle(String title) {
+        if(title == null || title.isBlank()) {
+            throw new ServiceException("400-3", "제목은 null이거나 공백일 수 없습니다.");
+        }
+        this.title = title;
+    }
+
+    public void updateContent(String content) {
+        if(content == null || content.isBlank()) {
+            throw new ServiceException("400-4", "내용은 null이거나 공백일 수 없습니다.");
+        }
+        this.content = content;
+    }
+
+    public void increaseViewCount() {
+        this.viewCount ++;
     }
 }
