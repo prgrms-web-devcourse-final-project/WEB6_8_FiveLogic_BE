@@ -23,9 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "ReservationController", description = "예약 API")
 public class ReservationController {
 
+    private final Rq rq;
     private final ReservationService reservationService;
     private final MemberStorage memberStorage;
-    private final Rq rq;
 
     @PostMapping
     @PreAuthorize("hasRole('MENTEE')")

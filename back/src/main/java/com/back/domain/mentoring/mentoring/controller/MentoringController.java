@@ -1,6 +1,7 @@
 package com.back.domain.mentoring.mentoring.controller;
 
-import com.back.domain.member.member.entity.Member;
+import com.back.domain.member.member.service.MemberStorage;
+import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.dto.MentoringWithTagsDto;
 import com.back.domain.mentoring.mentoring.dto.request.MentoringRequest;
 import com.back.domain.mentoring.mentoring.dto.response.MentoringPagingResponse;
@@ -21,8 +22,9 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Tag(name = "MentoringController", description = "멘토링 API")
 public class MentoringController {
-    private final MentoringService mentoringService;
     private final Rq rq;
+    private final MentoringService mentoringService;
+    private final MemberStorage memberStorage;
 
     @GetMapping
     @Operation(summary = "멘토링 목록 조회", description = "멘토링 목록을 조회합니다")
@@ -61,8 +63,8 @@ public class MentoringController {
     public RsData<MentoringResponse> createMentoring(
         @RequestBody @Valid MentoringRequest reqDto
     ) {
-        Member member = rq.getActor();
-        MentoringResponse resDto = mentoringService.createMentoring(reqDto, member);
+        Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
+        MentoringResponse resDto = mentoringService.createMentoring(reqDto, mentor);
 
         return new RsData<>(
             "201",
@@ -77,8 +79,8 @@ public class MentoringController {
         @PathVariable Long mentoringId,
         @RequestBody @Valid MentoringRequest reqDto
     ) {
-        Member member = rq.getActor();
-        MentoringResponse resDto = mentoringService.updateMentoring(mentoringId, reqDto, member);
+        Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
+        MentoringResponse resDto = mentoringService.updateMentoring(mentoringId, reqDto, mentor);
 
         return new RsData<>(
             "200",
@@ -92,8 +94,8 @@ public class MentoringController {
     public RsData<Void> deleteMentoring(
         @PathVariable Long mentoringId
     ) {
-        Member member = rq.getActor();
-        mentoringService.deleteMentoring(mentoringId, member);
+        Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
+        mentoringService.deleteMentoring(mentoringId, mentor);
 
         return new RsData<>(
             "200",

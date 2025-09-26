@@ -17,6 +17,8 @@ public class MemberStorage {
     private final MentorRepository mentorRepository;
     private final MenteeRepository menteeRepository;
 
+    // ===== find 메서드 =====
+
     public Mentor findMentorByMember(Member member) {
         return findMentorByMemberId(member.getId());
     }
@@ -29,5 +31,12 @@ public class MemberStorage {
     public Mentee findMenteeByMember(Member member) {
         return menteeRepository.findByMemberId(member.getId())
             .orElseThrow(() -> new ServiceException(MemberErrorCode.NOT_FOUND_MENTEE));
+    }
+
+
+    // ==== exists 메서드 =====
+
+    public boolean existsMentorById(Long mentorId) {
+        return mentorRepository.existsById(mentorId);
     }
 }

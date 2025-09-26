@@ -1,12 +1,8 @@
 package com.back.domain.mentoring.slot.service;
 
-import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.mentor.entity.Mentor;
-import com.back.domain.member.mentor.repository.MentorRepository;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
-import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
-import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
-import com.back.domain.mentoring.reservation.repository.ReservationRepository;
+import com.back.domain.mentoring.mentoring.service.MentoringStorage;
 import com.back.domain.mentoring.slot.dto.request.MentorSlotRepetitionRequest;
 import com.back.domain.mentoring.slot.dto.request.MentorSlotRequest;
 import com.back.domain.mentoring.slot.dto.response.MentorSlotDto;
@@ -31,14 +27,10 @@ import java.util.List;
 public class MentorSlotService {
 
     private final MentorSlotRepository mentorSlotRepository;
-    private final MentorRepository mentorRepository;
-    private final MentoringRepository mentoringRepository;
-    private final ReservationRepository reservationRepository;
+    private final MentoringStorage mentorStorage;
 
     @Transactional(readOnly = true)
-    public List<MentorSlotDto> getMyMentorSlots(Member member, LocalDateTime startDate, LocalDateTime endDate) {
-        Mentor mentor = findMentorByMember(member);
-
+    public List<MentorSlotDto> getMyMentorSlots(Mentor mentor, LocalDateTime startDate, LocalDateTime endDate) {
         DateTimeValidator.validateTime(startDate, endDate);
 
         List<MentorSlot> availableSlots = mentorSlotRepository.findMySlots(mentor.getId(), startDate, endDate);
@@ -50,7 +42,6 @@ public class MentorSlotService {
 
     @Transactional(readOnly = true)
     public List<MentorSlotDto> getAvailableMentorSlots(Long mentorId, LocalDateTime startDate, LocalDateTime endDate) {
-        validateMentorExists(mentorId);
         DateTimeValidator.validateTime(startDate, endDate);
 
         List<MentorSlot> availableSlots = mentorSlotRepository.findAvailableSlots(mentorId, startDate, endDate);
@@ -62,16 +53,15 @@ public class MentorSlotService {
 
     @Transactional(readOnly = true)
     public MentorSlotResponse getMentorSlot(Long slotId) {
-        MentorSlot mentorSlot = findMentorSlot(slotId);
-        Mentoring mentoring = findMentoring(mentorSlot.getMentor());
+        MentorSlot mentorSlot = mentorStorage.findMentorSlot(slotId);
+        Mentoring mentoring = mentorStorage.findMentoringByMentor(mentorSlot.getMentor());
 
         return MentorSlotResponse.from(mentorSlot, mentoring);
     }
 
     @Transactional
-    public MentorSlotResponse createMentorSlot(MentorSlotRequest reqDto, Member member) {
-        Mentor mentor = findMentorByMember(member);
-        Mentoring mentoring = findMentoring(mentor);
+    public MentorSlotResponse createMentorSlot(MentorSlotRequest reqDto, Mentor mentor) {
+        Mentoring mentoring = mentorStorage.findMentoringByMentor(mentor);
 
         DateTimeValidator.validateTimeSlot(reqDto.startDateTime(), reqDto.endDateTime());
         validateOverlappingSlots(mentor, reqDto.startDateTime(), reqDto.endDateTime());
@@ -87,9 +77,7 @@ public class MentorSlotService {
     }
 
     @Transactional
-    public void createMentorSlotRepetition(MentorSlotRepetitionRequest reqDto, Member member) {
-        Mentor mentor = findMentorByMember(member);
-
+    public void createMentorSlotRepetition(MentorSlotRepetitionRequest reqDto, Mentor mentor) {
         List<MentorSlot> mentorSlots = new ArrayList<>();
 
         // 지정한 요일별로 슬롯 목록 생성
@@ -100,10 +88,9 @@ public class MentorSlotService {
     }
 
     @Transactional
-    public MentorSlotResponse updateMentorSlot(Long slotId, MentorSlotRequest reqDto, Member member) {
-        Mentor mentor = findMentorByMember(member);
-        Mentoring mentoring = findMentoring(mentor);
-        MentorSlot mentorSlot = findMentorSlot(slotId);
+    public MentorSlotResponse updateMentorSlot(Long slotId, MentorSlotRequest reqDto, Mentor mentor) {
+        Mentoring mentoring = mentorStorage.findMentoringByMentor(mentor);
+        MentorSlot mentorSlot = mentorStorage.findMentorSlot(slotId);
 
         validateOwner(mentorSlot, mentor);
         // 활성화된 예약이 있으면 수정 불가
@@ -118,9 +105,8 @@ public class MentorSlotService {
     }
 
     @Transactional
-    public void deleteMentorSlot(Long slotId, Member member) {
-        Mentor mentor = findMentorByMember(member);
-        MentorSlot mentorSlot = findMentorSlot(slotId);
+    public void deleteMentorSlot(Long slotId, Mentor mentor) {
+        MentorSlot mentorSlot = mentorStorage.findMentorSlot(slotId);
 
         validateOwner(mentorSlot, mentor);
         // 예약 기록 존재 여부 검증 (모든 예약 기록 확인)
@@ -166,38 +152,11 @@ public class MentorSlotService {
     }
 
 
-    // ===== 헬퍼 메서드 =====
-
-    private Mentor findMentorByMember(Member member) {
-        return mentorRepository.findByMemberId(member.getId())
-            .orElseThrow(() -> new ServiceException(MentoringErrorCode.NOT_FOUND_MENTOR));
-    }
-
-    private Mentoring findMentoring(Mentor mentor) {
-        List<Mentoring> mentorings = mentoringRepository.findByMentorId(mentor.getId());
-        if (mentorings.isEmpty()) {
-            throw new ServiceException(MentoringErrorCode.NOT_FOUND_MENTORING);
-        }
-        return mentorings.getFirst();
-    }
-
-    private MentorSlot findMentorSlot(Long slotId) {
-        return mentorSlotRepository.findById(slotId)
-            .orElseThrow(() -> new ServiceException(MentorSlotErrorCode.NOT_FOUND_MENTOR_SLOT));
-    }
-
-
     // ===== 검증 메서드 =====
 
     private static void validateOwner(MentorSlot mentorSlot, Mentor mentor) {
         if (!mentorSlot.isOwnerBy(mentor)) {
             throw new ServiceException(MentorSlotErrorCode.NOT_OWNER);
-        }
-    }
-
-    private void validateMentorExists(Long mentorId) {
-        if (!mentorRepository.existsById(mentorId)) {
-            throw new ServiceException(MentoringErrorCode.NOT_FOUND_MENTOR);
         }
     }
 
@@ -237,7 +196,7 @@ public class MentorSlotService {
      * - 히스토리 보존
      */
     private void validateNoReservationHistory(Long slotId) {
-        if (reservationRepository.existsByMentorSlotId(slotId)) {
+        if (mentorStorage.hasReservationForMentorSlot(slotId)) {
             throw new ServiceException(MentorSlotErrorCode.CANNOT_DELETE_RESERVED_SLOT);
         }
     }

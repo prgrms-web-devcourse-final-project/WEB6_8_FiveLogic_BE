@@ -1,11 +1,14 @@
 package com.back.domain.mentoring.slot.controller;
 
-import com.back.domain.member.member.entity.Member;
+import com.back.domain.member.member.service.MemberStorage;
+import com.back.domain.member.mentor.entity.Mentor;
+import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.slot.dto.request.MentorSlotRepetitionRequest;
 import com.back.domain.mentoring.slot.dto.request.MentorSlotRequest;
 import com.back.domain.mentoring.slot.dto.response.MentorSlotDto;
 import com.back.domain.mentoring.slot.dto.response.MentorSlotResponse;
 import com.back.domain.mentoring.slot.service.MentorSlotService;
+import com.back.global.exception.ServiceException;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,8 +29,9 @@ import java.util.List;
 @Tag(name = "MentorSlotController", description = "멘토 슬롯(멘토의 예약 가능 일정) API")
 public class MentorSlotController {
 
-    private final MentorSlotService mentorSlotService;
     private final Rq rq;
+    private final MentorSlotService mentorSlotService;
+    private final MemberStorage memberStorage;
 
     @GetMapping
     @PreAuthorize("hasRole('MENTOR')")
@@ -36,12 +40,12 @@ public class MentorSlotController {
         @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
         @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate
     ) {
-        Member member = rq.getActor();
+        Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
 
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atStartOfDay();
 
-        List<MentorSlotDto> resDtoList = mentorSlotService.getMyMentorSlots(member, startDateTime, endDateTime);
+        List<MentorSlotDto> resDtoList = mentorSlotService.getMyMentorSlots(mentor, startDateTime, endDateTime);
 
         return new RsData<>(
             "200",
@@ -57,6 +61,10 @@ public class MentorSlotController {
         @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
         @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate
     ) {
+        if (!memberStorage.existsMentorById(mentorId)) {
+            throw new ServiceException(MentoringErrorCode.NOT_FOUND_MENTOR);
+        }
+
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atStartOfDay();
 
@@ -89,8 +97,8 @@ public class MentorSlotController {
     public RsData<MentorSlotResponse> createMentorSlot(
         @RequestBody @Valid MentorSlotRequest reqDto
     ) {
-        Member member = rq.getActor();
-        MentorSlotResponse resDto = mentorSlotService.createMentorSlot(reqDto, member);
+        Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
+        MentorSlotResponse resDto = mentorSlotService.createMentorSlot(reqDto, mentor);
 
         return new RsData<>(
             "201",
@@ -105,8 +113,8 @@ public class MentorSlotController {
     public RsData<Void> createMentorSlotRepetition(
         @RequestBody @Valid MentorSlotRepetitionRequest reqDto
     ) {
-        Member member = rq.getActor();
-        mentorSlotService.createMentorSlotRepetition(reqDto, member);
+        Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
+        mentorSlotService.createMentorSlotRepetition(reqDto, mentor);
 
         return new RsData<>(
             "201",
@@ -120,8 +128,8 @@ public class MentorSlotController {
         @PathVariable Long slotId,
         @RequestBody @Valid MentorSlotRequest reqDto
     ) {
-        Member member = rq.getActor();
-        MentorSlotResponse resDto = mentorSlotService.updateMentorSlot(slotId, reqDto, member);
+        Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
+        MentorSlotResponse resDto = mentorSlotService.updateMentorSlot(slotId, reqDto, mentor);
 
         return new RsData<>(
             "200",
@@ -135,8 +143,8 @@ public class MentorSlotController {
     public RsData<Void> deleteMentorSlot(
         @PathVariable Long slotId
     ) {
-        Member member = rq.getActor();
-        mentorSlotService.deleteMentorSlot(slotId, member);
+        Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
+        mentorSlotService.deleteMentorSlot(slotId, mentor);
 
         return new RsData<>(
             "200",
