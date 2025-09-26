@@ -6,14 +6,16 @@ import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Objects;
 
+@NoArgsConstructor
 @Entity
 @Getter
-@Setter
 public class PostComment extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Post post;
@@ -33,6 +35,22 @@ public class PostComment extends BaseEntity {
         return member.getName();
     }
 
+    @Builder
+    public PostComment(Post post, String content, Member member, String role) {
+        this.post = post;
+        this.content = content;
+        this.member = member;
+        this.role = role;
+    }
+
+
+    public void updateContent(String content) {
+        this.content = content;
+    }
+
+    public void updatePost(Post post) {
+        this.post = post;
+    }
 
 
 }

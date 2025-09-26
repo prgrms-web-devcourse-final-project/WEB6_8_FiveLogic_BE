@@ -61,12 +61,12 @@ public class Post extends BaseEntity {
 
     public void addComment(PostComment comment) {
         comments.add(comment);
-        comment.setPost(this);
+        comment.updatePost(this);
     }
 
     public void removeComment(PostComment comment) {
         comments.remove(comment);
-        comment.setPost(null);
+        comment.updatePost(null);
     }
 
 
