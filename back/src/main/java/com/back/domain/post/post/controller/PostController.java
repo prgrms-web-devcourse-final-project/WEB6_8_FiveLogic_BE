@@ -19,7 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/post")
 @RequiredArgsConstructor
-public class InformationPostController {
+public class PostController {
     private final PostLikeService postLikeService;
     private final PostService postService;
     private final Rq rq;

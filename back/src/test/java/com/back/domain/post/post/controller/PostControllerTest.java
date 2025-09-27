@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-public class InformationPostControllerTest {
+public class PostControllerTest {
 
     @Autowired
     private PostService postService;
@@ -92,7 +92,7 @@ public class InformationPostControllerTest {
         Post createdPost = postService.findById(4L);
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("createPost"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.msg").value("게시글이 성공적으로 생성되었습니다."))
@@ -121,7 +121,7 @@ public class InformationPostControllerTest {
 
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("createPost"))
 
                 .andExpect(status().isBadRequest())
@@ -147,7 +147,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("createPost"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.resultCode").value("400-2"))
@@ -192,7 +192,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("getPostWithPage"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").exists())
@@ -214,7 +214,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("getPostWithPage"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.posts").isArray())
@@ -250,7 +250,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("getPostWithPage"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.posts").isArray())
@@ -268,7 +268,7 @@ public class InformationPostControllerTest {
 
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("getSinglePost"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.msg").value("게시글 단건 조회 성공"))
@@ -287,7 +287,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("getSinglePost"))
                 .andExpect(jsonPath("$.resultCode").value("400"))
                 .andExpect(jsonPath("$.msg").value("해당 Id의 게시글이 없습니다."));
@@ -317,7 +317,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("removePost"))
                 .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.msg").value("게시글 삭제 성공"));
@@ -333,7 +333,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("removePost"))
                 .andExpect(jsonPath("$.resultCode").value("400"))
                 .andExpect(jsonPath("$.msg").value("삭제 권한이 없습니다."));
@@ -370,7 +370,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("updatePost"))
                 .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.msg").value("게시글 수정 성공"));
@@ -393,7 +393,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("updatePost"))
                 .andExpect(jsonPath("$.resultCode").value("400"))
                 .andExpect(jsonPath("$.msg").value("수정 권한이 없습니다."));
@@ -416,7 +416,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("updatePost"))
                 .andExpect(jsonPath("$.resultCode").value("400-1"))
                 .andExpect(jsonPath("$.msg").value("title-NotBlank-제목은 null 혹은 공백일 수 없습니다."));
@@ -432,7 +432,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("likePost"))
                 .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.msg").value("게시글 좋아요 성공"));
@@ -448,7 +448,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("getLike"))
                 .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.msg").value("게시글 좋아요 조회 성공"))
@@ -465,7 +465,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("disLikePost"))
                 .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.msg").value("게시글 싫어요 성공"));
@@ -481,7 +481,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("getDisLike"))
                 .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.msg").value("게시글 싫어요 조회 성공"))
@@ -503,7 +503,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("disLikePost"))
                 .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.msg").value("게시글 싫어요 성공"));
@@ -524,7 +524,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("likePost"))
                 .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.msg").value("게시글 좋아요 성공"));
@@ -544,7 +544,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("getPostDetail"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultCode").value("200"))
@@ -571,7 +571,7 @@ public class InformationPostControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(InformationPostController.class))
+                .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("getPostDetail"))
                 .andExpect(jsonPath("$.resultCode").value("400"))
                 .andExpect(jsonPath("$.msg").value("해당 Id의 게시글이 없습니다."));
