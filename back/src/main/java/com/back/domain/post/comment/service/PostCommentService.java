@@ -95,5 +95,31 @@ public class PostCommentService {
     }
 
 
+    public void adoptComment(Long commentId, Member member) {
+        PostComment postComment = postCommentRepository.findById(commentId)
+                .orElseThrow(() -> new ServiceException("400", "해당 Id의 댓글이 없습니다."));
 
+        Post post = postComment.getPost();
+
+        if (!post.isAuthor(member)) {
+            throw new ServiceException("400", "채택 권한이 없습니다.");
+        }
+
+        if (post.getPostType() != Post.PostType.QUESTIONPOST) {
+            throw new ServiceException("400", "질문 게시글에만 댓글 채택이 가능합니다.");
+        }
+
+        if (postComment.getIsAdopted()) {
+            throw new ServiceException("400", "이미 채택된 댓글입니다.");
+        }
+
+        // 이미 채택된 댓글이 있는지 확인
+        // Post쪽에서 확인해야 하는건가 - No post는 comment를 관리할 책임이 없음.
+        boolean alreadyAdopted = postCommentRepository.existsByPostAndIsAdoptedTrue(post);
+        if (alreadyAdopted) {
+            throw new ServiceException("400", "이미 채택된 댓글이 있습니다.");
+        }
+
+        postComment.adoptComment();
+    }
 }
