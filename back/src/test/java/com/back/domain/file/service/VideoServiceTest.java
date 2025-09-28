@@ -109,8 +109,6 @@ class VideoServiceTest {
     @DisplayName("Video 객체 상태 업데이트 시 Null 혹은 공백일 때 예외 발생")
     void updateStatusInvalidTest() {
         String uuid = UUID.randomUUID().toString();
-        Video video = VideoFixture.createDefault();
-        when(videoRepository.findByUuid(uuid)).thenReturn(java.util.Optional.of(video));
 
         try {
             videoService.updateStatus(uuid, null);
