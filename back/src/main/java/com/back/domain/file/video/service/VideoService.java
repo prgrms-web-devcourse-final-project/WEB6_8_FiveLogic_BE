@@ -22,10 +22,10 @@ public class VideoService {
     }
 
     public Video updateStatus(String uuid, String status) {
-        Video news = getNewsByUuid(uuid);
         if (status == null || status.isBlank()) {
             throw new ServiceException("400", "status cannot be null or empty");
         }
+        Video news = getNewsByUuid(uuid);
         news.updateStatus(status);
         return videoRepository.save(news);
     }
