@@ -81,4 +81,28 @@ class VideoTest {
         video.updateStatus(newStatus);
         assertThat(video.getStatus()).isEqualTo(newStatus);
     }
+
+    @Test
+    @DisplayName("트랜스코딩 상태 업데이트 시 null 또는 공백일 경우 예외를 반환한다.")
+    void videoUpdateStatusTestWithInvalidStatus() {
+        String uuid = "sample-uuid";
+        String status = "{\"status\":\"pending\"}";
+        String originalPath = "/videos/sample.mp4";
+        Integer duration = 120;
+        Long fileSize = 1024L;
+
+        Video video = Video.create(uuid, status, originalPath, duration, fileSize);
+
+        try {
+            video.updateStatus(null);
+        } catch (Exception e) {
+            assertThat(e).isInstanceOf(IllegalArgumentException.class);
+        }
+
+        try {
+            video.updateStatus("");
+        } catch (Exception e) {
+            assertThat(e).isInstanceOf(IllegalArgumentException.class);
+        }
+    }
 }
