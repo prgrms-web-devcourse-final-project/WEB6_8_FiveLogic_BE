@@ -20,4 +20,13 @@ public class VideoService {
         return videoRepository.findByUuid(uuid)
                 .orElseThrow(() -> new ServiceException("404","Video not found"));
     }
+
+    public Video updateStatus(String uuid, String status){
+        Video news = getNewsByUuid(uuid);
+        if (status == null|| status.isBlank()) {
+            throw new ServiceException("400","status cannot be null or empty");
+        }
+        news.updateStatus(status);
+        return videoRepository.save(news);
+    }
 }
