@@ -19,7 +19,10 @@ public class NewsLikeService {
         News news = newsRepository.findById(newsId)
                 .orElseThrow(() -> new ServiceException("404", "해당 뉴스를 찾을 수 없습니다."));
 
-        newsLikeRepository.findByMemberAndNews(member, news).orElseThrow(() -> new ServiceException("400", "이미 좋아요를 누른 뉴스입니다."));
+        newsLikeRepository.findByMemberAndNews(member, news)
+                .ifPresent(like -> {
+                    throw new ServiceException("400", "이미 좋아요를 누른 뉴스입니다.");
+                });
 
         NewsLike newsLike = NewsLike.create(member, news);
         return newsLikeRepository.save(newsLike);
