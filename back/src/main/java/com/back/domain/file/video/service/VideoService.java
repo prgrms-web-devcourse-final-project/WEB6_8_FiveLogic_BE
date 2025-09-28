@@ -18,6 +18,6 @@ public class VideoService {
 
     public Video getNewsByUuid(String uuid) {
         return videoRepository.findByUuid(uuid)
-                .orElseThrow(() -> new ServiceException("404","존재하지 않는 비디오입니다."));
+                .orElseThrow(() -> new ServiceException("404","Video not found"));
     }
 }
