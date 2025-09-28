@@ -6,17 +6,16 @@ import com.back.domain.news.comment.repository.NewsCommentRepository;
 import com.back.domain.news.news.entity.News;
 import com.back.fixture.MemberFixture;
 import com.back.fixture.NewsFixture;
+import com.back.global.exception.ServiceException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.access.AccessDeniedException;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -108,12 +107,12 @@ class NewsCommentServiceTest {
         when(newsCommentRepository.findById(nonExistentCommentId)).thenReturn(Optional.empty());
 
         // when & then
-        NoSuchElementException exception = assertThrows(NoSuchElementException.class, () -> {
+        ServiceException exception = assertThrows(ServiceException.class, () -> {
             newsCommentService.updateComment(member, news, nonExistentCommentId, updatedContent);
         });
 
 
-        assertThat(exception.getMessage()).isEqualTo("Comment not found: " + nonExistentCommentId);
+        assertThat(exception.getMessage()).isEqualTo("404 : Comment not found: " + nonExistentCommentId);
         verify(newsCommentRepository, times(1)).findById(nonExistentCommentId);
     }
 
@@ -131,11 +130,11 @@ class NewsCommentServiceTest {
         when(newsCommentRepository.findById(commentId)).thenReturn(Optional.of(existingNewsComment));
 
         // when & then
-        AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> {
+        ServiceException exception = assertThrows(ServiceException.class, () -> {
             newsCommentService.updateComment(otherMember, news, commentId, updatedContent);
         });
 
-        assertThat(exception.getMessage()).isEqualTo("You do not have permission to update this comment.");
+        assertThat(exception.getMessage()).isEqualTo("403 : You do not have permission to update this comment.");
         verify(newsCommentRepository, times(1)).findById(commentId);
     }
 
@@ -153,11 +152,11 @@ class NewsCommentServiceTest {
         when(newsCommentRepository.findById(commentId)).thenReturn(Optional.of(existingNewsComment));
 
         // when & then
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        ServiceException exception = assertThrows(ServiceException.class, () -> {
             newsCommentService.updateComment(member, news2, commentId, updatedContent);
         });
 
-        assertThat(exception.getMessage()).isEqualTo("This comment does not belong to the given news.");
+        assertThat(exception.getMessage()).isEqualTo("400 : This comment does not belong to the given news.");
         verify(newsCommentRepository, times(1)).findById(commentId);
     }
 
@@ -192,11 +191,11 @@ class NewsCommentServiceTest {
         when(newsCommentRepository.findById(nonExistentCommentId)).thenReturn(Optional.empty());
 
         // when & then
-        NoSuchElementException exception = assertThrows(NoSuchElementException.class, () -> {
+        ServiceException exception = assertThrows(ServiceException.class, () -> {
             newsCommentService.deleteComment(member, news, nonExistentCommentId);
         });
 
-        assertThat(exception.getMessage()).isEqualTo("Comment not found: " + nonExistentCommentId);
+        assertThat(exception.getMessage()).isEqualTo("404 : Comment not found: " + nonExistentCommentId);
         verify(newsCommentRepository, times(1)).findById(nonExistentCommentId);
         verify(newsCommentRepository, never()).delete(any(NewsComment.class));
     }
@@ -214,11 +213,11 @@ class NewsCommentServiceTest {
         when(newsCommentRepository.findById(commentId)).thenReturn(Optional.of(existingNewsComment));
 
         // when & then
-        AccessDeniedException exception = assertThrows(AccessDeniedException.class, () -> {
+        ServiceException exception = assertThrows(ServiceException.class, () -> {
             newsCommentService.deleteComment(otherMember, news, commentId);
         });
 
-        assertThat(exception.getMessage()).isEqualTo("You do not have permission to delete this comment.");
+        assertThat(exception.getMessage()).isEqualTo("403 : You do not have permission to delete this comment.");
         verify(newsCommentRepository, times(1)).findById(commentId);
         verify(newsCommentRepository, never()).delete(any(NewsComment.class));
     }
@@ -236,11 +235,11 @@ class NewsCommentServiceTest {
         when(newsCommentRepository.findById(commentId)).thenReturn(Optional.of(existingNewsComment));
 
         // when & then
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        ServiceException exception = assertThrows(ServiceException.class, () -> {
             newsCommentService.deleteComment(member, news2, commentId);
         });
 
-        assertThat(exception.getMessage()).isEqualTo("This comment does not belong to the given news.");
+        assertThat(exception.getMessage()).isEqualTo("400 : This comment does not belong to the given news.");
         verify(newsCommentRepository, times(1)).findById(commentId);
         verify(newsCommentRepository, never()).delete(any(NewsComment.class));
     }
