@@ -2,7 +2,7 @@ package com.back.domain.news.news.entity;
 
 import com.back.domain.file.video.entity.Video;
 import com.back.domain.member.member.entity.Member;
-import com.back.domain.news.comment.entity.Comment;
+import com.back.domain.news.comment.entity.NewsComment;
 import com.back.domain.news.like.entity.NewsLike;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
@@ -25,17 +25,17 @@ public class News extends BaseEntity {
     private Video video;
     private String content;
     @OneToMany(mappedBy = "news", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Comment> comment;
+    private List<NewsComment> newsComment;
     @OneToMany(mappedBy = "news", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<NewsLike> newsLikes = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
-    private News(Member member, String title, Video video, String content, List<Comment> comment, List<NewsLike> newsLikes) {
+    private News(Member member, String title, Video video, String content, List<NewsComment> newsComment, List<NewsLike> newsLikes) {
         this.member = member;
         this.title = title;
         this.video = video;
         this.content = content;
-        this.comment = comment;
+        this.newsComment = newsComment;
         this.newsLikes = newsLikes;
     }
 
@@ -57,7 +57,7 @@ public class News extends BaseEntity {
                 .title(title)
                 .video(video)
                 .content(content)
-                .comment(new ArrayList<>())
+                .newsComment(new ArrayList<>())
                 .newsLikes(new ArrayList<>())
                 .build();
     }
@@ -80,18 +80,18 @@ public class News extends BaseEntity {
         this.newsLikes.remove(newsLike);
     }
 
-    public void addComment(Comment comment) {
-        if (comment == null) {
+    public void addComment(NewsComment newsComment) {
+        if (newsComment == null) {
             throw new IllegalArgumentException("Comment cannot be null");
         }
-        this.comment.add(comment);
+        this.newsComment.add(newsComment);
     }
 
-    public void removeComment(Comment comment) {
-        if (comment == null) {
+    public void removeComment(NewsComment newsComment) {
+        if (newsComment == null) {
             throw new IllegalArgumentException("Comment cannot be null");
         }
-        this.comment.remove(comment);
+        this.newsComment.remove(newsComment);
     }
 
     public void update(String title, Video video, String content) {

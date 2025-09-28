@@ -2,7 +2,7 @@ package com.back.fixture;
 
 import com.back.domain.file.video.entity.Video;
 import com.back.domain.member.member.entity.Member;
-import com.back.domain.news.comment.entity.Comment;
+import com.back.domain.news.comment.entity.NewsComment;
 import com.back.domain.news.news.entity.News;
 
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ public class NewsFixture {
     private String title = "Sample News Title";
     private Video video = VideoFixture.createDefault();
     private String content = "This is a sample news content.";
-    private List<Comment> comments = new ArrayList<>();
+    private List<NewsComment> newsComments = new ArrayList<>();
     private Integer likes = 0;
 
     private static NewsFixture builder() {
@@ -63,14 +63,14 @@ public class NewsFixture {
         return this;
     }
 
-    public NewsFixture withComments(List<Comment> comments) {
-        this.comments = comments;
+    public NewsFixture withComments(List<NewsComment> newsComments) {
+        this.newsComments = newsComments;
         return this;
     }
 
     public News build() {
         News news = News.create(member, title, video, content);
-        news.getComment().addAll(comments);
+        news.getNewsComment().addAll(newsComments);
         return news;
     }
 }

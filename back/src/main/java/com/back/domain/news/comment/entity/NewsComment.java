@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Comment extends BaseEntity {
+public class NewsComment extends BaseEntity {
     @ManyToOne
     private Member member;
     @ManyToOne
@@ -23,7 +23,7 @@ public class Comment extends BaseEntity {
     private String content;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Comment(Member member, News news, String content) {
+    private NewsComment(Member member, News news, String content) {
         if (member == null) {
             throw new IllegalArgumentException("Member cannot be null");
         }
@@ -38,17 +38,17 @@ public class Comment extends BaseEntity {
         this.content = content;
     }
 
-    public static Comment create(Member member, News news, String content) {
-        Comment comment = Comment.builder()
+    public static NewsComment create(Member member, News news, String content) {
+        NewsComment newsComment = NewsComment.builder()
                 .member(member)
                 .news(news)
                 .content(content)
                 .build();
 
-        return comment;
+        return newsComment;
     }
 
-    public Comment update(String content) {
+    public NewsComment update(String content) {
         if (content == null || content.isBlank()) {
             throw new IllegalArgumentException("Content cannot be null or empty");
         }
