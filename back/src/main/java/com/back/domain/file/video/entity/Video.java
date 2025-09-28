@@ -51,4 +51,7 @@ public class Video extends BaseEntity {
                 .fileSize(fileSize)
                 .build();
     }
+    public void updateStatus(String status) {
+        this.status = status;
+    }
 }
