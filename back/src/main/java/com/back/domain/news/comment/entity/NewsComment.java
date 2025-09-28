@@ -39,6 +39,15 @@ public class NewsComment extends BaseEntity {
     }
 
     public static NewsComment create(Member member, News news, String content) {
+        if(member == null) {
+            throw new IllegalArgumentException("Member cannot be null");
+        }
+        if(news == null) {
+            throw new IllegalArgumentException("News cannot be null");
+        }
+        if(content == null || content.isBlank()) {
+            throw new IllegalArgumentException("Content cannot be null or empty");
+        }
         NewsComment newsComment = NewsComment.builder()
                 .member(member)
                 .news(news)
