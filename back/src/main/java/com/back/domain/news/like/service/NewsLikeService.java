@@ -1,8 +1,8 @@
 package com.back.domain.news.like.service;
 
 import com.back.domain.member.member.entity.Member;
-import com.back.domain.news.like.entity.Like;
-import com.back.domain.news.like.repository.LikeRepository;
+import com.back.domain.news.like.entity.NewsLike;
+import com.back.domain.news.like.repository.NewsLikeRepository;
 import com.back.domain.news.news.entity.News;
 import com.back.domain.news.news.repository.NewsRepository;
 import com.back.global.exception.ServiceException;
@@ -13,26 +13,26 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class LikeService {
-    private final LikeRepository likeRepository;
+public class NewsLikeService {
+    private final NewsLikeRepository newsLikeRepository;
     private final NewsRepository newsRepository;
 
-    public Like likeNews(Member member, Long newsId) {
+    public NewsLike likeNews(Member member, Long newsId) {
         News news = newsRepository.findById(newsId)
                 .orElseThrow(() -> new ServiceException("404", "해당 뉴스를 찾을 수 없습니다."));
 
-        Optional<Like> existingLike = likeRepository.findByMemberAndNews(member, news);
+        Optional<NewsLike> existingLike = newsLikeRepository.findByMemberAndNews(member, news);
         if (existingLike.isPresent()) {
             throw new ServiceException("400", "이미 좋아요를 누른 뉴스입니다.");
         }
 
-        Like like = Like.create(member, news);
-        return likeRepository.save(like);
+        NewsLike newsLike = NewsLike.create(member, news);
+        return newsLikeRepository.save(newsLike);
     }
 
     public long getLikeCount(Long newsId) {
         News news = newsRepository.findById(newsId)
                 .orElseThrow(() -> new ServiceException("404", "해당 뉴스를 찾을 수 없습니다."));
-        return likeRepository.countByNews(news);
+        return newsLikeRepository.countByNews(news);
     }
 }

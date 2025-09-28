@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
         @UniqueConstraint(columnNames = {"member_id", "news_id"})
 })
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Like extends BaseEntity {
+public class NewsLike extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Member member;
@@ -28,22 +28,22 @@ public class Like extends BaseEntity {
     private News news;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Like(Member member, News news) {
+    private NewsLike(Member member, News news) {
         this.member = member;
         this.news = news;
     }
 
-    public static Like create(Member member, News news) {
+    public static NewsLike create(Member member, News news) {
         if (member == null) {
             throw new IllegalArgumentException("Member cannot be null");
         }
         if (news == null) {
             throw new IllegalArgumentException("News cannot be null");
         }
-        Like like = Like.builder()
+        NewsLike newsLike = NewsLike.builder()
                 .member(member)
                 .news(news)
                 .build();
-        return like;
+        return newsLike;
     }
 }
