@@ -90,4 +90,40 @@ class VideoServiceTest {
             assertThat(e.getMessage()).isEqualTo("404 : Video not found");
         }
     }
+
+    @Test
+    @DisplayName("Video 객체 상태 업데이트")
+    void updateStatusTest() {
+        String uuid = UUID.randomUUID().toString();
+        String newStatus = "{\"status\":\"pending\"}";
+        Video video = VideoFixture.createDefault();
+        when(videoRepository.findByUuid(uuid)).thenReturn(java.util.Optional.of(video));
+        when(videoRepository.save(any(Video.class))).thenReturn(video);
+
+        Video updatedVideo = videoService.updateStatus(uuid, newStatus);
+        assertThat(updatedVideo).isNotNull();
+        assertThat(updatedVideo.getStatus()).isEqualTo(newStatus);
+    }
+
+    @Test
+    @DisplayName("Video 객체 상태 업데이트 시 Null 혹은 공백일 때 예외 발생")
+    void updateStatusInvalidTest() {
+        String uuid = UUID.randomUUID().toString();
+        Video video = VideoFixture.createDefault();
+        when(videoRepository.findByUuid(uuid)).thenReturn(java.util.Optional.of(video));
+
+        try {
+            videoService.updateStatus(uuid, null);
+        } catch (Exception e) {
+            assertThat(e).isInstanceOf(ServiceException.class);
+            assertThat(e.getMessage()).isEqualTo("400 : status cannot be null or empty");
+        }
+
+        try {
+            videoService.updateStatus(uuid, "   ");
+        } catch (Exception e) {
+            assertThat(e).isInstanceOf(ServiceException.class);
+            assertThat(e.getMessage()).isEqualTo("400 : status cannot be null or empty");
+        }
+    }
 }
