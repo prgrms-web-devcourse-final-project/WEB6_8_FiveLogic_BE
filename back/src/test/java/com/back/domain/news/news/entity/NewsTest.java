@@ -1,8 +1,8 @@
 package com.back.domain.news.news.entity;
 
-import com.back.domain.file.entity.Video;
-import com.back.domain.news.comment.entity.Comment;
-import com.back.domain.news.like.entity.Like;
+import com.back.domain.file.video.entity.Video;
+import com.back.domain.news.comment.entity.NewsComment;
+import com.back.domain.news.like.entity.NewsLike;
 import com.back.fixture.MemberFixture;
 import com.back.fixture.VideoFixture;
 import com.back.domain.member.member.entity.Member;
@@ -26,8 +26,8 @@ class NewsTest {
         assertThat(news.getTitle()).isEqualTo(title);
         assertThat(news.getVideo()).isEqualTo(video);
         assertThat(news.getContent()).isEqualTo(content);
-        assertThat(news.getComment().size()).isEqualTo(0);
-        assertThat(news.getLikes().size()).isEqualTo(0);
+        assertThat(news.getNewsComment().size()).isEqualTo(0);
+        assertThat(news.getNewsLikes().size()).isEqualTo(0);
     }
 
     @Test
@@ -107,11 +107,11 @@ class NewsTest {
         Video video = VideoFixture.createDefault();
         News news = News.create(member, title, video, content);
 
-        Like like = Like.create(member, news);
-        news.like(like);
+        NewsLike newsLike = NewsLike.create(member, news);
+        news.like(newsLike);
 
-        assertThat(news.getLikes().size()).isEqualTo(1);
-        assertThat(news.getLikes()).contains(like);
+        assertThat(news.getNewsLikes().size()).isEqualTo(1);
+        assertThat(news.getNewsLikes()).contains(newsLike);
     }
 
     @Test
@@ -123,16 +123,16 @@ class NewsTest {
         Video video = VideoFixture.createDefault();
         News news = News.create(member, title, video, content);
 
-        Like like = Like.create(member, news);
-        news.like(like);
+        NewsLike newsLike = NewsLike.create(member, news);
+        news.like(newsLike);
 
         try {
-            news.like(like);
+            news.like(newsLike);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalStateException.class);
         }
 
-        assertThat(news.getLikes().size()).isEqualTo(1);
+        assertThat(news.getNewsLikes().size()).isEqualTo(1);
     }
 
     @Test
@@ -233,11 +233,11 @@ class NewsTest {
         Video video = VideoFixture.createDefault();
         News news = News.create(member, title, video, content);
 
-        Comment comment = Comment.create(member, news, "This is a comment.");
-        news.addComment(comment);
+        NewsComment newsComment = NewsComment.create(member, news, "This is a comment.");
+        news.addComment(newsComment);
 
-        assertThat(news.getComment().size()).isEqualTo(1);
-        assertThat(news.getComment()).contains(comment);
+        assertThat(news.getNewsComment().size()).isEqualTo(1);
+        assertThat(news.getNewsComment()).contains(newsComment);
     }
 
     @Test
@@ -255,7 +255,7 @@ class NewsTest {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }
 
-        assertThat(news.getComment().size()).isEqualTo(0);
+        assertThat(news.getNewsComment().size()).isEqualTo(0);
     }
 
     @Test
@@ -267,12 +267,12 @@ class NewsTest {
         Video video = VideoFixture.createDefault();
         News news = News.create(member, title, video, content);
 
-        Comment comment = Comment.create(member, news, "This is a comment.");
-        news.addComment(comment);
-        assertThat(news.getComment().size()).isEqualTo(1);
+        NewsComment newsComment = NewsComment.create(member, news, "This is a comment.");
+        news.addComment(newsComment);
+        assertThat(news.getNewsComment().size()).isEqualTo(1);
 
-        news.removeComment(comment);
-        assertThat(news.getComment().size()).isEqualTo(0);
+        news.removeComment(newsComment);
+        assertThat(news.getNewsComment().size()).isEqualTo(0);
     }
     @Test
     @DisplayName("뉴스의 null 댓글을 제거하려하면 예외를 반환한다.")
@@ -289,6 +289,6 @@ class NewsTest {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }
 
-        assertThat(news.getComment().size()).isEqualTo(0);
+        assertThat(news.getNewsComment().size()).isEqualTo(0);
     }
 }

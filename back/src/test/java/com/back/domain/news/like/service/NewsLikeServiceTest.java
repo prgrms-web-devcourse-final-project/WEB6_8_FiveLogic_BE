@@ -1,12 +1,13 @@
 package com.back.domain.news.like.service;
 
 import com.back.domain.member.member.entity.Member;
-import com.back.domain.news.like.entity.Like;
-import com.back.domain.news.like.repository.LikeRepository;
+import com.back.domain.news.like.entity.NewsLike;
+import com.back.domain.news.like.repository.NewsLikeRepository;
 import com.back.domain.news.news.entity.News;
 import com.back.domain.news.news.repository.NewsRepository;
 import com.back.fixture.MemberFixture;
 import com.back.fixture.NewsFixture;
+import com.back.global.exception.ServiceException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,16 +23,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class LikeServiceTest {
+class NewsLikeServiceTest {
 
     @Mock
-    private LikeRepository likeRepository;
+    private NewsLikeRepository newsLikeRepository;
 
     @Mock
     private NewsRepository newsRepository;
 
     @InjectMocks
-    private LikeService likeService;
+    private NewsLikeService newsLikeService;
 
     @Test
     @DisplayName("사용자는 뉴스에 '좋아요'를 누를 수 있다.")
@@ -42,13 +43,13 @@ class LikeServiceTest {
         Long newsId = news.getId();
 
         when(newsRepository.findById(newsId)).thenReturn(Optional.of(news));
-        when(likeRepository.findByMemberAndNews(member, news)).thenReturn(Optional.empty());
+        when(newsLikeRepository.findByMemberAndNews(member, news)).thenReturn(Optional.empty());
 
         // when
-        likeService.likeNews(member, newsId);
+        newsLikeService.likeNews(member, newsId);
 
         // then
-        verify(likeRepository, times(1)).save(any(Like.class));
+        verify(newsLikeRepository, times(1)).save(any(NewsLike.class));
     }
 
     @Test
@@ -61,12 +62,12 @@ class LikeServiceTest {
         when(newsRepository.findById(nonExistentNewsId)).thenReturn(Optional.empty());
 
         // when & then
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            likeService.likeNews(member, nonExistentNewsId);
+        ServiceException exception = assertThrows(ServiceException.class, () -> {
+            newsLikeService.likeNews(member, nonExistentNewsId);
         });
 
-        assertThat(exception.getMessage()).isEqualTo("해당 뉴스를 찾을 수 없습니다.");
-        verify(likeRepository, never()).save(any(Like.class));
+        assertThat(exception.getMessage()).isEqualTo("404 : 해당 뉴스를 찾을 수 없습니다.");
+        verify(newsLikeRepository, never()).save(any(NewsLike.class));
     }
 
     @Test
@@ -76,17 +77,17 @@ class LikeServiceTest {
         Member member = MemberFixture.createDefault();
         News news = NewsFixture.createDefault();
         Long newsId = news.getId();
-        Like existingLike = Like.create(member, news);
+        NewsLike existingNewsLike = NewsLike.create(member, news);
 
         when(newsRepository.findById(newsId)).thenReturn(Optional.of(news));
-        when(likeRepository.findByMemberAndNews(member, news)).thenReturn(Optional.of(existingLike));
+        when(newsLikeRepository.findByMemberAndNews(member, news)).thenReturn(Optional.of(existingNewsLike));
 
         // when & then
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-            likeService.likeNews(member, newsId);
+        ServiceException exception = assertThrows(ServiceException.class, () -> {
+            newsLikeService.likeNews(member, newsId);
         });
 
-        assertThat(exception.getMessage()).isEqualTo("이미 좋아요를 누른 뉴스입니다.");
-        verify(likeRepository, never()).save(any(Like.class));
+        assertThat(exception.getMessage()).isEqualTo("400 : 이미 좋아요를 누른 뉴스입니다.");
+        verify(newsLikeRepository, never()).save(any(NewsLike.class));
     }
 }

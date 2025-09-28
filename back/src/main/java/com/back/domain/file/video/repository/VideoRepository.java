@@ -1,6 +1,6 @@
-package com.back.domain.file.repository;
+package com.back.domain.file.video.repository;
 
-import com.back.domain.file.entity.Video;
+import com.back.domain.file.video.entity.Video;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

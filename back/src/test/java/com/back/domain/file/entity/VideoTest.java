@@ -1,5 +1,6 @@
 package com.back.domain.file.entity;
 
+import com.back.domain.file.video.entity.Video;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -8,23 +9,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 class VideoTest {
 
     @Test
-    @DisplayName("uuid, transcodingResults, originalPath, originalFileName, duration, fileSize로 Video 객체 생성")
+    @DisplayName("uuid, status, originalPath, originalFileName, duration, fileSize로 Video 객체 생성")
     void videoCreationTest() {
         String uuid = "sample-uuid";
-        String transcodingResults = "{\"status\":\"done\"}";
+        String status = "{\"status\":\"done\"}";
         String originalPath = "/videos/sample.mp4";
-        String originalFileName = "sample.mp4";
         Integer duration = 120;
         Long fileSize = 1024L;
 
-        Video video = Video.create(uuid, transcodingResults, originalPath, originalFileName, duration, fileSize);
+        Video video = Video.create(uuid, status, originalPath, duration, fileSize);
 
         assertThat(video).isNotNull();
         assertThat(video.getUuid()).isEqualTo(uuid);
-        assertThat(video.getTranscodingResults()).isEqualTo(transcodingResults);
-        assertThat(video.getOriginalPath()).isEqualTo(originalPath);
-        assertThat(video.getViews()).isEqualTo(0); // 기본값 확인
-        assertThat(video.getOriginalFileName()).isEqualTo(originalFileName);
+        assertThat(video.getStatus()).isEqualTo(status);
+        assertThat(video.getPath()).isEqualTo(originalPath);
         assertThat(video.getDuration()).isEqualTo(duration);
         assertThat(video.getFileSize()).isEqualTo(fileSize);
     }
@@ -32,18 +30,17 @@ class VideoTest {
     @Test
     @DisplayName("uuid가 null 또는 공백일 경우 예외를 반환한다.")
     void videoCreationTestWithInvalidUuid() {
-        String transcodingResults = "{}";
+        String status = "{}";
         String originalPath = "/videos/sample.mp4";
-        String originalFileName = "sample.mp4";
 
         try {
-            Video.create(null, transcodingResults, originalPath, originalFileName, 100, 1000L);
+            Video.create(null, status, originalPath, 100, 1000L);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }
 
         try {
-            Video.create("", transcodingResults, originalPath, originalFileName, 100, 1000L);
+            Video.create("", status, originalPath, 100, 1000L);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }
@@ -53,37 +50,57 @@ class VideoTest {
     @DisplayName("originalPath가 null 또는 공백일 경우 예외를 반환한다.")
     void videoCreationTestWithInvalidOriginalPath() {
         String uuid = "sample-uuid";
-        String transcodingResults = "{}";
-        String originalFileName = "sample.mp4";
+        String status = "{}";
 
         try {
-            Video.create(uuid, transcodingResults, null, originalFileName, 100, 1000L);
+            Video.create(uuid, status, null, 100, 1000L);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }
 
         try {
-            Video.create(uuid, transcodingResults, "", originalFileName, 100, 1000L);
+            Video.create(uuid, status, "", 100, 1000L);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }
     }
 
     @Test
-    @DisplayName("originalFileName이 null 또는 공백일 경우 예외를 반환한다.")
-    void videoCreationTestWithInvalidOriginalFileName() {
+    @DisplayName("트랜스코딩 상태 업데이트")
+    void videoUpdateStatusTest() {
         String uuid = "sample-uuid";
-        String transcodingResults = "{}";
+        String status = "{\"status\":\"pending\"}";
         String originalPath = "/videos/sample.mp4";
+        Integer duration = 120;
+        Long fileSize = 1024L;
+
+        Video video = Video.create(uuid, status, originalPath, duration, fileSize);
+        assertThat(video.getStatus()).isEqualTo(status);
+
+        String newStatus = "{\"status\":\"done\"}";
+        video.updateStatus(newStatus);
+        assertThat(video.getStatus()).isEqualTo(newStatus);
+    }
+
+    @Test
+    @DisplayName("트랜스코딩 상태 업데이트 시 null 또는 공백일 경우 예외를 반환한다.")
+    void videoUpdateStatusTestWithInvalidStatus() {
+        String uuid = "sample-uuid";
+        String status = "{\"status\":\"pending\"}";
+        String originalPath = "/videos/sample.mp4";
+        Integer duration = 120;
+        Long fileSize = 1024L;
+
+        Video video = Video.create(uuid, status, originalPath, duration, fileSize);
 
         try {
-            Video.create(uuid, transcodingResults, originalPath, null, 100, 1000L);
+            video.updateStatus(null);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }
 
         try {
-            Video.create(uuid, transcodingResults, originalPath, "", 100, 1000L);
+            video.updateStatus("");
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }

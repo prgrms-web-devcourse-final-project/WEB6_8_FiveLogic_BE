@@ -4,8 +4,8 @@ import com.back.domain.member.member.entity.Member;
 import com.back.domain.news.comment.dto.CommentCreateRequest;
 import com.back.domain.news.comment.dto.CommentResponse;
 import com.back.domain.news.comment.dto.CommentUpdateRequest;
-import com.back.domain.news.comment.entity.Comment;
-import com.back.domain.news.comment.service.CommentService;
+import com.back.domain.news.comment.entity.NewsComment;
+import com.back.domain.news.comment.service.NewsCommentService;
 import com.back.domain.news.news.entity.News;
 import com.back.domain.news.news.service.NewsService;
 import com.back.global.rq.Rq;
@@ -23,15 +23,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CommentController {
     private final NewsService newsService;
-    private final CommentService commentService;
+    private final NewsCommentService newsCommentService;
     private final Rq rq;
 
     @GetMapping
     @Operation(summary = "댓글 목록 조회", description = "특정 뉴스의 댓글 목록을 불러옵니다.")
     public RsData<List<CommentResponse>> getComments(@PathVariable Long newsId) {
         News news = newsService.getNewsById(newsId);
-        List<Comment> comments = commentService.getComments(news);
-        List<CommentResponse> commentResponses = comments.stream()
+        List<NewsComment> newsComments = newsCommentService.getComments(news);
+        List<CommentResponse> commentResponses = newsComments.stream()
                 .map(CommentResponse::new)
                 .collect(Collectors.toList());
         return new RsData<>("200", "댓글 목록 불러오기 완료", commentResponses);
@@ -45,8 +45,8 @@ public class CommentController {
             return new RsData<>("401", "로그인이 필요합니다.");
         }
         News news = newsService.getNewsById(newsId);
-        Comment comment = commentService.createComment(member, news, request.content());
-        CommentResponse commentResponse = new CommentResponse(comment);
+        NewsComment newsComment = newsCommentService.createComment(member, news, request.content());
+        CommentResponse commentResponse = new CommentResponse(newsComment);
         return new RsData<>("201", "댓글 생성 완료", commentResponse);
     }
 
@@ -59,8 +59,8 @@ public class CommentController {
         }
         try {
             News news = newsService.getNewsById(newsId);
-            Comment updatedComment = commentService.updateComment(member, news, commentId, request.content());
-            CommentResponse commentResponse = new CommentResponse(updatedComment);
+            NewsComment updatedNewsComment = newsCommentService.updateComment(member, news, commentId, request.content());
+            CommentResponse commentResponse = new CommentResponse(updatedNewsComment);
             return new RsData<>("200", "댓글 수정 완료", commentResponse);
         } catch (AccessDeniedException e) {
             return new RsData<>("403", e.getMessage());
@@ -78,7 +78,7 @@ public class CommentController {
         }
         try {
             News news = newsService.getNewsById(newsId);
-            commentService.deleteComment(member, news, commentId);
+            newsCommentService.deleteComment(member, news, commentId);
             return new RsData<>("200", "댓글 삭제 완료");
         } catch (AccessDeniedException e) {
             return new RsData<>("403", e.getMessage());

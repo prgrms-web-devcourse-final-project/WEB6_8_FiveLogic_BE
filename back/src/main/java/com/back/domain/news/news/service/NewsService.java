@@ -1,18 +1,17 @@
 package com.back.domain.news.news.service;
 
 
-import com.back.domain.file.entity.Video;
+import com.back.domain.file.video.entity.Video;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.news.news.entity.News;
 import com.back.domain.news.news.repository.NewsRepository;
+import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
-import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -30,20 +29,20 @@ public class NewsService {
     }
 
     public News getNewsById(Long id) {
-        return newsRepository.findById(id).orElseThrow(() -> new NoSuchElementException("뉴스를 찾을 수 없습니다."));
+        return newsRepository.findById(id).orElseThrow(() -> new ServiceException("404", "뉴스를 찾을 수 없습니다."));
     }
 
     public News updateNews(Member member, News news, String title, Video video, String content) {
-        if (!(member.getRole()== Member.Role.ADMIN)) {
-            throw new SecurityException("수정 권한이 없습니다.");
+        if (!(member.getRole() == Member.Role.ADMIN)) {
+            throw new ServiceException("403","수정 권한이 없습니다.");
         }
         news.update(title, video, content);
         return newsRepository.save(news);
     }
 
     public void deleteNews(Member member, News news) {
-        if (!(member.getRole()== Member.Role.ADMIN)) {
-            throw new SecurityException("삭제 권한이 없습니다.");
+        if (!(member.getRole() == Member.Role.ADMIN)) {
+            throw new ServiceException("403","수정 권한이 없습니다.");
         }
         newsRepository.delete(news);
     }
