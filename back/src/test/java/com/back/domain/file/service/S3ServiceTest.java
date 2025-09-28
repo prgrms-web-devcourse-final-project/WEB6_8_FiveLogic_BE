@@ -13,13 +13,10 @@ import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -129,27 +126,6 @@ public class S3ServiceTest {
         assertThrows(ServiceException.class, () ->
                 s3Service.isExist(bucket, objectKey)
         );
-    }
-
-    @Test
-    @DisplayName("generateDashUrls() - MPD와 segment URL 정상 생성")
-    void generateDashUrls_shouldReturnUrls() throws Exception {
-        String bucket = "test-bucket";
-        String mpdFile = "video.mpd";
-        List<String> segmentFiles = List.of("seg1.mp4", "seg2.mp4");
-
-        PresignedGetObjectRequest mockedPresigned = mock(PresignedGetObjectRequest.class);
-        HeadObjectResponse mockResponse = mock(HeadObjectResponse.class);
-
-        when(mockedPresigned.url()).thenReturn(new URL("http://localhost:8080/download"));
-        when(presigner.presignGetObject(any(Consumer.class))).thenReturn(mockedPresigned);
-        when(s3Client.headObject(any(HeadObjectRequest.class))).thenReturn(mockResponse);
-
-        Map<String, URL> urls = s3Service.generateDashUrls(bucket, mpdFile, segmentFiles);
-
-        assertThat(urls).isNotNull();
-        assertThat(urls).containsKeys("mpd", "seg1.mp4", "seg2.mp4");
-        urls.values().forEach(url -> assertThat(url.toString()).isEqualTo("http://localhost:8080/download"));
     }
 
     @Test

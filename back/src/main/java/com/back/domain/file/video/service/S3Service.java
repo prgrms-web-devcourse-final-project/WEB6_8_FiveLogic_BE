@@ -11,9 +11,6 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequ
 
 import java.net.URL;
 import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -73,20 +70,6 @@ public class S3Service {
         validateRequest(bucket, objectKey);
 
         return generateDownloadUrl(bucket, objectKey, 60);
-    }
-
-    @Deprecated // DASH방식으로 제공시 각각의 세그먼트 파일을 받을 필요가 없으므로 사용하지 않음
-    public Map<String, URL> generateDashUrls(String bucket, String mpdFile, List<String> segmentFiles) {
-        // MPD 파일 URL
-        URL mpdUrl = generateDownloadUrl(bucket, mpdFile);
-
-        // 각 세그먼트 파일 URL
-        Map<String, URL> segmentUrls = segmentFiles.stream()
-                .collect(Collectors.toMap(f -> f, f -> generateDownloadUrl(bucket, f)));
-
-        // MPD 포함 합쳐서 반환
-        segmentUrls.put("mpd", mpdUrl);
-        return segmentUrls;
     }
 
     public void isExist(String bucket, String objectKey) {
