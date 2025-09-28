@@ -21,7 +21,7 @@ class VideoTest {
 
         assertThat(video).isNotNull();
         assertThat(video.getUuid()).isEqualTo(uuid);
-        assertThat(video.getTranscodingResults()).isEqualTo(transcodingResults);
+        assertThat(video.getStatus()).isEqualTo(transcodingResults);
         assertThat(video.getPath()).isEqualTo(originalPath);
         assertThat(video.getDuration()).isEqualTo(duration);
         assertThat(video.getFileSize()).isEqualTo(fileSize);

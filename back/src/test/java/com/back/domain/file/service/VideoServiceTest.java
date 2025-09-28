@@ -60,7 +60,7 @@ class VideoServiceTest {
         Video createdVideo = videoService.createVideo(uuid, transcodingResults, originalPath, duration, fileSize);
         assertThat(createdVideo).isNotNull();
         assertThat(createdVideo.getUuid()).isEqualTo(uuid);
-        assertThat(createdVideo.getTranscodingResults()).isEqualTo(transcodingResults);
+        assertThat(createdVideo.getStatus()).isEqualTo(transcodingResults);
         assertThat(createdVideo.getPath()).isEqualTo(originalPath);
         assertThat(createdVideo.getDuration()).isEqualTo(duration);
         assertThat(createdVideo.getFileSize()).isEqualTo(fileSize);

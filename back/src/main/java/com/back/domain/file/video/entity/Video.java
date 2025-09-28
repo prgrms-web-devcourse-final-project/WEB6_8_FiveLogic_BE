@@ -18,8 +18,7 @@ public class Video extends BaseEntity {
     private String uuid;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "transcoding_results")
-    private String transcodingResults;
+    private String status;
 
     private String path;
 
@@ -28,15 +27,15 @@ public class Video extends BaseEntity {
     private Long fileSize;
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Video(String uuid, String transcodingResults, String path, Integer duration, Long fileSize) {
+    private Video(String uuid, String status, String path, Integer duration, Long fileSize) {
         this.uuid = uuid;
-        this.transcodingResults = transcodingResults;
+        this.status = status;
         this.path = path;
         this.duration = duration;
         this.fileSize = fileSize;
     }
 
-    public static Video create(String uuid, String transcodingResults, String path, Integer duration, Long fileSize) {
+    public static Video create(String uuid, String status, String path, Integer duration, Long fileSize) {
         if (uuid == null || uuid.isBlank()) {
             throw new IllegalArgumentException("uuid cannot be null or empty");
         }
@@ -46,7 +45,7 @@ public class Video extends BaseEntity {
 
         return Video.builder()
                 .uuid(uuid)
-                .transcodingResults(transcodingResults)
+                .status(status)
                 .path(path)
                 .duration(duration)
                 .fileSize(fileSize)
