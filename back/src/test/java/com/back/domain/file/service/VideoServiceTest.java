@@ -4,6 +4,7 @@ import com.back.domain.file.video.entity.Video;
 import com.back.domain.file.video.repository.VideoRepository;
 import com.back.domain.file.video.service.VideoService;
 import com.back.fixture.VideoFixture;
+import com.back.global.exception.ServiceException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,11 +50,10 @@ class VideoServiceTest {
                 }
                 """;
         String originalPath = "/videos/sample.mp4";
-        String originalFileName = "sample.mp4";
         Integer duration = 120;
         Long fileSize = 1024L;
 
-        Video video = VideoFixture.create(uuid, transcodingResults, originalPath, originalFileName, duration, fileSize);
+        Video video = VideoFixture.create(uuid, transcodingResults, originalPath, duration, fileSize);
         when(videoRepository.save(any(Video.class))).thenReturn(video);
 
         Video createdVideo = videoService.createVideo(uuid, transcodingResults, originalPath, duration, fileSize);
@@ -87,8 +86,8 @@ class VideoServiceTest {
         try {
             videoService.getNewsByUuid(uuid);
         } catch (Exception e) {
-            assertThat(e).isInstanceOf(NoSuchElementException.class);
-            assertThat(e.getMessage()).isEqualTo("존재하지 않는 비디오입니다.");
+            assertThat(e).isInstanceOf(ServiceException.class);
+            assertThat(e.getMessage()).isEqualTo("404 : Video not found");
         }
     }
 }
