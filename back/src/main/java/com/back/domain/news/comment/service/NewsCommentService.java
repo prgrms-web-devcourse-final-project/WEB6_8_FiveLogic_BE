@@ -4,6 +4,7 @@ import com.back.domain.member.member.entity.Member;
 import com.back.domain.news.comment.entity.NewsComment;
 import com.back.domain.news.comment.repository.NewsCommentRepository;
 import com.back.domain.news.news.entity.News;
+import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -27,17 +28,17 @@ public class NewsCommentService {
 
     public NewsComment getCommentById(Long commentId) {
         return newsCommentRepository.findById(commentId)
-                .orElseThrow(() -> new NoSuchElementException("Comment not found: " + commentId));
+                .orElseThrow(() -> new ServiceException("404", "Comment not found: " + commentId));
     }
 
     public NewsComment updateComment(Member member, News news, Long commentId, String content) {
         NewsComment newsComment = getCommentById(commentId);
 
         if (!newsComment.getMember().equals(member)) {
-            throw new AccessDeniedException("You do not have permission to update this comment.");
+            throw new ServiceException("403","You do not have permission to update this comment.");
         }
         if (!newsComment.getNews().equals(news)) {
-            throw new IllegalArgumentException("This comment does not belong to the given news.");
+            throw new ServiceException("400","This comment does not belong to the given news.");
         }
         newsComment.update(content);
         return newsComment;
@@ -47,10 +48,10 @@ public class NewsCommentService {
         NewsComment newsComment = getCommentById(commentId);
 
         if (!newsComment.getMember().equals(member)) {
-            throw new AccessDeniedException("You do not have permission to delete this comment.");
+            throw new ServiceException("403","You do not have permission to delete this comment.");
         }
         if (!newsComment.getNews().equals(news)) {
-            throw new IllegalArgumentException("This comment does not belong to the given news.");
+            throw new ServiceException("400","This comment does not belong to the given news.");
         }
         newsCommentRepository.delete(newsComment);
     }
