@@ -52,6 +52,9 @@ public class Video extends BaseEntity {
                 .build();
     }
     public void updateStatus(String status) {
+        if (status == null || status.isBlank()) {
+            throw new IllegalArgumentException("status cannot be null or empty");
+        }
         this.status = status;
     }
 }
