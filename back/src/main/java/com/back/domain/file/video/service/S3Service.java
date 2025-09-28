@@ -1,5 +1,6 @@
 package com.back.domain.file.video.service;
 
+import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -15,7 +16,6 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,7 +49,7 @@ public class S3Service {
 
     public URL generateDownloadUrl(String bucket, String objectKey, Integer expireHours) {
         if (!isExist(bucket, objectKey)) {
-            throw new NoSuchElementException("요청한 파일이 존재하지 않습니다: " + objectKey);
+            throw new ServiceException("404", "요청한 파일이 존재하지 않습니다: " + objectKey);
         }
 
         GetObjectRequest request = GetObjectRequest.builder()
@@ -64,7 +64,7 @@ public class S3Service {
 
         URL url = presignedRequest.url();
         if (url == null) {
-            throw new RuntimeException("Presigned URL 생성 실패");
+            throw new ServiceException("500", "Presigned URL 생성 실패");
         }
 
         return url;
@@ -74,7 +74,7 @@ public class S3Service {
         return generateDownloadUrl(bucket, objectKey, 60);
     }
 
-    // DASH용 인덱스 + 세그먼트 URL 발급
+    @Deprecated // DASH방식으로 제공시 각각의 세그먼트 파일을 받을 필요가 없으므로 사용하지 않음
     public Map<String, URL> generateDashUrls(String bucket, String mpdFile, List<String> segmentFiles) {
         // MPD 파일 URL
         URL mpdUrl = generateDownloadUrl(bucket, mpdFile);
