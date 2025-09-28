@@ -5,6 +5,7 @@ import com.back.domain.news.like.entity.Like;
 import com.back.domain.news.like.repository.LikeRepository;
 import com.back.domain.news.news.entity.News;
 import com.back.domain.news.news.repository.NewsRepository;
+import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,11 +19,11 @@ public class LikeService {
 
     public Like likeNews(Member member, Long newsId) {
         News news = newsRepository.findById(newsId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 뉴스를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ServiceException("404", "해당 뉴스를 찾을 수 없습니다."));
 
         Optional<Like> existingLike = likeRepository.findByMemberAndNews(member, news);
         if (existingLike.isPresent()) {
-            throw new IllegalStateException("이미 좋아요를 누른 뉴스입니다.");
+            throw new ServiceException("400", "이미 좋아요를 누른 뉴스입니다.");
         }
 
         Like like = Like.create(member, news);
@@ -31,7 +32,7 @@ public class LikeService {
 
     public long getLikeCount(Long newsId) {
         News news = newsRepository.findById(newsId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 뉴스를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ServiceException("404", "해당 뉴스를 찾을 수 없습니다."));
         return likeRepository.countByNews(news);
     }
 }
