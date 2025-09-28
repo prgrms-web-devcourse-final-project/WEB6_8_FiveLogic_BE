@@ -9,8 +9,6 @@ import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class NewsLikeService {
@@ -21,10 +19,7 @@ public class NewsLikeService {
         News news = newsRepository.findById(newsId)
                 .orElseThrow(() -> new ServiceException("404", "해당 뉴스를 찾을 수 없습니다."));
 
-        Optional<NewsLike> existingLike = newsLikeRepository.findByMemberAndNews(member, news);
-        if (existingLike.isPresent()) {
-            throw new ServiceException("400", "이미 좋아요를 누른 뉴스입니다.");
-        }
+        newsLikeRepository.findByMemberAndNews(member, news).orElseThrow(() -> new ServiceException("400", "이미 좋아요를 누른 뉴스입니다."));
 
         NewsLike newsLike = NewsLike.create(member, news);
         return newsLikeRepository.save(newsLike);
