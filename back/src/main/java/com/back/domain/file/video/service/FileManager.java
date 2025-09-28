@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class VideoManager {
+public class FileManager {
     private final VideoService videoService;
     private final S3Service s3Service;
 
