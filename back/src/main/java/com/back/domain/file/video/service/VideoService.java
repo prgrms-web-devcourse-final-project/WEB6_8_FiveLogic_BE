@@ -2,10 +2,9 @@ package com.back.domain.file.video.service;
 
 import com.back.domain.file.video.entity.Video;
 import com.back.domain.file.video.repository.VideoRepository;
+import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +18,6 @@ public class VideoService {
 
     public Video getNewsByUuid(String uuid) {
         return videoRepository.findByUuid(uuid)
-                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 비디오입니다."));
+                .orElseThrow(() -> new ServiceException("404","존재하지 않는 비디오입니다."));
     }
 }
