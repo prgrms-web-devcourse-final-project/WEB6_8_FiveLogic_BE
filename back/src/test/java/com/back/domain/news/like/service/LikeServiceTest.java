@@ -7,6 +7,7 @@ import com.back.domain.news.news.entity.News;
 import com.back.domain.news.news.repository.NewsRepository;
 import com.back.fixture.MemberFixture;
 import com.back.fixture.NewsFixture;
+import com.back.global.exception.ServiceException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -61,7 +62,7 @@ class LikeServiceTest {
         when(newsRepository.findById(nonExistentNewsId)).thenReturn(Optional.empty());
 
         // when & then
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        ServiceException exception = assertThrows(ServiceException.class, () -> {
             likeService.likeNews(member, nonExistentNewsId);
         });
 
@@ -82,7 +83,7 @@ class LikeServiceTest {
         when(likeRepository.findByMemberAndNews(member, news)).thenReturn(Optional.of(existingLike));
 
         // when & then
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+        ServiceException exception = assertThrows(ServiceException.class, () -> {
             likeService.likeNews(member, newsId);
         });
 
