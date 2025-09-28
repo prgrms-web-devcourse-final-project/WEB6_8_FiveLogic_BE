@@ -7,6 +7,7 @@ import com.back.domain.news.news.repository.NewsRepository;
 import com.back.fixture.MemberFixture;
 import com.back.fixture.NewsFixture;
 import com.back.fixture.VideoFixture;
+import com.back.global.exception.ServiceException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -100,7 +101,7 @@ public class NewsServiceTest {
         when(newsRepository.findById(nonExistentNewsId)).thenReturn(Optional.empty());
 
         // when & then
-        assertThrows(NoSuchElementException.class, () -> {
+        assertThrows(ServiceException.class, () -> {
             newsService.getNewsById(nonExistentNewsId);
         });
         verify(newsRepository, times(1)).findById(nonExistentNewsId);
@@ -140,7 +141,7 @@ public class NewsServiceTest {
         String newContent = "수정된 뉴스 내용";
 
         // when & then
-        assertThrows(SecurityException.class, () -> {
+        assertThrows(ServiceException.class, () -> {
             newsService.updateNews(user, news, newTitle, newVideo, newContent);
         });
         verify(newsRepository, never()).save(any(News.class));
@@ -169,7 +170,7 @@ public class NewsServiceTest {
         News news = NewsFixture.createDefault();
 
         // when & then
-        assertThrows(SecurityException.class, () -> {
+        assertThrows(ServiceException.class, () -> {
             newsService.deleteNews(user, news);
         });
         verify(newsRepository, never()).delete(any(News.class));
