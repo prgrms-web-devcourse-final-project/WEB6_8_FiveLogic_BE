@@ -1,6 +1,7 @@
 package com.back.domain.file.service;
 
 import com.back.domain.file.video.service.S3Service;
+import com.back.global.exception.ServiceException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,9 +23,10 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class S3ServiceTest {
@@ -83,7 +85,7 @@ public class S3ServiceTest {
         try {
             s3Service.generateUploadUrl(bucket, objectKey);
         } catch (Exception e) {
-            assertThat(e).isInstanceOf(RuntimeException.class);
+            assertThat(e).isInstanceOf(ServiceException.class);
         }
     }
 
@@ -98,37 +100,35 @@ public class S3ServiceTest {
         try {
             s3Service.generateDownloadUrl(bucket, objectKey);
         } catch (Exception e) {
-            assertThat(e).isInstanceOf(RuntimeException.class);
+            assertThat(e).isInstanceOf(ServiceException.class);
         }
     }
 
 
     @Test
-    @DisplayName("isExist() - 객체 존재 시 true 반환")
-    void isExist_objectExists_shouldReturnTrue() {
+    @DisplayName("isExist() - 객체 존재 시 예외를 던지지 않고 정상 완료")
+    void isExist_objectExists_shouldNotThrowException() {
         String bucket = "test-bucket";
         String objectKey = "existing.mp4";
 
         HeadObjectResponse mockResponse = mock(HeadObjectResponse.class);
         when(s3Client.headObject(any(HeadObjectRequest.class))).thenReturn(mockResponse);
 
-        boolean exist = s3Service.isExist(bucket, objectKey);
-
-        assertThat(exist).isTrue();
+        assertDoesNotThrow(() -> s3Service.isExist(bucket, objectKey));
     }
 
     @Test
-    @DisplayName("isExist() - 객체 존재하지 않으면 false 반환")
-    void isExist_objectNotExists_shouldReturnFalse() {
+    @DisplayName("isExist() - 객체 존재하지 않으면 ObjectNotFoundException을 던짐")
+    void isExist_objectNotExists_shouldThrowObjectNotFoundException() {
         String bucket = "test-bucket";
         String objectKey = "non-existing.mp4";
 
         doThrow(S3Exception.builder().statusCode(404).build())
                 .when(s3Client).headObject(any(HeadObjectRequest.class));
 
-        boolean exist = s3Service.isExist(bucket, objectKey);
-
-        assertThat(exist).isFalse();
+        assertThrows(ServiceException.class, () ->
+                s3Service.isExist(bucket, objectKey)
+        );
     }
 
     @Test
@@ -151,4 +151,23 @@ public class S3ServiceTest {
         assertThat(urls).containsKeys("mpd", "seg1.mp4", "seg2.mp4");
         urls.values().forEach(url -> assertThat(url.toString()).isEqualTo("http://localhost:8080/download"));
     }
+
+    @Test
+    @DisplayName("bucket이나 objectKey가 null 혹은 공백인 요청은 예외를 반환한다")
+    void validateRequest_InvalidInput_Test() {
+        try {
+            s3Service.validateRequest(null, "file.mp4");
+        } catch (Exception e) {
+            assertThat(e).isInstanceOf(ServiceException.class);
+            assertThat(e.getMessage()).isEqualTo("400 : 버킷 이름과 객체 키는 필수입니다.");
+        }
+
+        try {
+            s3Service.validateRequest("bucket", "   ");
+        } catch (Exception e) {
+            assertThat(e).isInstanceOf(ServiceException.class);
+            assertThat(e.getMessage()).isEqualTo("400 : 버킷 이름과 객체 키는 필수입니다.");
+        }
+    }
+
 }
