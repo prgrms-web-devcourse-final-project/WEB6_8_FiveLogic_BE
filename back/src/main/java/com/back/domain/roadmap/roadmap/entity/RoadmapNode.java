@@ -3,6 +3,7 @@ package com.back.domain.roadmap.roadmap.entity;
 import com.back.domain.roadmap.task.entity.Task;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -36,7 +37,7 @@ public class RoadmapNode extends BaseEntity {
     private int stepOrder = 0;
 
     @Column(name = "raw_task_name")
-    private String rawTaskName; // 원본 Task 입력값
+    private String taskName; // Task 이름 표시값(DB에 없는 Task 입력시 입력값 그대로 출력)
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
@@ -49,14 +50,17 @@ public class RoadmapNode extends BaseEntity {
         MENTOR, JOB
     }
 
-    public RoadmapNode(String rawTaskName, String description, Task task, int stepOrder, long roadmapId, RoadmapType roadmapType) {
-        this.rawTaskName = rawTaskName;
+    // Builder 패턴 적용된 생성자
+    @Builder
+    public RoadmapNode(String taskName, String description, Task task, int stepOrder, long roadmapId, RoadmapType roadmapType) {
+        this.taskName = taskName;
         this.description = description;
         this.task = task;
         this.stepOrder = stepOrder;
         this.roadmapId = roadmapId;
         this.roadmapType = roadmapType;
     }
+
 
     public void addChild(RoadmapNode child) {
         if (child == null) {

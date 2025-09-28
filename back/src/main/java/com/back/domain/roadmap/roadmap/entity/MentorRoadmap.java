@@ -38,7 +38,10 @@ public class MentorRoadmap extends BaseEntity {
     }
 
     public RoadmapNode getRootNode() {
-        return nodes.isEmpty() ? null : nodes.get(0);
+        return nodes.stream()
+                .filter(node -> node.getStepOrder() == 1)
+                .findFirst()
+                .orElse(null);
     }
 
     // 노드 추가 헬퍼 메서드 (이미 완전히 초기화된 노드 추가)

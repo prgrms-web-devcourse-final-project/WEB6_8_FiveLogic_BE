@@ -16,7 +16,7 @@ public record RoadmapNodeResponse(
         return new RoadmapNodeResponse(
             node.getId(),
             node.getTask() != null ? node.getTask().getId() : null,
-            node.getTask() != null ? node.getTask().getName() : node.getRawTaskName(),
+            node.getTaskName(), // taskName 필드 직접 사용 (Task 엔티티 접근 불필요)
             node.getDescription(),
             node.getStepOrder(),
             node.getTask() != null

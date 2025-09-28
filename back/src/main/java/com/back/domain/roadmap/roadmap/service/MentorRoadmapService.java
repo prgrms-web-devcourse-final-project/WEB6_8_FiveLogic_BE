@@ -135,6 +135,33 @@ public class MentorRoadmapService {
         if (request.nodes().isEmpty()) {
             throw new ServiceException("400", "로드맵은 적어도 하나 이상의 노드를 포함해야 합니다.");
         }
+        validateStepOrderSequence(request.nodes());
+    }
+
+    // stepOrder 연속성 검증 (멘토 로드맵은 선형 구조)
+    private void validateStepOrderSequence(List<RoadmapNodeRequest> nodes) {
+        List<Integer> stepOrders = nodes.stream()
+                .map(RoadmapNodeRequest::stepOrder)
+                .toList();
+
+        // 중복 검증 먼저 수행
+        long distinctCount = stepOrders.stream().distinct().count();
+        if (distinctCount != stepOrders.size()) {
+            throw new ServiceException("400", "stepOrder에 중복된 값이 있습니다.");
+        }
+
+        // 정렬 후 연속성 검증
+        List<Integer> sortedStepOrders = stepOrders.stream().sorted().toList();
+
+        // 1부터 시작하는 연속된 숫자인지 검증
+        for (int i = 0; i < sortedStepOrders.size(); i++) {
+            int expectedOrder = i + 1;
+            if (!sortedStepOrders.get(i).equals(expectedOrder)) {
+                throw new ServiceException("400",
+                    String.format("stepOrder는 1부터 시작하는 연속된 숫자여야 합니다. 현재: %s, 기대값: %d",
+                        sortedStepOrders, expectedOrder));
+            }
+        }
     }
 
     // 로드맵 저장 (노드들도 cascade로 함께 저장)
@@ -199,7 +226,14 @@ public class MentorRoadmapService {
             Task task = nodeRequest.taskId() != null ? tasksMap.get(nodeRequest.taskId()) : null;
             String taskName = (task != null) ? task.getName() : nodeRequest.taskName();
 
-            RoadmapNode node = new RoadmapNode(taskName, nodeRequest.description(), task, nodeRequest.stepOrder(), roadmapId, RoadmapNode.RoadmapType.MENTOR);
+            RoadmapNode node = RoadmapNode.builder()
+                    .taskName(taskName)
+                    .description(nodeRequest.description())
+                    .task(task)
+                    .stepOrder(nodeRequest.stepOrder())
+                    .roadmapId(roadmapId)
+                    .roadmapType(RoadmapNode.RoadmapType.MENTOR)
+                    .build();
 
             nodes.add(node);
         }

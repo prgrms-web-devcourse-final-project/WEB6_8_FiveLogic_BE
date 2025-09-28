@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/mentor-roadmaps")
 @RequiredArgsConstructor
-@Tag(name = "MentorRoadmap", description = "멘토 로드맵 관리 API")
+@Tag(name = "MentorRoadmapController", description = "멘토 로드맵 API")
 public class MentorRoadmapController {
     private final MentorRoadmapService mentorRoadmapService;
     private final Rq rq;

@@ -12,20 +12,20 @@ public interface MentorRoadmapRepository extends JpaRepository<MentorRoadmap, Lo
      @Query("""
          SELECT mr FROM MentorRoadmap mr
          LEFT JOIN FETCH mr.nodes n
-         LEFT JOIN FETCH n.task
          WHERE mr.id = :id
+         ORDER BY n.stepOrder ASC
          """)
      Optional<MentorRoadmap> findByIdWithNodes(@Param("id") Long id);
 
     @Query("""
         SELECT mr FROM MentorRoadmap mr
         LEFT JOIN FETCH mr.nodes n
-        LEFT JOIN FETCH n.task
         WHERE mr.mentorId = :mentorId
+        ORDER BY n.stepOrder ASC
         """)
     Optional<MentorRoadmap> findByMentorIdWithNodes(@Param("mentorId") Long mentorId);
 
-    // 기본 정보만 조회하는 메서드도 유지
+    // 기본 정보만 조회하는 메서드
     Optional<MentorRoadmap> findByMentorId(Long mentorId);
 
     boolean existsByMentorId(Long mentorId);

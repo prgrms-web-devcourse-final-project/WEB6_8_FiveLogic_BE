@@ -17,6 +17,7 @@ public record MentorRoadmapResponse(
     // 정적 팩터리 메서드 - MentorRoadmap로부터 Response DTO 생성
     public static MentorRoadmapResponse from(MentorRoadmap mentorRoadmap) {
         List<RoadmapNodeResponse> nodeResponses = mentorRoadmap.getNodes().stream()
+                .sorted((n1, n2) -> Integer.compare(n1.getStepOrder(), n2.getStepOrder())) // stepOrder로 정렬
                 .map(RoadmapNodeResponse::from)
                 .toList();
 
