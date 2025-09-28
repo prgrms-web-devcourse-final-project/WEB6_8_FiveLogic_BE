@@ -23,7 +23,7 @@ public record MentorRoadmapResponse(
 
         return new MentorRoadmapResponse(
             mentorRoadmap.getId(),
-            mentorRoadmap.getMentorId(),
+            mentorRoadmap.getMentor().getId(),
             mentorRoadmap.getTitle(),
             mentorRoadmap.getDescription(),
             nodeResponses,

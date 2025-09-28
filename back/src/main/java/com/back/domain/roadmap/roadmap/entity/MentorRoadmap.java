@@ -1,5 +1,6 @@
 package com.back.domain.roadmap.roadmap.entity;
 
+import com.back.domain.member.mentor.entity.Mentor;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -20,8 +21,9 @@ public class MentorRoadmap extends BaseEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "mentor_id", nullable = false)
-    private Long mentorId; // Mentor 엔티티 FK
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mentor_id", nullable = false)
+    private Mentor mentor;
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "roadmap_id")
@@ -30,8 +32,8 @@ public class MentorRoadmap extends BaseEntity {
     private List<RoadmapNode> nodes;
 
 
-    public MentorRoadmap(Long mentorId, String title, String description) {
-        this.mentorId = mentorId;
+    public MentorRoadmap(Mentor mentor, String title, String description) {
+        this.mentor = mentor;
         this.title = title;
         this.description = description;
         this.nodes = new ArrayList<>();
