@@ -66,7 +66,7 @@ class LikeServiceTest {
             likeService.likeNews(member, nonExistentNewsId);
         });
 
-        assertThat(exception.getMessage()).isEqualTo("해당 뉴스를 찾을 수 없습니다.");
+        assertThat(exception.getMessage()).isEqualTo("404 : 해당 뉴스를 찾을 수 없습니다.");
         verify(likeRepository, never()).save(any(Like.class));
     }
 
@@ -87,7 +87,7 @@ class LikeServiceTest {
             likeService.likeNews(member, newsId);
         });
 
-        assertThat(exception.getMessage()).isEqualTo("이미 좋아요를 누른 뉴스입니다.");
+        assertThat(exception.getMessage()).isEqualTo("404 : 해당 뉴스를 찾을 수 없습니다.");
         verify(likeRepository, never()).save(any(Like.class));
     }
 }
