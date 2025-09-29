@@ -10,7 +10,7 @@ import com.back.domain.mentoring.reservation.error.ReservationErrorCode;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.fixture.MemberTestFixture;
-import com.back.fixture.MentoringTestFixture;
+import com.back.fixture.mentoring.MentoringTestFixture;
 import com.back.global.exception.ServiceException;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
