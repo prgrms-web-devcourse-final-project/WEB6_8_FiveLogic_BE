@@ -42,6 +42,12 @@ public class PostService {
             throw new ServiceException("400", "실무 경험 공유 게시글은 멘토만 작성할 수 있습니다.");
         }
 
+//        if( postType == Post.PostType.PRACTICEPOST ) {
+//            if(member.getCareer() == null || member.getCareer().isEmpty()) {
+//                throw new ServiceException("400", "멘토는 경력을 입력해야 실무 경험 공유 게시글을 작성할 수 있습니다.");
+//            }
+//        }
+
         Post post = Post.builder()
                 .title(postCreateRequest.getTitle())
                 .content(postCreateRequest.getContent())
@@ -72,6 +78,14 @@ public class PostService {
     public void updatePost(long postId, Member member, @Valid PostCreateRequest postCreateRequest) {
         Post post = findById(postId);
         if (!post.isAuthor(member)) throw new ServiceException("400", "수정 권한이 없습니다.");
+
+        if ( postCreateRequest.getTitle() == null || postCreateRequest.getTitle().isBlank()) {
+            throw new ServiceException("400", "제목을 입력해주세요.");
+        }
+
+        if ( postCreateRequest.getContent() == null || postCreateRequest.getContent().isBlank()) {
+            throw new ServiceException("400", "내용을 입력해주세요.");
+        }
 
         post.updateTitle(postCreateRequest.getTitle());
         post.updateContent(postCreateRequest.getContent());

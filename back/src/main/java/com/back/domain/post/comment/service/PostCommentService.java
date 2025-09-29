@@ -93,13 +93,15 @@ public class PostCommentService {
 
 
     private void validatePostExists(Long postId) {
+        if(postId == null || postId <= 0) {
+            throw new ServiceException("400", "유효하지 않은 게시글 Id입니다.");
+        }
+
         if (!postRepository.existsById(postId)) {
             throw new ServiceException("400", "해당 Id의 게시글이 없습니다.");
         }
 
-        if(postId == null || postId <= 0) {
-            throw new ServiceException("400", "유효하지 않은 게시글 Id입니다.");
-        }
+
     }
 
     private PostComment getPostCommentById(Long commentId) {

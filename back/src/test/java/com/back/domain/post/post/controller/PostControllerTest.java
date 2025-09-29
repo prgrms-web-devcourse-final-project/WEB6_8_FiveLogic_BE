@@ -150,7 +150,7 @@ public class PostControllerTest {
                 .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("createPost"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.resultCode").value("400-2"))
+                .andExpect(jsonPath("$.resultCode").value("400"))
                 .andExpect(jsonPath("$.msg").value("유효하지 않은 PostType입니다."));
     }
 
