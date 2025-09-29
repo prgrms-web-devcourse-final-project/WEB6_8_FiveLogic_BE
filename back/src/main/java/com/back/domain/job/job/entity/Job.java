@@ -4,13 +4,13 @@ import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "job")
-@Getter @Setter
+@Getter
 @NoArgsConstructor
 public class Job extends BaseEntity {
     @Column(name = "name", nullable = false, unique = true)
@@ -20,15 +20,19 @@ public class Job extends BaseEntity {
     private String description;
 
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL)
-    private List<JobAlias> aliases;
+    private List<JobAlias> aliases = new ArrayList<>();
 
     public Job(String name, String description) {
         this.name = name;
         this.description = description;
+        this.aliases = new ArrayList<>();
     }
 
     public void addAlias(JobAlias alias) {
+        if (aliases == null) {
+            aliases = new ArrayList<>();
+        }
         aliases.add(alias);
-        alias.setJob(this);
+        alias.linkToJob(this);
     }
 }
