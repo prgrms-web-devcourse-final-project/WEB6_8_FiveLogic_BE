@@ -61,11 +61,5 @@ public class PostComment extends BaseEntity {
     public void adoptComment() {
         this.isAdopted = true;
     }
-/*
-*  Post 단위 테스트 작성
-*  isAdopted 테스트
-*  PracticePost 작성 권한 테스트
-*  API 명세서 수정
-* */
 
 }

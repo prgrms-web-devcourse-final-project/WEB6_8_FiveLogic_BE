@@ -134,5 +134,7 @@ public class PostCommentService {
         }
 
         postComment.adoptComment();
+
+        post.updateResolveStatus(true);
     }
 }
