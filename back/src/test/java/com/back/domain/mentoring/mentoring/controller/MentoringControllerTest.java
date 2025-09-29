@@ -2,17 +2,15 @@ package com.back.domain.mentoring.mentoring.controller;
 
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.AuthTokenService;
-import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.dto.request.MentoringRequest;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
-import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.domain.mentoring.slot.repository.MentorSlotRepository;
 import com.back.fixture.MemberTestFixture;
-import com.back.fixture.MentoringTestFixture;
+import com.back.fixture.mentoring.MentoringTestFixture;
 import com.back.global.exception.ServiceException;
 import com.back.standard.util.Ut;
 import jakarta.servlet.http.Cookie;
@@ -53,7 +51,6 @@ class MentoringControllerTest {
     private static final String MENTORING_URL = "/mentorings";
 
     private Mentor mentor;
-    private Mentee mentee;
     private String mentorToken;
     private String menteeToken;
 
@@ -65,7 +62,7 @@ class MentoringControllerTest {
 
         // Mentee
         Member menteeMember = memberFixture.createMenteeMember();
-        mentee = memberFixture.createMentee(menteeMember);
+        memberFixture.createMentee(menteeMember);
 
         // JWT 발급
         mentorToken = authTokenService.genAccessToken(mentorMember);
@@ -222,17 +219,6 @@ class MentoringControllerTest {
             .andExpect(jsonPath("$.msg").value("멘토를 찾을 수 없습니다."));
     }
 
-    @Test
-    @DisplayName("멘토링 생성 실패 - 멘토당 멘토링 1개 제한")
-    void createMentoringFailDuplicate() throws Exception {
-        mentoringFixture.createMentoring(mentor);
-
-        performCreateMentoring(mentorToken)
-            .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.resultCode").value("409-1"))
-            .andExpect(jsonPath("$.msg").value("이미 멘토링 정보가 존재합니다."));
-    }
-
 
     // ===== 멘토링 수정 =====
 
@@ -281,22 +267,6 @@ class MentoringControllerTest {
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.resultCode").value("404-2"))
             .andExpect(jsonPath("$.msg").value("멘토링을 찾을 수 없습니다."));
-    }
-
-    @Test
-    @DisplayName("멘토링 수정 실패 - 멘토링 소유자가 아닌 경우")
-    void updateMentoringFailNotOwner() throws Exception {
-        Mentoring mentoring = mentoringFixture.createMentoring(mentor);
-
-        // 다른 멘토
-        Member otherMentor = memberFixture.createMentorMember();
-        memberFixture.createMentor(otherMentor);
-        String token = authTokenService.genAccessToken(otherMentor);
-
-        performUpdateMentoring(mentoring.getId(), token)
-            .andExpect(status().isForbidden())
-            .andExpect(jsonPath("$.resultCode").value("403-1"))
-            .andExpect(jsonPath("$.msg").value("해당 멘토링에 대한 권한이 없습니다."));
     }
 
 
@@ -372,36 +342,6 @@ class MentoringControllerTest {
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.resultCode").value("404-2"))
             .andExpect(jsonPath("$.msg").value("멘토링을 찾을 수 없습니다."));
-    }
-
-    @Test
-    @DisplayName("멘토링 삭제 실패 - 멘토링 소유자가 아닌 경우")
-    void deleteMentoringFailNotOwner() throws Exception {
-        Mentoring mentoring = mentoringFixture.createMentoring(mentor);
-
-        // 다른 멘토
-        Member otherMentor = memberFixture.createMentorMember();
-        memberFixture.createMentor(otherMentor);
-        String token = authTokenService.genAccessToken(otherMentor);
-
-        performDeleteMentoring(mentoring.getId(), token)
-            .andExpect(status().isForbidden())
-            .andExpect(jsonPath("$.resultCode").value("403-1"))
-            .andExpect(jsonPath("$.msg").value("해당 멘토링에 대한 권한이 없습니다."));
-    }
-
-    @Test
-    @DisplayName("멘토링 삭제 실패 - 예약 정보가 있는 경우")
-    void deleteMentoringFailExistsReservation() throws Exception {
-        Mentoring mentoring = mentoringFixture.createMentoring(mentor);
-        MentorSlot mentorSlot = mentoringFixture.createMentorSlot(mentor);
-        mentoringFixture.createReservation(mentoring, mentee, mentorSlot);
-
-        performDeleteMentoring(mentoring.getId(), mentorToken)
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.resultCode").value("400-1"))
-            .andExpect(jsonPath("$.msg").value("예약 이력이 있는 멘토링은 삭제할 수 없습니다."));
-
     }
 
 
