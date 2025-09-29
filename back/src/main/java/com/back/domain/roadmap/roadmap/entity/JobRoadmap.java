@@ -1,5 +1,6 @@
 package com.back.domain.roadmap.roadmap.entity;
 
+import com.back.domain.job.job.entity.Job;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -15,17 +16,18 @@ import java.util.List;
 @Getter @Setter
 @NoArgsConstructor
 public class JobRoadmap extends BaseEntity {
-    @Column(name = "job_id", nullable = false)
-    private Long jobId; // Job FK
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "job_id", nullable = false)
+    private Job job;
 
-    @OneToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "roadmap_id") // RoadmapNode.roadmapId 참조
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "roadmap_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @SQLRestriction("roadmap_type = 'JOB'")
-    @OrderBy("stepOrder ASC")
+    @OrderBy("level ASC, stepOrder ASC")
     private List<RoadmapNode> nodes;
 
-    public JobRoadmap(Long jobId) {
-        this.jobId = jobId;
+    public JobRoadmap(Job job) {
+        this.job = job;
         this.nodes = new ArrayList<>();
     }
 

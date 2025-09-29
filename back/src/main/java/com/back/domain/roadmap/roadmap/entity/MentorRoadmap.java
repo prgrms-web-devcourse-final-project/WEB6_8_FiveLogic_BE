@@ -26,7 +26,7 @@ public class MentorRoadmap extends BaseEntity {
     private Mentor mentor;
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "roadmap_id")
+    @JoinColumn(name = "roadmap_id", foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
     @SQLRestriction("roadmap_type = 'MENTOR'")
     @OrderBy("stepOrder ASC")
     private List<RoadmapNode> nodes;
