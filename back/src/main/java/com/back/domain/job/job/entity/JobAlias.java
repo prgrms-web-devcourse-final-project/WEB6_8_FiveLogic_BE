@@ -4,11 +4,10 @@ import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "job_alias")
-@Getter @Setter
+@Getter
 @NoArgsConstructor
 public class JobAlias extends BaseEntity {
     @Column(name = "name", nullable = false, unique = true)
@@ -21,5 +20,13 @@ public class JobAlias extends BaseEntity {
     public JobAlias(String name) {
         this.name = name;
         this.job = null; // 기본적으로 연결된 Job이 없음 (pending 상태)
+    }
+
+    public void linkToJob(Job job) {
+        this.job = job;
+    }
+
+    public boolean isPending() {
+        return this.job == null;
     }
 }
