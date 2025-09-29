@@ -6,6 +6,7 @@ import com.back.domain.file.video.service.FileManager;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,7 +17,8 @@ public class VideoController {
     private final FileManager fileManager;
 
     @GetMapping("/videos/upload")
-    @Operation(summary="업로드용 URL 요청", description="파일 업로드를 위한 Presigned URL을 발급받습니다.")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "업로드용 URL 요청", description = "파일 업로드를 위한 Presigned URL을 발급받습니다.")
     public RsData<UploadUrlGetResponse> getUploadUrl() {
         PresignedUrlResponse uploadUrl = fileManager.getUploadUrl();
         UploadUrlGetResponse response = new UploadUrlGetResponse(uploadUrl.url().toString(), uploadUrl.expiresAt());
@@ -24,7 +26,7 @@ public class VideoController {
     }
 
     @GetMapping("/videos/download")
-    @Operation(summary="다운로드용 URL 요청", description="파일 다운로드를 위한 Presigned URL을 발급받습니다.")
+    @Operation(summary = "다운로드용 URL 요청", description = "파일 다운로드를 위한 Presigned URL을 발급받습니다.")
     public RsData<UploadUrlGetResponse> getDownloadUrls(@RequestParam String objectKey) {
         PresignedUrlResponse downloadUrl = fileManager.getDownloadUrl(objectKey);
         UploadUrlGetResponse response = new UploadUrlGetResponse(downloadUrl.url().toString(), downloadUrl.expiresAt());
