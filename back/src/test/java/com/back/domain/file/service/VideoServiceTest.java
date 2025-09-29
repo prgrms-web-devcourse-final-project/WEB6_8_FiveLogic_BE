@@ -27,7 +27,7 @@ class VideoServiceTest {
     private VideoService videoService;
 
     @Test
-    @DisplayName("transcodingResults, originalPath, originalFileName, duration, fileSize로 Video 객체 생성")
+    @DisplayName("transcodingResults, originalPath, originalFileName, duration로 Video 객체 생성")
     void videoCreationTest() {
         String uuid = UUID.randomUUID().toString();
         String transcodingResults = """
@@ -51,18 +51,16 @@ class VideoServiceTest {
                 """;
         String originalPath = "/videos/sample.mp4";
         Integer duration = 120;
-        Long fileSize = 1024L;
 
-        Video video = VideoFixture.create(uuid, transcodingResults, originalPath, duration, fileSize);
+        Video video = VideoFixture.create(uuid, transcodingResults, originalPath, duration);
         when(videoRepository.save(any(Video.class))).thenReturn(video);
 
-        Video createdVideo = videoService.createVideo(uuid, transcodingResults, originalPath, duration, fileSize);
+        Video createdVideo = videoService.createVideo(uuid, transcodingResults, originalPath, duration);
         assertThat(createdVideo).isNotNull();
         assertThat(createdVideo.getUuid()).isEqualTo(uuid);
         assertThat(createdVideo.getStatus()).isEqualTo(transcodingResults);
         assertThat(createdVideo.getPath()).isEqualTo(originalPath);
         assertThat(createdVideo.getDuration()).isEqualTo(duration);
-        assertThat(createdVideo.getFileSize()).isEqualTo(fileSize);
     }
 
     @Test

@@ -24,17 +24,19 @@ public class News extends BaseEntity {
     @OneToOne
     private Video video;
     private String content;
+    private Integer views;
     @OneToMany(mappedBy = "news", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<NewsComment> newsComment;
     @OneToMany(mappedBy = "news", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<NewsLike> newsLikes = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
-    private News(Member member, String title, Video video, String content, List<NewsComment> newsComment, List<NewsLike> newsLikes) {
+    private News(Member member, String title, Video video, String content, Integer views, List<NewsComment> newsComment, List<NewsLike> newsLikes) {
         this.member = member;
         this.title = title;
         this.video = video;
         this.content = content;
+        this.views = views;
         this.newsComment = newsComment;
         this.newsLikes = newsLikes;
     }
@@ -57,6 +59,7 @@ public class News extends BaseEntity {
                 .title(title)
                 .video(video)
                 .content(content)
+                .views(0)
                 .newsComment(new ArrayList<>())
                 .newsLikes(new ArrayList<>())
                 .build();
@@ -78,6 +81,10 @@ public class News extends BaseEntity {
             throw new IllegalStateException("좋아요를 누르지 않은 뉴스입니다.");
         }
         this.newsLikes.remove(newsLike);
+    }
+
+    public void incrementViews() {
+        this.views += 1;
     }
 
     public void addComment(NewsComment newsComment) {

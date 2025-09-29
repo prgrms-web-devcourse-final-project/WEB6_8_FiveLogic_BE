@@ -29,4 +29,13 @@ public class FileManager {
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(expires);
         return new PresignedUrlResponse(url, expiresAt);
     }
+
+    //TODO : 테스트 작성필요
+    public void updateVideoStatus(String videoId, String status) {
+        try {
+            videoService.updateStatus(videoId, status);
+        } catch (Exception e) {
+            videoService.createVideo(videoId, status, "/", 0);
+        }
+    }
 }

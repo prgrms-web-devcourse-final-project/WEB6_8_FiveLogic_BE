@@ -291,4 +291,22 @@ class NewsTest {
 
         assertThat(news.getNewsComment().size()).isEqualTo(0);
     }
+
+    @Test
+    @DisplayName("뉴스 조회수를 증가시킬 수 있다.")
+    void incrementViewsTest() {
+        Member member = MemberFixture.createDefault();
+        String title = "Sample News Title";
+        String content = "This is a sample news content.";
+        Video video = VideoFixture.createDefault();
+        News news = News.create(member, title, video, content);
+
+        assertThat(news.getViews()).isEqualTo(0);
+
+        news.incrementViews();
+        assertThat(news.getViews()).isEqualTo(1);
+
+        news.incrementViews();
+        assertThat(news.getViews()).isEqualTo(2);
+    }
 }
