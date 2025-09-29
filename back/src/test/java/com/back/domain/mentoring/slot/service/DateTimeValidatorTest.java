@@ -5,7 +5,9 @@ import com.back.global.exception.ServiceException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -145,5 +147,33 @@ class DateTimeValidatorTest {
             () -> DateTimeValidator.validateTimeSlot(null, end));
 
         assertEquals(MentorSlotErrorCode.START_TIME_REQUIRED.getCode(), exception.getResultCode());
+    }
+
+    @Test
+    @DisplayName("반복 일정 정상 케이스")
+    void validateRepetitionSlot_success() {
+        LocalDate startDate = LocalDate.now().plusDays(1);
+        LocalDate endDate = startDate.plusDays(3);
+        LocalTime startTime = LocalTime.of(10, 0);
+        LocalTime endTime = LocalTime.of(11, 0);
+
+        assertDoesNotThrow(() ->
+            DateTimeValidator.validateRepetitionSlot(startDate, startTime, endDate, endTime)
+        );
+    }
+
+    @Test
+    @DisplayName("반복 종료일이 시작일보다 이전이면 예외 발생")
+    void validateRepetitionSlot_fail_endDateBeforeStartDate() {
+        LocalDate startDate = LocalDate.now().plusDays(3);
+        LocalDate endDate = LocalDate.now().plusDays(1);
+        LocalTime startTime = LocalTime.of(10, 0);
+        LocalTime endTime = LocalTime.of(11, 0);
+
+        ServiceException exception = assertThrows(ServiceException.class,
+            () -> DateTimeValidator.validateRepetitionSlot(startDate, startTime, endDate, endTime)
+        );
+
+        assertEquals(MentorSlotErrorCode.END_TIME_BEFORE_START.getCode(), exception.getResultCode());
     }
 }

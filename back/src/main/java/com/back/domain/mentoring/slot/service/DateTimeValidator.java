@@ -4,7 +4,9 @@ import com.back.domain.mentoring.slot.error.MentorSlotErrorCode;
 import com.back.global.exception.ServiceException;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 public class DateTimeValidator {
 
@@ -49,5 +51,17 @@ public class DateTimeValidator {
 
         validateStartTimeNotInPast(start);
         validateMinimumDuration(start, end);
+    }
+
+    public static void validateRepetitionSlot(LocalDate startDate, LocalTime startTime,
+                                              LocalDate endDate, LocalTime endTime) {
+        if (endDate.isBefore(startDate)) {
+            throw new ServiceException(MentorSlotErrorCode.END_TIME_BEFORE_START);
+        }
+
+        LocalDateTime startDateTime = LocalDateTime.of(startDate, startTime);
+        LocalDateTime endDateTime = LocalDateTime.of(startDate, endTime);
+
+        validateTimeSlot(startDateTime, endDateTime);
     }
 }
