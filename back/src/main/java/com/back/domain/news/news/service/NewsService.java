@@ -34,15 +34,20 @@ public class NewsService {
 
     public News updateNews(Member member, News news, String title, Video video, String content) {
         if (!(member.getRole() == Member.Role.ADMIN)) {
-            throw new ServiceException("403","수정 권한이 없습니다.");
+            throw new ServiceException("403", "수정 권한이 없습니다.");
         }
         news.update(title, video, content);
         return newsRepository.save(news);
     }
 
+    public News incrementViews(News news) {
+        news.incrementViews();
+        return newsRepository.save(news);
+    }
+
     public void deleteNews(Member member, News news) {
         if (!(member.getRole() == Member.Role.ADMIN)) {
-            throw new ServiceException("403","수정 권한이 없습니다.");
+            throw new ServiceException("403", "수정 권한이 없습니다.");
         }
         newsRepository.delete(news);
     }

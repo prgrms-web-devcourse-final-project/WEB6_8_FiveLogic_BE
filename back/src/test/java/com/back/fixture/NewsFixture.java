@@ -17,7 +17,6 @@ public class NewsFixture {
     private Video video = VideoFixture.createDefault();
     private String content = "This is a sample news content.";
     private List<NewsComment> newsComments = new ArrayList<>();
-    private Integer likes = 0;
 
     private static NewsFixture builder() {
         return new NewsFixture();
@@ -55,11 +54,6 @@ public class NewsFixture {
 
     public NewsFixture withContent(String content) {
         this.content = content;
-        return this;
-    }
-
-    public NewsFixture withLikes(Integer likes) {
-        this.likes = likes;
         return this;
     }
 

@@ -45,6 +45,7 @@ public class NewsController {
     @Operation(summary = "뉴스 단건 조회", description = "특정 ID의 뉴스를 읽어옵니다.")
     public RsData<NewsGetResponse> getNews(@PathVariable("newsId") Long newsId) {
         News news = newsService.getNewsById(newsId);
+        newsService.incrementViews(news);
         NewsGetResponse response = new NewsGetResponse(news);
         return new RsData<>("200", "뉴스 읽어오기 완료", response);
     }

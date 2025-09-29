@@ -175,4 +175,21 @@ public class NewsServiceTest {
         });
         verify(newsRepository, never()).delete(any(News.class));
     }
+
+    @Test
+    @DisplayName("뉴스 조회수 증가 성공")
+    void incrementViews_Success() {
+        // given
+        News news = NewsFixture.createDefault();
+        int initialViews = news.getViews();
+        when(newsRepository.save(any(News.class))).thenReturn(news);
+
+        // when
+        News updatedNews = newsService.incrementViews(news);
+
+        // then
+        assertThat(updatedNews).isNotNull();
+        assertThat(updatedNews.getViews()).isEqualTo(initialViews + 1);
+        verify(newsRepository, times(1)).save(news);
+    }
 }
