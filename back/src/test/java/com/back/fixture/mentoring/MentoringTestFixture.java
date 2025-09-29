@@ -1,4 +1,4 @@
-package com.back.fixture;
+package com.back.fixture.mentoring;
 
 import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentor.entity.Mentor;
