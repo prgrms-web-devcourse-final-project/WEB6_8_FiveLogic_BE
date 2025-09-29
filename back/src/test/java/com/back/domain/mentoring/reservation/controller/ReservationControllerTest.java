@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
@@ -97,20 +99,20 @@ class ReservationControllerTest {
         mentoringFixture.createReservation(mentoring, mentee2, mentorSlot);
 
         performCreateReservation()
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.resultCode").value("400-1"))
-            .andExpect(jsonPath("$.msg").value("예약할 수 없는 슬롯입니다."));
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.resultCode").value("409-1"))
+            .andExpect(jsonPath("$.msg").value("이미 예약이 완료된 시간대입니다."));
     }
 
     @Test
-    @DisplayName("멘티가 멘토에게 예약 신청 실패 - 예약 가능한 상태가 아닌 경우")
+    @DisplayName("멘티가 멘토에게 예약 신청 실패 - 이미 예약한 경우")
     void createReservationFailAlreadyReservation() throws Exception {
         mentoringFixture.createReservation(mentoring, mentee, mentorSlot);
 
         performCreateReservation()
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.resultCode").value("400-2"))
-            .andExpect(jsonPath("$.msg").value("해당 시간에 예약 내역이 있습니다. 예약 목록을 확인해 주세요."));
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.resultCode").value("409-2"))
+            .andExpect(jsonPath("$.msg").value("이미 예약한 시간대입니다. 예약 목록을 확인해 주세요."));
     }
 
 

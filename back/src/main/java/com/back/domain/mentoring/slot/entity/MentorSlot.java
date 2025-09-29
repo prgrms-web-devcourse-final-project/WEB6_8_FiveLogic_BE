@@ -32,6 +32,9 @@ public class MentorSlot extends BaseEntity {
     @Column(nullable = false)
     private MentorSlotStatus status;
 
+    @Version
+    private Long version;
+
     @Builder
     public MentorSlot(Mentor mentor, LocalDateTime startDateTime, LocalDateTime endDateTime) {
         this.mentor = mentor;
