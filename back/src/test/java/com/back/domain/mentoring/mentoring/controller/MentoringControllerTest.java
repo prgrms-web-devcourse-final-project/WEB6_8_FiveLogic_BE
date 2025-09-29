@@ -75,14 +75,15 @@ class MentoringControllerTest {
     void getMentoringsSuccess() throws Exception {
         mentoringFixture.createMentorings(mentor, 15);
 
-        // TODO: 일반 조회, 목록 조회는 쿠키 없어도 가능하게 설정 필요
         performGetMentorings(null, "0")
             .andExpect(jsonPath("$.data.mentorings").isArray())
             .andExpect(jsonPath("$.data.mentorings.length()").value(10))
             .andExpect(jsonPath("$.data.currentPage").value(0))
             .andExpect(jsonPath("$.data.totalPage").value(2))
             .andExpect(jsonPath("$.data.totalElements").value(15))
-            .andExpect(jsonPath("$.data.hasNext").value(true));
+            .andExpect(jsonPath("$.data.hasNext").value(true))
+            .andExpect(jsonPath("$.data.mentorings[0].tags[0]").value("Spring"))
+            .andExpect(jsonPath("$.data.mentorings[0].tags[1]").value("Java"));
     }
 
     @Test
@@ -162,7 +163,9 @@ class MentoringControllerTest {
             .andExpect(handler().methodName("getMentoring"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.resultCode").value("200"))
-            .andExpect(jsonPath("$.msg").value("멘토링을 조회하였습니다."));
+            .andExpect(jsonPath("$.msg").value("멘토링을 조회하였습니다."))
+            .andExpect(jsonPath("$.data.mentoring.tags[0]").value("Spring"))
+            .andExpect(jsonPath("$.data.mentoring.tags[1]").value("Java"));
     }
     
     
