@@ -118,7 +118,7 @@ class MentoringControllerTest {
         mentoringFixture.createMentorings(mentor, 8);
         mentoringFixture.createMentorings(mentor2, 3);
 
-        performGetMentorings(mentorMember.getName(), "0")
+        performGetMentorings(mentorMember.getNickname(), "0")
             .andExpect(jsonPath("$.data.mentorings").isArray())
             .andExpect(jsonPath("$.data.mentorings.length()").value(3))
             .andExpect(jsonPath("$.data.currentPage").value(0))
@@ -193,7 +193,7 @@ class MentoringControllerTest {
 
             // Mentor 정보 검증
             .andExpect(jsonPath("$.data.mentor.mentorId").value(mentorOfMentoring.getId()))
-            .andExpect(jsonPath("$.data.mentor.name").value(mentorOfMentoring.getMember().getName()))
+            .andExpect(jsonPath("$.data.mentor.nickname").value(mentorOfMentoring.getMember().getNickname()))
             .andExpect(jsonPath("$.data.mentor.rate").value(mentorOfMentoring.getRate()))
             .andExpect(jsonPath("$.data.mentor.careerYears").value(mentorOfMentoring.getCareerYears()));
     }

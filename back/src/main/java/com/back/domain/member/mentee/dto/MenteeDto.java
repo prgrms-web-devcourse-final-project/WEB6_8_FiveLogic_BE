@@ -6,13 +6,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record MenteeDto(
     @Schema(description = "멘티 ID")
     Long menteeId,
-    @Schema(description = "멘티명")
-    String name
+    @Schema(description = "멘티 닉네임")
+    String nickname
 ) {
     public static MenteeDto from(Mentee mentee) {
         return new MenteeDto(
             mentee.getId(),
-            mentee.getMember().getName()
+            mentee.getMember().getNickname()
         );
     }
 }
