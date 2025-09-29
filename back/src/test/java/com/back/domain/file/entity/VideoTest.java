@@ -15,16 +15,14 @@ class VideoTest {
         String status = "{\"status\":\"done\"}";
         String originalPath = "/videos/sample.mp4";
         Integer duration = 120;
-        Long fileSize = 1024L;
 
-        Video video = Video.create(uuid, status, originalPath, duration, fileSize);
+        Video video = Video.create(uuid, status, originalPath, duration);
 
         assertThat(video).isNotNull();
         assertThat(video.getUuid()).isEqualTo(uuid);
         assertThat(video.getStatus()).isEqualTo(status);
         assertThat(video.getPath()).isEqualTo(originalPath);
         assertThat(video.getDuration()).isEqualTo(duration);
-        assertThat(video.getFileSize()).isEqualTo(fileSize);
     }
 
     @Test
@@ -34,13 +32,13 @@ class VideoTest {
         String originalPath = "/videos/sample.mp4";
 
         try {
-            Video.create(null, status, originalPath, 100, 1000L);
+            Video.create(null, status, originalPath, 100);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }
 
         try {
-            Video.create("", status, originalPath, 100, 1000L);
+            Video.create("", status, originalPath, 100);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }
@@ -53,13 +51,13 @@ class VideoTest {
         String status = "{}";
 
         try {
-            Video.create(uuid, status, null, 100, 1000L);
+            Video.create(uuid, status, null, 100);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }
 
         try {
-            Video.create(uuid, status, "", 100, 1000L);
+            Video.create(uuid, status, "", 100);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }
@@ -74,7 +72,7 @@ class VideoTest {
         Integer duration = 120;
         Long fileSize = 1024L;
 
-        Video video = Video.create(uuid, status, originalPath, duration, fileSize);
+        Video video = Video.create(uuid, status, originalPath, duration);
         assertThat(video.getStatus()).isEqualTo(status);
 
         String newStatus = "{\"status\":\"done\"}";
@@ -91,7 +89,7 @@ class VideoTest {
         Integer duration = 120;
         Long fileSize = 1024L;
 
-        Video video = Video.create(uuid, status, originalPath, duration, fileSize);
+        Video video = Video.create(uuid, status, originalPath, duration);
 
         try {
             video.updateStatus(null);

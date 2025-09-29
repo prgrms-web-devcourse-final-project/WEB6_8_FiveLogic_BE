@@ -11,8 +11,8 @@ import org.springframework.stereotype.Service;
 public class VideoService {
     private final VideoRepository videoRepository;
 
-    public Video createVideo(String uuid, String status, String path, Integer duration, Long fileSize) {
-        Video video = Video.create(uuid, status, path, duration, fileSize);
+    public Video createVideo(String uuid, String status, String path, Integer duration) {
+        Video video = Video.create(uuid, status, path, duration);
         return videoRepository.save(video);
     }
 

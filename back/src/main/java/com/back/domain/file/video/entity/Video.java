@@ -24,18 +24,15 @@ public class Video extends BaseEntity {
 
     private Integer duration;
 
-    private Long fileSize;
-
     @Builder(access = AccessLevel.PRIVATE)
-    private Video(String uuid, String status, String path, Integer duration, Long fileSize) {
+    private Video(String uuid, String status, String path, Integer duration) {
         this.uuid = uuid;
         this.status = status;
         this.path = path;
         this.duration = duration;
-        this.fileSize = fileSize;
     }
 
-    public static Video create(String uuid, String status, String path, Integer duration, Long fileSize) {
+    public static Video create(String uuid, String status, String path, Integer duration) {
         if (uuid == null || uuid.isBlank()) {
             throw new IllegalArgumentException("uuid cannot be null or empty");
         }
@@ -48,7 +45,6 @@ public class Video extends BaseEntity {
                 .status(status)
                 .path(path)
                 .duration(duration)
-                .fileSize(fileSize)
                 .build();
     }
     public void updateStatus(String status) {
