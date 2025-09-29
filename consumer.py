@@ -192,6 +192,12 @@ for msg in consumer:
         data = json.loads(msg.value.decode('utf-8'))
         bucket = data['Records'][0]['s3']['bucket']['name']
         key = data['Records'][0]['s3']['object']['key']
+
+        # transcode 결과물은 무시
+        if key.startswith("transcoded/"):
+            print(f"트랜스코딩 결과물이므로 스킵: {key}")
+            continue
+
         print(f"업로드 감지: {bucket}/{key}")
 
         # 다운로드
@@ -203,21 +209,22 @@ for msg in consumer:
         if is_video(download_path):
             object_key_without_ext = os.path.splitext(key)[0]
             dash_output_dir = os.path.join(DOWNLOAD_DIR, "dash_" + object_key_without_ext)
-            
+
             encode_dash_multi_quality(
-                download_path, 
-                dash_output_dir, 
-                producer, 
-                KAFKA_TRANSCODING_STATUS_TOPIC, 
-                bucket, 
+                download_path,
+                dash_output_dir,
+                producer,
+                KAFKA_TRANSCODING_STATUS_TOPIC,
+                bucket,
                 object_key_without_ext
             )
             print(f"DASH 인코딩 완료: {dash_output_dir}")
 
             # DASH 결과 재업로드
-            upload_folder_to_minio(dash_output_dir, REUPLOAD_BUCKET, s3_prefix=object_key_without_ext)
+            upload_folder_to_minio(dash_output_dir, bucket, s3_prefix="transcoded/"+object_key_without_ext)
         else:
             print(f"영상 아님, 인코딩 스킵: {download_path}")
 
     except Exception as e:
         print("오류:", e)
+
