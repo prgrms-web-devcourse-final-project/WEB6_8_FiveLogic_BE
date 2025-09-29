@@ -1,0 +1,66 @@
+package com.back.domain.mentoring.session.entity;
+
+import com.back.domain.mentoring.mentoring.entity.Mentoring;
+import com.back.domain.mentoring.reservation.entity.Reservation;
+import com.back.global.jpa.BaseEntity;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Getter
+@NoArgsConstructor
+public class MentoringSession extends BaseEntity {
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reservation_id", nullable = false)
+    private Reservation reservation;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mentoring_id", nullable = false)
+    private Mentoring mentoring;
+
+    @Enumerated(EnumType.STRING)
+    private MentoringSessionStatus status;
+
+    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
+    private List<ChatMessage> chatMessages = new ArrayList<>();
+    public MentoringSession(Reservation reservation, Mentoring mentoring, MentoringSessionStatus status, List<ChatMessage> chatMessages) {
+        this.reservation = reservation;
+        this.mentoring = mentoring;
+        this.status = status;
+        this.chatMessages = chatMessages;
+    }
+
+    // 화면 공유, WebRTC 관련 필드 등 추가 가능
+
+    @Builder(access = AccessLevel.PRIVATE)
+    private MentoringSession(Reservation reservation) {
+        this.reservation = reservation;
+        this.mentoring = reservation.getMentoring();
+        this.status = MentoringSessionStatus.CLOSED;
+    }
+
+    public static MentoringSession create(){
+        return MentoringSession.builder()
+                .reservation(null)
+                .build();
+    }
+
+    private MentoringSession updateStatus(MentoringSessionStatus status) {
+        this.status = status;
+        return this;
+    }
+
+    public MentoringSession openSession() {
+        return updateStatus(MentoringSessionStatus.OPEN);
+    }
+
+    public MentoringSession closeSession() {
+        return updateStatus(MentoringSessionStatus.CLOSED);
+    }
+}
