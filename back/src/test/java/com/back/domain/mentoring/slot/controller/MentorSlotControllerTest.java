@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +36,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-
+@ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
@@ -160,13 +161,13 @@ class MentorSlotControllerTest {
             .andExpect(handler().methodName("getMentorSlot"))
             .andExpect(jsonPath("$.resultCode").value("200"))
             .andExpect(jsonPath("$.msg").value("멘토의 예약 가능 일정을 조회하였습니다."))
-            .andExpect(jsonPath("$.data.mentorSlotId").value(mentorSlot.getId()))
-            .andExpect(jsonPath("$.data.mentorId").value(mentorSlot.getMentor().getId()))
-            .andExpect(jsonPath("$.data.mentoringId").value(mentoring.getId()))
-            .andExpect(jsonPath("$.data.mentoringTitle").value(mentoring.getTitle()))
-            .andExpect(jsonPath("$.data.startDateTime").value(mentorSlot.getStartDateTime().format(formatter)))
-            .andExpect(jsonPath("$.data.endDateTime").value(mentorSlot.getEndDateTime().format(formatter)))
-            .andExpect(jsonPath("$.data.mentorSlotStatus").value(mentorSlot.getStatus().name()));
+            .andExpect(jsonPath("$.data.mentorSlot.mentorSlotId").value(mentorSlot.getId()))
+            .andExpect(jsonPath("$.data.mentor.mentorId").value(mentorSlot.getMentor().getId()))
+            .andExpect(jsonPath("$.data.mentoring.mentoringId").value(mentoring.getId()))
+            .andExpect(jsonPath("$.data.mentoring.title").value(mentoring.getTitle()))
+            .andExpect(jsonPath("$.data.mentorSlot.startDateTime").value(mentorSlot.getStartDateTime().format(formatter)))
+            .andExpect(jsonPath("$.data.mentorSlot.endDateTime").value(mentorSlot.getEndDateTime().format(formatter)))
+            .andExpect(jsonPath("$.data.mentorSlot.mentorSlotStatus").value(mentorSlot.getStatus().name()));
     }
 
     // ===== 슬롯 생성 =====
@@ -186,13 +187,13 @@ class MentorSlotControllerTest {
             .orElseThrow(() -> new ServiceException(MentorSlotErrorCode.NOT_FOUND_MENTOR_SLOT));
 
         resultActions
-            .andExpect(jsonPath("$.data.mentorSlotId").value(mentorSlot.getId()))
-            .andExpect(jsonPath("$.data.mentorId").value(mentorSlot.getMentor().getId()))
-            .andExpect(jsonPath("$.data.mentoringId").value(mentoring.getId()))
-            .andExpect(jsonPath("$.data.mentoringTitle").value(mentoring.getTitle()))
-            .andExpect(jsonPath("$.data.startDateTime").value(startDateTime))
-            .andExpect(jsonPath("$.data.endDateTime").value(endDateTime))
-            .andExpect(jsonPath("$.data.mentorSlotStatus").value("AVAILABLE"));
+            .andExpect(jsonPath("$.data.mentorSlot.mentorSlotId").value(mentorSlot.getId()))
+            .andExpect(jsonPath("$.data.mentor.mentorId").value(mentorSlot.getMentor().getId()))
+            .andExpect(jsonPath("$.data.mentoring.mentoringId").value(mentoring.getId()))
+            .andExpect(jsonPath("$.data.mentoring.title").value(mentoring.getTitle()))
+            .andExpect(jsonPath("$.data.mentorSlot.startDateTime").value(startDateTime))
+            .andExpect(jsonPath("$.data.mentorSlot.endDateTime").value(endDateTime))
+            .andExpect(jsonPath("$.data.mentorSlot.mentorSlotStatus").value("AVAILABLE"));
     }
 
     @Test
@@ -288,12 +289,12 @@ class MentorSlotControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.resultCode").value("200"))
             .andExpect(jsonPath("$.msg").value("멘토의 예약 가능 일정이 수정되었습니다."))
-            .andExpect(jsonPath("$.data.mentorSlotId").value(mentorSlot.getId()))
-            .andExpect(jsonPath("$.data.mentorId").value(mentorSlot.getMentor().getId()))
-            .andExpect(jsonPath("$.data.mentoringId").value(mentoring.getId()))
-            .andExpect(jsonPath("$.data.mentoringTitle").value(mentoring.getTitle()))
-            .andExpect(jsonPath("$.data.endDateTime").value(expectedEndDate))
-            .andExpect(jsonPath("$.data.mentorSlotStatus").value("AVAILABLE"));
+            .andExpect(jsonPath("$.data.mentorSlot.mentorSlotId").value(mentorSlot.getId()))
+            .andExpect(jsonPath("$.data.mentor.mentorId").value(mentorSlot.getMentor().getId()))
+            .andExpect(jsonPath("$.data.mentoring.mentoringId").value(mentoring.getId()))
+            .andExpect(jsonPath("$.data.mentoring.title").value(mentoring.getTitle()))
+            .andExpect(jsonPath("$.data.mentorSlot.endDateTime").value(expectedEndDate))
+            .andExpect(jsonPath("$.data.mentorSlot.mentorSlotStatus").value("AVAILABLE"));
     }
 
 

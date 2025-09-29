@@ -12,6 +12,9 @@ public interface MentorRepository extends JpaRepository<Mentor, Long> {
     @Query("SELECT m FROM Mentor m WHERE m.member.id = :memberId AND m.isDeleted = false")
     Optional<Mentor> findByMemberId(@Param("memberId") Long memberId);
 
+    @Query("SELECT m FROM Mentor m JOIN FETCH m.member WHERE m.member.id = :memberId AND m.isDeleted = false")
+    Optional<Mentor> findByMemberIdWithMember(@Param("memberId") Long memberId);
+
     @Query("SELECT m FROM Mentor m WHERE m.id = :id AND m.isDeleted = false")
     Optional<Mentor> findById(@Param("id") Long id);
 

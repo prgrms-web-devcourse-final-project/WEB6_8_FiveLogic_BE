@@ -174,8 +174,8 @@ class MentorSlotServiceTest {
 
             // then
             assertThat(result).isNotNull();
-            assertThat(result.mentorSlotId()).isEqualTo(slotId);
-            assertThat(result.mentorId()).isEqualTo(mentor1.getId());
+            assertThat(result.mentorSlot().mentorSlotId()).isEqualTo(slotId);
+            assertThat(result.mentor().mentorId()).isEqualTo(mentor1.getId());
             verify(mentoringStorage).findMentorSlot(slotId);
             verify(mentoringStorage).findMentoringByMentor(mentor1);
         }
@@ -211,12 +211,12 @@ class MentorSlotServiceTest {
 
             // then
             assertThat(result).isNotNull();
-            assertThat(result.mentorId()).isEqualTo(mentor1.getId());
-            assertThat(result.mentoringId()).isEqualTo(mentoring1.getId());
-            assertThat(result.mentoringTitle()).isEqualTo(mentoring1.getTitle());
-            assertThat(result.startDateTime()).isEqualTo(request.startDateTime());
-            assertThat(result.endDateTime()).isEqualTo(request.endDateTime());
-            assertThat(result.mentorSlotStatus()).isEqualTo(MentorSlotStatus.AVAILABLE);
+            assertThat(result.mentor().mentorId()).isEqualTo(mentor1.getId());
+            assertThat(result.mentoring().mentoringId()).isEqualTo(mentoring1.getId());
+            assertThat(result.mentoring().title()).isEqualTo(mentoring1.getTitle());
+            assertThat(result.mentorSlot().startDateTime()).isEqualTo(request.startDateTime());
+            assertThat(result.mentorSlot().endDateTime()).isEqualTo(request.endDateTime());
+            assertThat(result.mentorSlot().mentorSlotStatus()).isEqualTo(MentorSlotStatus.AVAILABLE);
 
             verify(mentoringStorage).findMentoringByMentor(mentor1);
             verify(mentorSlotRepository).existsOverlappingSlot(mentor1.getId(), request.startDateTime(), request.endDateTime());
@@ -345,13 +345,13 @@ class MentorSlotServiceTest {
 
             // then
             assertThat(result).isNotNull();
-            assertThat(result.mentorSlotId()).isEqualTo(slotId);
-            assertThat(result.mentorId()).isEqualTo(mentor1.getId());
-            assertThat(result.mentoringId()).isEqualTo(mentoring1.getId());
-            assertThat(result.mentoringTitle()).isEqualTo(mentoring1.getTitle());
-            assertThat(result.startDateTime()).isEqualTo(request.startDateTime());
-            assertThat(result.endDateTime()).isEqualTo(request.endDateTime());
-            assertThat(result.mentorSlotStatus()).isEqualTo(MentorSlotStatus.AVAILABLE);
+            assertThat(result.mentorSlot().mentorSlotId()).isEqualTo(slotId);
+            assertThat(result.mentor().mentorId()).isEqualTo(mentor1.getId());
+            assertThat(result.mentoring().mentoringId()).isEqualTo(mentoring1.getId());
+            assertThat(result.mentoring().title()).isEqualTo(mentoring1.getTitle());
+            assertThat(result.mentorSlot().startDateTime()).isEqualTo(request.startDateTime());
+            assertThat(result.mentorSlot().endDateTime()).isEqualTo(request.endDateTime());
+            assertThat(result.mentorSlot().mentorSlotStatus()).isEqualTo(MentorSlotStatus.AVAILABLE);
 
             verify(mentoringStorage).findMentorSlot(slotId);
             verify(mentorSlotRepository).existsOverlappingExcept(
