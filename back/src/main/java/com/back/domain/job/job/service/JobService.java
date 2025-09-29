@@ -28,7 +28,7 @@ public class JobService {
     @Transactional
     public JobAlias createAlias(Job job, String aliasName) {
         JobAlias alias = new JobAlias(aliasName);
-        alias.setJob(job);
+        job.addAlias(alias);
         return jobAliasRepository.save(alias);
     }
 }

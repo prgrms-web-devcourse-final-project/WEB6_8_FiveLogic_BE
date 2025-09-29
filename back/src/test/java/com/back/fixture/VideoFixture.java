@@ -1,6 +1,6 @@
 package com.back.fixture;
 
-import com.back.domain.file.entity.Video;
+import com.back.domain.file.video.entity.Video;
 
 import java.util.UUID;
 
@@ -26,9 +26,7 @@ public class VideoFixture {
                 }
                 """;
     private String originalPath = "/videos/original.mp4";
-    private String originalFileName = "original.mp4";
     private Integer duration = 120;
-    private Long fileSize = 1024L * 1024L * 10; // 10MB
 
     private static VideoFixture builder() {
         return new VideoFixture();
@@ -37,14 +35,12 @@ public class VideoFixture {
     public static Video createDefault() {
         return builder().build();
     }
-    public static Video create(String uuid, String transcodingResults, String originalPath, String originalFileName, Integer duration, Long fileSize) {
+    public static Video create(String uuid, String transcodingResults, String originalPath, Integer duration) {
         return builder()
                 .withUuid(uuid)
                 .withTranscodingResults(transcodingResults)
                 .withOriginalPath(originalPath)
-                .withOriginalFileName(originalFileName)
                 .withDuration(duration)
-                .withFileSize(fileSize)
                 .build();
     }
 
@@ -63,18 +59,8 @@ public class VideoFixture {
         return this;
     }
 
-    public VideoFixture withOriginalFileName(String originalFileName) {
-        this.originalFileName = originalFileName;
-        return this;
-    }
-
     public VideoFixture withDuration(Integer duration) {
         this.duration = duration;
-        return this;
-    }
-
-    public VideoFixture withFileSize(Long fileSize) {
-        this.fileSize = fileSize;
         return this;
     }
 
@@ -83,9 +69,7 @@ public class VideoFixture {
                 uuid,
                 transcodingResults,
                 originalPath,
-                originalFileName,
-                duration,
-                fileSize
+                duration
         );
     }
 }

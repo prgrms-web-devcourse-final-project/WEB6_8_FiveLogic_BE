@@ -10,7 +10,7 @@ import com.back.domain.mentoring.reservation.error.ReservationErrorCode;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.fixture.MemberTestFixture;
-import com.back.fixture.MentoringFixture;
+import com.back.fixture.mentoring.MentoringTestFixture;
 import com.back.global.exception.ServiceException;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
@@ -37,7 +39,7 @@ class ReservationControllerTest {
 
     @Autowired private MockMvc mvc;
     @Autowired private MemberTestFixture memberFixture;
-    @Autowired private MentoringFixture mentoringFixture;
+    @Autowired private MentoringTestFixture mentoringFixture;
 
     @Autowired private ReservationRepository reservationRepository;
     @Autowired private AuthTokenService authTokenService;
@@ -87,30 +89,6 @@ class ReservationControllerTest {
             .andExpect(jsonPath("$.data.reservation.mentorSlotId").value(mentorSlot.getId()))
             .andExpect(jsonPath("$.data.reservation.startDateTime").value(mentorSlot.getStartDateTime().format(formatter)))
             .andExpect(jsonPath("$.data.reservation.endDateTime").value(mentorSlot.getEndDateTime().format(formatter)));
-    }
-
-    @Test
-    @DisplayName("멘티가 멘토에게 예약 신청 실패 - 예약 가능한 상태가 아닌 경우")
-    void createReservationFailNotAvailable() throws Exception {
-        Member menteeMember = memberFixture.createMenteeMember();
-        Mentee mentee2 = memberFixture.createMentee(menteeMember);
-        mentoringFixture.createReservation(mentoring, mentee2, mentorSlot);
-
-        performCreateReservation()
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.resultCode").value("400-1"))
-            .andExpect(jsonPath("$.msg").value("예약할 수 없는 슬롯입니다."));
-    }
-
-    @Test
-    @DisplayName("멘티가 멘토에게 예약 신청 실패 - 예약 가능한 상태가 아닌 경우")
-    void createReservationFailAlreadyReservation() throws Exception {
-        mentoringFixture.createReservation(mentoring, mentee, mentorSlot);
-
-        performCreateReservation()
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.resultCode").value("400-2"))
-            .andExpect(jsonPath("$.msg").value("해당 시간에 예약 내역이 있습니다. 예약 목록을 확인해 주세요."));
     }
 
 

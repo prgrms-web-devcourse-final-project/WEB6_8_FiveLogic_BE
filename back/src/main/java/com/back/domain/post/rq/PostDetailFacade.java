@@ -33,9 +33,5 @@ public class PostDetailFacade {
         return PostDetailResponse.from(post, comments, likeCount, dislikeCount, userStatus);
     }
 
-//    public Post findById(Long postId) {
-//        return postService.findById(postId);
-//    }
-
 
 }

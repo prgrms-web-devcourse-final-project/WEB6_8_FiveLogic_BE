@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class LikeTest {
+class NewsLikeTest {
 
     @Test
     @DisplayName("멤버와 뉴스로 좋아요 객체 생성")
@@ -19,12 +19,12 @@ class LikeTest {
         News news = NewsFixture.createDefault();
 
         // when
-        Like like = Like.create(member, news);
+        NewsLike newsLike = NewsLike.create(member, news);
 
         // then
-        assertThat(like).isNotNull();
-        assertThat(like.getMember()).isEqualTo(member);
-        assertThat(like.getNews()).isEqualTo(news);
+        assertThat(newsLike).isNotNull();
+        assertThat(newsLike.getMember()).isEqualTo(member);
+        assertThat(newsLike.getNews()).isEqualTo(news);
     }
 
     @Test
@@ -35,7 +35,7 @@ class LikeTest {
 
         // when & then
         try {
-            Like.create(null, news);
+            NewsLike.create(null, news);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
             assertThat(e.getMessage()).isEqualTo("Member cannot be null");
@@ -50,7 +50,7 @@ class LikeTest {
 
         // when & then
         try {
-            Like.create(member, null);
+            NewsLike.create(member, null);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
             assertThat(e.getMessage()).isEqualTo("News cannot be null");

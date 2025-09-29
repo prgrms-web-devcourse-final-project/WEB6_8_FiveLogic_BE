@@ -2,9 +2,10 @@ import os
 import json
 import time
 import subprocess
-from kafka import KafkaConsumer
+from kafka import KafkaConsumer, KafkaProducer
 from kafka.errors import NoBrokersAvailable
 import boto3
+import urllib.parse
 
 # =========================
 # 환경 변수 설정
@@ -12,6 +13,7 @@ import boto3
 
 # Kafka
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "s3-events")
+KAFKA_TRANSCODING_STATUS_TOPIC = os.getenv("KAFKA_TRANSCODING_STATUS_TOPIC", "transcoding-status")
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP", "kafka:29092")  # Docker 내부 네트워크용
 GROUP_ID = os.getenv("GROUP_ID", "minio-consumer")
 
@@ -36,6 +38,35 @@ s3 = boto3.client(
 )
 
 # =========================
+# Kafka Producer 연결 재시도
+# =========================
+while True:
+    try:
+        producer = KafkaProducer(
+            bootstrap_servers=KAFKA_BOOTSTRAP,
+            value_serializer=lambda v: json.dumps(v).encode('utf-8')
+        )
+        print("Kafka Producer 연결 성공...")
+        break
+    except NoBrokersAvailable:
+        print("Kafka Producer 연결 실패, 5초 후 재시도...")
+        time.sleep(5)
+
+# =========================
+# Kafka 메시지 전송 함수
+# =========================
+def send_kafka_message(producer, topic, bucket, key, qualities_status):
+    message = {
+        "bucket": bucket,
+        "key": key,
+        "qualities": qualities_status
+    }
+    producer.send(topic, message)
+    producer.flush()
+    print(f"Kafka 메시지 전송: {json.dumps(message)}")
+
+
+# =========================
 # DASH 트랜스코딩 함수
 # =========================
 def is_video(file_path):
@@ -53,19 +84,26 @@ def is_video(file_path):
     except Exception:
         return False
 
-def encode_dash_multi_quality(input_file, output_dir):
+def encode_dash_multi_quality(input_file, output_dir, producer, topic, bucket, key):
     os.makedirs(output_dir, exist_ok=True)
 
-    # 화질별 설정 (폴더 이름, 해상도, 비트레이트)
     qualities = [
         ("1080p", "1920x1080", "5000k"),
         ("720p",  "1280x720",  "3000k"),
         ("480p",  "854x480",   "1500k")
     ]
 
+    qualities_status = {q[0]: {"file_path": None, "status": "PENDING", "size_mb": 0} for q in qualities}
+
+    send_kafka_message(producer, topic, bucket, key, qualities_status)
+
     for name, resolution, bitrate in qualities:
         quality_dir = os.path.join(output_dir, name)
         os.makedirs(quality_dir, exist_ok=True)
+        manifest_path = os.path.join(quality_dir, "manifest.mpd")
+
+        qualities_status[name]["status"] = "IN_PROGRESS"
+        send_kafka_message(producer, topic, bucket, key, qualities_status)
 
         cmd = [
             "ffmpeg",
@@ -75,12 +113,33 @@ def encode_dash_multi_quality(input_file, output_dir):
             "-s", resolution,
             "-c:a", "aac",
             "-f", "dash",
-            os.path.join(quality_dir, "manifest.mpd")
+            manifest_path
         ]
 
         print(f"{name} 트랜스코딩 시작: {input_file} → {quality_dir}")
-        subprocess.run(cmd, check=True)
-        print(f"{name} 트랜스코딩 완료: {quality_dir}")
+        try:
+            subprocess.run(cmd, check=True)
+            print(f"{name} 트랜스코딩 완료: {quality_dir}")
+
+            qualities_status[name]["status"] = "COMPLETED"
+            qualities_status[name]["file_path"] = f"{key}/{name}/manifest.mpd"
+
+            total_size_bytes = sum(
+                os.path.getsize(os.path.join(root, file))
+                for root, _, files in os.walk(quality_dir)
+                for file in files
+            )
+            qualities_status[name]["size_mb"] = round(total_size_bytes / (1024*1024), 2)
+            send_kafka_message(producer, topic, bucket, key, qualities_status)
+
+        except subprocess.CalledProcessError as e:
+            print(f"{name} 트랜스코딩 실패: {e}")
+            qualities_status[name]["status"] = "FAILED"
+            send_kafka_message(producer, topic, bucket, key, qualities_status)
+
+    print("전체 트랜스코딩 과정 완료.")
+    send_kafka_message(producer, topic, bucket, key, qualities_status)
+
 
 # =========================
 # DASH 폴더 업로드 함수
@@ -101,6 +160,7 @@ def upload_folder_to_minio(local_folder, bucket_name, s3_prefix=""):
             s3.upload_file(local_path, bucket_name, s3_key)
     print(f"폴더 업로드 완료: {bucket_name}/{s3_prefix}")
 
+
 # =========================
 # Kafka Consumer 연결 재시도
 # =========================
@@ -119,6 +179,7 @@ while True:
         print("Kafka 브로커 연결 실패, 5초 후 재시도...")
         time.sleep(5)
 
+
 # =========================
 # 이벤트 처리 루프
 # =========================
@@ -127,21 +188,36 @@ for msg in consumer:
         data = json.loads(msg.value.decode('utf-8'))
         bucket = data['Records'][0]['s3']['bucket']['name']
         key = data['Records'][0]['s3']['object']['key']
+
+        # URL 디코딩 적용
+        key = urllib.parse.unquote(key)
+
+        # transcode 결과물은 무시
+        if key.startswith("transcoded/"):
+            print(f"트랜스코딩 결과물이므로 스킵: {key}")
+            continue
+
         print(f"업로드 감지: {bucket}/{key}")
 
-        # 다운로드
         download_path = os.path.join(DOWNLOAD_DIR, key.replace("/", "_"))
         s3.download_file(bucket, key, download_path)
         print(f"다운로드 완료: {download_path}")
 
-        # 영상 확인 후 DASH 인코딩 (3화질)
         if is_video(download_path):
-            dash_output_dir = os.path.join(DOWNLOAD_DIR, "dash_" + os.path.splitext(key)[0])
-            encode_dash_multi_quality(download_path, dash_output_dir)
+            object_key_without_ext = os.path.splitext(key)[0]
+            dash_output_dir = os.path.join(DOWNLOAD_DIR, "dash_" + object_key_without_ext)
+
+            encode_dash_multi_quality(
+                download_path,
+                dash_output_dir,
+                producer,
+                KAFKA_TRANSCODING_STATUS_TOPIC,
+                bucket,
+                object_key_without_ext
+            )
             print(f"DASH 인코딩 완료: {dash_output_dir}")
 
-            # DASH 결과 재업로드
-            upload_folder_to_minio(dash_output_dir, REUPLOAD_BUCKET, s3_prefix=os.path.splitext(key)[0])
+            upload_folder_to_minio(dash_output_dir, bucket, s3_prefix="transcoded/"+object_key_without_ext)
         else:
             print(f"영상 아님, 인코딩 스킵: {download_path}")
 

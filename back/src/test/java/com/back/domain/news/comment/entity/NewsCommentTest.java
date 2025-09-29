@@ -17,12 +17,12 @@ class NewsCommentTest {
         Member member = MemberFixture.createDefault();
         News news = NewsFixture.createDefault();
         String content = "This is a sample comment content.";
-        Comment comment = Comment.create(member, news, content);
+        NewsComment newsComment = NewsComment.create(member, news, content);
 
-        assertThat(comment).isNotNull();
-        assertThat(comment.getMember()).isEqualTo(member);
-        assertThat(comment.getNews()).isEqualTo(news);
-        assertThat(comment.getContent()).isEqualTo(content);
+        assertThat(newsComment).isNotNull();
+        assertThat(newsComment.getMember()).isEqualTo(member);
+        assertThat(newsComment.getNews()).isEqualTo(news);
+        assertThat(newsComment.getContent()).isEqualTo(content);
     }
 
     @Test
@@ -32,7 +32,7 @@ class NewsCommentTest {
         String content = "This is a sample comment content.";
 
         try {
-            Comment.create(null, news, content);
+            NewsComment.create(null, news, content);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }
@@ -45,7 +45,7 @@ class NewsCommentTest {
         String content = "This is a sample comment content.";
 
         try {
-            Comment.create(member, null, content);
+            NewsComment.create(member, null, content);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }
@@ -58,13 +58,13 @@ class NewsCommentTest {
         News news = NewsFixture.createDefault();
 
         try {
-            Comment.create(member, news, null);
+            NewsComment.create(member, news, null);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }
 
         try {
-            Comment.create(member, news, "");
+            NewsComment.create(member, news, "");
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }
@@ -76,12 +76,12 @@ class NewsCommentTest {
         Member member = MemberFixture.createDefault();
         News news = NewsFixture.createDefault();
         String content = "This is a sample comment content.";
-        Comment comment = Comment.create(member, news, content);
+        NewsComment newsComment = NewsComment.create(member, news, content);
 
         String newContent = "This is the updated comment content.";
-        comment.update(newContent);
+        newsComment.update(newContent);
 
-        assertThat(comment.getContent()).isEqualTo(newContent);
+        assertThat(newsComment.getContent()).isEqualTo(newContent);
     }
 
     @Test
@@ -90,16 +90,16 @@ class NewsCommentTest {
         Member member = MemberFixture.createDefault();
         News news = NewsFixture.createDefault();
         String content = "This is a sample comment content.";
-        Comment comment = Comment.create(member, news, content);
+        NewsComment newsComment = NewsComment.create(member, news, content);
 
         try {
-            comment.update(null);
+            newsComment.update(null);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }
 
         try {
-            comment.update("");
+            newsComment.update("");
         } catch (Exception e) {
             assertThat(e).isInstanceOf(IllegalArgumentException.class);
         }

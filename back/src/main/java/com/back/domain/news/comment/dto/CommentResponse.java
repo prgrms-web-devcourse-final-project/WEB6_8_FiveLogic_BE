@@ -1,6 +1,6 @@
 package com.back.domain.news.comment.dto;
 
-import com.back.domain.news.comment.entity.Comment;
+import com.back.domain.news.comment.entity.NewsComment;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -13,11 +13,11 @@ public class CommentResponse {
     private final LocalDateTime createdDate;
     private final LocalDateTime modifiedDate;
 
-    public CommentResponse(Comment comment) {
-        this.id = comment.getId();
-        this.content = comment.getContent();
-        this.author = comment.getMember().getName();
-        this.createdDate = comment.getCreateDate();
-        this.modifiedDate = comment.getModifyDate();
+    public CommentResponse(NewsComment newsComment) {
+        this.id = newsComment.getId();
+        this.content = newsComment.getContent();
+        this.author = newsComment.getMember().getName();
+        this.createdDate = newsComment.getCreateDate();
+        this.modifiedDate = newsComment.getModifyDate();
     }
 }

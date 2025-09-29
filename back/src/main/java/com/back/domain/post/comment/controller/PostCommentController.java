@@ -9,6 +9,7 @@ import com.back.domain.post.comment.service.PostCommentService;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +21,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/post/comment")
+@RequiredArgsConstructor
 public class PostCommentController {
-    @Autowired
-    private Rq rq;
-    @Autowired
-    private PostCommentService postCommentService;
+
+    private final Rq rq;
+    private final PostCommentService postCommentService;
 
     @Operation(summary = "댓글 생성")
     @PostMapping("/post/{post_id}")
@@ -65,6 +66,13 @@ public class PostCommentController {
         postCommentService.updatePostComment(post_id, commentModifyRequest, member);
 
         return new RsData<>("200", "댓글 수정 성공", null);
+    }
+    @Operation(summary = "댓글 채택")
+    @PostMapping("isAdopted/{commentId}")
+    public RsData<Void> adoptComment(@PathVariable Long commentId) {
+        Member member = rq.getActor();
+        postCommentService.adoptComment(commentId, member);
+        return new RsData<>("200", "댓글 채택 성공", null);
     }
 
 }

@@ -27,6 +27,8 @@ public class PostComment extends BaseEntity {
 
     private String role;
 
+    private Boolean isAdopted;
+
     public Boolean isAuthor( Member member) {
         return Objects.equals(this.member.getId(), member.getId());
     }
@@ -41,6 +43,7 @@ public class PostComment extends BaseEntity {
         this.content = content;
         this.member = member;
         this.role = role;
+        this.isAdopted = false;
     }
 
 
@@ -55,5 +58,8 @@ public class PostComment extends BaseEntity {
         this.post = post;
     }
 
+    public void adoptComment() {
+        this.isAdopted = true;
+    }
 
 }

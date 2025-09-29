@@ -10,6 +10,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -60,7 +61,10 @@ public class PostLike extends BaseEntity {
                 .build();
     }
 
+    @Transactional
     public void updateStatus(LikeStatus status) {
+
+
         this.status = status;
     }
 }
