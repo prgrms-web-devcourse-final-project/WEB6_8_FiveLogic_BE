@@ -10,7 +10,7 @@ import com.back.domain.mentoring.reservation.error.ReservationErrorCode;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.fixture.MemberTestFixture;
-import com.back.fixture.MentoringFixture;
+import com.back.fixture.MentoringTestFixture;
 import com.back.global.exception.ServiceException;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,7 +39,7 @@ class ReservationControllerTest {
 
     @Autowired private MockMvc mvc;
     @Autowired private MemberTestFixture memberFixture;
-    @Autowired private MentoringFixture mentoringFixture;
+    @Autowired private MentoringTestFixture mentoringFixture;
 
     @Autowired private ReservationRepository reservationRepository;
     @Autowired private AuthTokenService authTokenService;

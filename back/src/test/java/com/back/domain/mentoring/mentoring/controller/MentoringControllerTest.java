@@ -12,7 +12,7 @@ import com.back.domain.mentoring.reservation.repository.ReservationRepository;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.domain.mentoring.slot.repository.MentorSlotRepository;
 import com.back.fixture.MemberTestFixture;
-import com.back.fixture.MentoringFixture;
+import com.back.fixture.MentoringTestFixture;
 import com.back.global.exception.ServiceException;
 import com.back.standard.util.Ut;
 import jakarta.servlet.http.Cookie;
@@ -42,7 +42,7 @@ class MentoringControllerTest {
 
     @Autowired private MockMvc mvc;
     @Autowired private MemberTestFixture memberFixture;
-    @Autowired private MentoringFixture mentoringFixture;
+    @Autowired private MentoringTestFixture mentoringFixture;
 
     @Autowired private MentoringRepository mentoringRepository;
     @Autowired private MentorSlotRepository mentorSlotRepository;
