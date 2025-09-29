@@ -82,25 +82,29 @@ public class Post extends BaseEntity {
         try {
             Post.PostType.valueOf(postTypeStr);
         } catch (IllegalArgumentException e) {
-            throw new ServiceException("400-2", "유효하지 않은 PostType입니다.");
+            throw new ServiceException("400", "유효하지 않은 PostType입니다.");
         }
     }
 
     public void updateTitle(String title) {
         if(title == null || title.isBlank()) {
-            throw new ServiceException("400-3", "제목은 null이거나 공백일 수 없습니다.");
+            throw new ServiceException("400", "제목은 null이거나 공백일 수 없습니다.");
         }
         this.title = title;
     }
 
     public void updateContent(String content) {
         if(content == null || content.isBlank()) {
-            throw new ServiceException("400-4", "내용은 null이거나 공백일 수 없습니다.");
+            throw new ServiceException("400", "내용은 null이거나 공백일 수 없습니다.");
         }
         this.content = content;
     }
 
     public void increaseViewCount() {
         this.viewCount ++;
+    }
+
+    public void updateResolveStatus(Boolean isResolve) {
+        this.isResolve = isResolve;
     }
 }

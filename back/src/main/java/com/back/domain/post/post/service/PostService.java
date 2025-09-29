@@ -7,6 +7,7 @@ import com.back.domain.post.post.dto.PostDto;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.repository.PostRepository;
 import com.back.global.exception.ServiceException;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Tag(name = "PostController", description = "커뮤니티(게시글) API")
 public class PostService {
 
     private final PostRepository postRepository;;
@@ -35,6 +37,17 @@ public class PostService {
         Post.validPostType(postTypeStr);
         Post.PostType postType = Post.PostType.valueOf(postTypeStr);
 
+        // PostType이 PracticePost인 경우 멘토인지 확인
+        if (postType == Post.PostType.PRACTICEPOST && member.getRole() != Member.Role.MENTOR) {
+            throw new ServiceException("400", "실무 경험 공유 게시글은 멘토만 작성할 수 있습니다.");
+        }
+
+//        if( postType == Post.PostType.PRACTICEPOST ) {
+//            if(member.getCareer() == null || member.getCareer().isEmpty()) {
+//                throw new ServiceException("400", "멘토는 경력을 입력해야 실무 경험 공유 게시글을 작성할 수 있습니다.");
+//            }
+//        }
+
         Post post = Post.builder()
                 .title(postCreateRequest.getTitle())
                 .content(postCreateRequest.getContent())
@@ -42,10 +55,11 @@ public class PostService {
                 .postType(postType)
                 .build();
 
-//        post.setTitle(postCreateRequest.getTitle());
-//        post.setContent(postCreateRequest.getContent());
-//        post.setMember(member);
-//        post.setPostType(postType);
+
+        // PostType이 QUESTIONPOST인 경우 isResolve를 false로 초기화
+        if(postType == Post.PostType.QUESTIONPOST) {
+            post.updateResolveStatus(false);
+        }
 
         postRepository.save(post);
 
@@ -65,6 +79,14 @@ public class PostService {
         Post post = findById(postId);
         if (!post.isAuthor(member)) throw new ServiceException("400", "수정 권한이 없습니다.");
 
+        if ( postCreateRequest.getTitle() == null || postCreateRequest.getTitle().isBlank()) {
+            throw new ServiceException("400", "제목을 입력해주세요.");
+        }
+
+        if ( postCreateRequest.getContent() == null || postCreateRequest.getContent().isBlank()) {
+            throw new ServiceException("400", "내용을 입력해주세요.");
+        }
+
         post.updateTitle(postCreateRequest.getTitle());
         post.updateContent(postCreateRequest.getContent());
 
@@ -79,11 +101,10 @@ public class PostService {
         return post;
     }
 
-
-    public Page<PostDto> getPosts(String keyword, int page, int size) {
+    public Page<PostDto> getPosts(String keyword, int page, int size ,Post.PostType postType) {
         Pageable pageable = PageRequest.of(page, size);
 
-        return postRepository.searchPosts(keyword, pageable).map(PostDto::from);
+        return postRepository.searchPosts(keyword, pageable, postType).map(PostDto::from);
     }
 
     public Post findById(Long postId) {
@@ -91,13 +112,12 @@ public class PostService {
         return post;
     }
 
-
-
     public List<PostAllResponse> getAllPostResponse() {
         return postRepository.findAllWithMember().stream()
                 .map(PostAllResponse::new)
                 .toList();
     }
 
+    //채택된 comment 받아오기
 
 }

@@ -63,6 +63,10 @@ public class PostCommentService {
             throw new ServiceException("400", "삭제 권한이 없습니다.");
         }
 
+//        if(postComment.getIsAdopted()) {
+//            throw new ServiceException("400", "채택된 댓글은 삭제할 수 없습니다.");
+//        }
+
         postCommentRepository.delete(postComment);
 
     }
@@ -79,15 +83,25 @@ public class PostCommentService {
             throw new ServiceException("400", "수정 권한이 없습니다.");
         }
 
+        if ( commentModifyRequest.getContent() == null || commentModifyRequest.getContent().isEmpty()) {
+            throw new ServiceException("400", "댓글은 비어 있을 수 없습니다.");
+        }
+
         postComment.updateContent(commentModifyRequest.getContent());
     }
 
 
 
     private void validatePostExists(Long postId) {
+        if(postId == null || postId <= 0) {
+            throw new ServiceException("400", "유효하지 않은 게시글 Id입니다.");
+        }
+
         if (!postRepository.existsById(postId)) {
             throw new ServiceException("400", "해당 Id의 게시글이 없습니다.");
         }
+
+
     }
 
     private PostComment getPostCommentById(Long commentId) {
@@ -95,5 +109,30 @@ public class PostCommentService {
     }
 
 
+    public void adoptComment(Long commentId, Member member) {
+        PostComment postComment = postCommentRepository.findById(commentId)
+                .orElseThrow(() -> new ServiceException("400", "해당 Id의 댓글이 없습니다."));
 
+        Post post = postComment.getPost();
+
+        if (!post.isAuthor(member)) {
+            throw new ServiceException("400", "채택 권한이 없습니다.");
+        }
+
+        if (post.getPostType() != Post.PostType.QUESTIONPOST) {
+            throw new ServiceException("400", "질문 게시글에만 댓글 채택이 가능합니다.");
+        }
+
+        if (postComment.getIsAdopted()) {
+            throw new ServiceException("400", "이미 채택된 댓글입니다.");
+        }
+
+        // 이미 채택된 댓글이 있는지 확인
+        boolean alreadyAdopted = postCommentRepository.existsByPostAndIsAdoptedTrue(post);
+        if (alreadyAdopted) {
+            throw new ServiceException("400", "이미 채택된 댓글이 있습니다.");
+        }
+
+        postComment.adoptComment();
+    }
 }

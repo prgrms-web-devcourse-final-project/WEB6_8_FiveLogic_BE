@@ -17,11 +17,14 @@ public class PostRepositoryImpl implements PostRepositoryCustom{
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Page<Post> searchPosts(String keyword, Pageable pageable) {
+    public Page<Post> searchPosts(String keyword, Pageable pageable, Post.PostType postType) {
         QPost post = QPost.post;
-        QMember member = QMember.member;
 
         BooleanBuilder builder = new BooleanBuilder();
+
+        if(postType != null) {
+            builder.and(post.postType.eq(postType));
+        }
 
         if(keyword != null && !keyword.isBlank()) {
             builder.and(
@@ -34,7 +37,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom{
                 .selectFrom(post)
                 .where(builder)
                 .orderBy(post.createDate.desc())
-                .offset(pageable.getOffset())// 이거뭐임
+                .offset(pageable.getOffset()) // 시작점
                 .limit(pageable.getPageSize())
                 .fetch();
 
