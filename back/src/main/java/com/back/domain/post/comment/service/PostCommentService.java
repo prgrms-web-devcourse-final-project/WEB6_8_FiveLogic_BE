@@ -108,7 +108,7 @@ public class PostCommentService {
         return postCommentRepository.findById(commentId).orElseThrow(() -> new ServiceException("400", "해당 Id의 댓글이 없습니다."));
     }
 
-
+    @Transactional
     public void adoptComment(Long commentId, Member member) {
         PostComment postComment = postCommentRepository.findById(commentId)
                 .orElseThrow(() -> new ServiceException("400", "해당 Id의 댓글이 없습니다."));
