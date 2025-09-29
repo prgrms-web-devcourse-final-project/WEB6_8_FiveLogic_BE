@@ -19,14 +19,6 @@ public class MentorSlotFixture {
             .build();
     }
 
-    public static MentorSlot create(Mentor mentor, LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        return MentorSlot.builder()
-            .mentor(mentor)
-            .startDateTime(DEFAULT_START_TIME)
-            .endDateTime(DEFAULT_END_TIME)
-            .build();
-    }
-
     public static MentorSlot create(Long id, Mentor mentor) {
         MentorSlot slot = MentorSlot.builder()
             .mentor(mentor)
