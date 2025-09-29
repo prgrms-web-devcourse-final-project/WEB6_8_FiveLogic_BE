@@ -124,12 +124,12 @@ class JobRoadmapControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.msg").value("직업 로드맵 목록 조회 성공"))
-                .andExpect(jsonPath("$.data.content").isArray())
-                .andExpect(jsonPath("$.data.content.length()").value(2))
+                .andExpect(jsonPath("$.data.jobRoadmaps").isArray())
+                .andExpect(jsonPath("$.data.jobRoadmaps.length()").value(2))
                 .andExpect(jsonPath("$.data.totalElements").value(2))
-                .andExpect(jsonPath("$.data.totalPages").value(1))
-                .andExpect(jsonPath("$.data.size").value(10))
-                .andExpect(jsonPath("$.data.number").value(0));
+                .andExpect(jsonPath("$.data.totalPage").value(1))
+                .andExpect(jsonPath("$.data.currentPage").value(0))
+                .andExpect(jsonPath("$.data.hasNext").value(false));
     }
 
     @Test
@@ -142,10 +142,10 @@ class JobRoadmapControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.content.length()").value(1))
+                .andExpect(jsonPath("$.data.jobRoadmaps.length()").value(1))
                 .andExpect(jsonPath("$.data.totalElements").value(2))
-                .andExpect(jsonPath("$.data.totalPages").value(2))
-                .andExpect(jsonPath("$.data.size").value(1));
+                .andExpect(jsonPath("$.data.totalPage").value(2))
+                .andExpect(jsonPath("$.data.currentPage").value(0));
     }
 
     @Test
@@ -157,8 +157,8 @@ class JobRoadmapControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.content.length()").value(1))
-                .andExpect(jsonPath("$.data.content[0].jobName").value(testJob1.getName()));
+                .andExpect(jsonPath("$.data.jobRoadmaps.length()").value(1))
+                .andExpect(jsonPath("$.data.jobRoadmaps[0].jobName").value(testJob1.getName()));
     }
 
     @Test
@@ -170,7 +170,7 @@ class JobRoadmapControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.content.length()").value(0))
+                .andExpect(jsonPath("$.data.jobRoadmaps.length()").value(0))
                 .andExpect(jsonPath("$.data.totalElements").value(0));
     }
 
@@ -182,12 +182,12 @@ class JobRoadmapControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.content[0].id").exists())
-                .andExpect(jsonPath("$.data.content[0].jobName").exists())
-                .andExpect(jsonPath("$.data.content[0].jobDescription").exists())
-                .andExpect(jsonPath("$.data.content[0].id").isNumber())
-                .andExpect(jsonPath("$.data.content[0].jobName").isString())
-                .andExpect(jsonPath("$.data.content[0].jobDescription").isString());
+                .andExpect(jsonPath("$.data.jobRoadmaps[0].id").exists())
+                .andExpect(jsonPath("$.data.jobRoadmaps[0].jobName").exists())
+                .andExpect(jsonPath("$.data.jobRoadmaps[0].jobDescription").exists())
+                .andExpect(jsonPath("$.data.jobRoadmaps[0].id").isNumber())
+                .andExpect(jsonPath("$.data.jobRoadmaps[0].jobName").isString())
+                .andExpect(jsonPath("$.data.jobRoadmaps[0].jobDescription").isString());
     }
 
     @Test
@@ -238,7 +238,7 @@ class JobRoadmapControllerTest {
         mvc.perform(get("/job-roadmaps/{id}", nonExistentId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isNotFound());
     }
 
     @Test
