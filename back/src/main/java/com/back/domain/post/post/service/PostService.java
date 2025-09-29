@@ -127,6 +127,4 @@ public class PostService {
                 .toList();
     }
 
-    //채택된 comment 받아오기
-
 }
