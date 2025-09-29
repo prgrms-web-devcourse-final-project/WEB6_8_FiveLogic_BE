@@ -11,7 +11,7 @@ import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.domain.mentoring.slot.error.MentorSlotErrorCode;
 import com.back.domain.mentoring.slot.repository.MentorSlotRepository;
 import com.back.fixture.MemberTestFixture;
-import com.back.fixture.MentoringFixture;
+import com.back.fixture.MentoringTestFixture;
 import com.back.global.exception.ServiceException;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +46,7 @@ class MentorSlotControllerTest {
 
     @Autowired private MockMvc mvc;
     @Autowired private MemberTestFixture memberFixture;
-    @Autowired private MentoringFixture mentoringFixture;
+    @Autowired private MentoringTestFixture mentoringFixture;
 
     @Autowired private MentorSlotRepository mentorSlotRepository;
     @Autowired private AuthTokenService authTokenService;

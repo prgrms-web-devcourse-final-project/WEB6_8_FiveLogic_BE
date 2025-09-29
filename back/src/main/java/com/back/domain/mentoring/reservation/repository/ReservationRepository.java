@@ -1,12 +1,15 @@
 package com.back.domain.mentoring.reservation.repository;
 
+import com.back.domain.mentoring.reservation.constant.ReservationStatus;
 import com.back.domain.mentoring.reservation.entity.Reservation;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
     Optional<Reservation> findTopByOrderByIdDesc();
+    Optional<Reservation> findByMentorSlotIdAndStatusIn(Long mentorSlotId, List<ReservationStatus> statuses);
 
     boolean existsByMentoringId(Long mentoringId);
 
