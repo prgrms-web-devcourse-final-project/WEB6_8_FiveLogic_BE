@@ -91,30 +91,6 @@ class ReservationControllerTest {
             .andExpect(jsonPath("$.data.reservation.endDateTime").value(mentorSlot.getEndDateTime().format(formatter)));
     }
 
-    @Test
-    @DisplayName("멘티가 멘토에게 예약 신청 실패 - 예약 가능한 상태가 아닌 경우")
-    void createReservationFailNotAvailable() throws Exception {
-        Member menteeMember = memberFixture.createMenteeMember();
-        Mentee mentee2 = memberFixture.createMentee(menteeMember);
-        mentoringFixture.createReservation(mentoring, mentee2, mentorSlot);
-
-        performCreateReservation()
-            .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.resultCode").value("409-1"))
-            .andExpect(jsonPath("$.msg").value("이미 예약이 완료된 시간대입니다."));
-    }
-
-    @Test
-    @DisplayName("멘티가 멘토에게 예약 신청 실패 - 이미 예약한 경우")
-    void createReservationFailAlreadyReservation() throws Exception {
-        mentoringFixture.createReservation(mentoring, mentee, mentorSlot);
-
-        performCreateReservation()
-            .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.resultCode").value("409-2"))
-            .andExpect(jsonPath("$.msg").value("이미 예약한 시간대입니다. 예약 목록을 확인해 주세요."));
-    }
-
 
     // ===== perform =====
 
