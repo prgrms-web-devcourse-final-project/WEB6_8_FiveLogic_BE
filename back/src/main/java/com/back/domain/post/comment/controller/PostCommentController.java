@@ -68,7 +68,7 @@ public class PostCommentController {
 
         return new RsData<>("200", "댓글 수정 성공", null);
     }
-
+    @Operation(summary = "댓글 채택")
     @PostMapping("isAdopted/{commentId}")
     public RsData<Void> adoptComment(@PathVariable Long commentId) {
         Member member = rq.getActor();

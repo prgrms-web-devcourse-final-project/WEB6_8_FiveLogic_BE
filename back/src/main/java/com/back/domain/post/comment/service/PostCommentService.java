@@ -63,6 +63,10 @@ public class PostCommentService {
             throw new ServiceException("400", "삭제 권한이 없습니다.");
         }
 
+//        if(postComment.getIsAdopted()) {
+//            throw new ServiceException("400", "채택된 댓글은 삭제할 수 없습니다.");
+//        }
+
         postCommentRepository.delete(postComment);
 
     }
@@ -79,6 +83,10 @@ public class PostCommentService {
             throw new ServiceException("400", "수정 권한이 없습니다.");
         }
 
+        if ( commentModifyRequest.getContent() == null || commentModifyRequest.getContent().isEmpty()) {
+            throw new ServiceException("400", "댓글은 비어 있을 수 없습니다.");
+        }
+
         postComment.updateContent(commentModifyRequest.getContent());
     }
 
@@ -87,6 +95,10 @@ public class PostCommentService {
     private void validatePostExists(Long postId) {
         if (!postRepository.existsById(postId)) {
             throw new ServiceException("400", "해당 Id의 게시글이 없습니다.");
+        }
+
+        if(postId == null || postId <= 0) {
+            throw new ServiceException("400", "유효하지 않은 게시글 Id입니다.");
         }
     }
 
@@ -114,7 +126,6 @@ public class PostCommentService {
         }
 
         // 이미 채택된 댓글이 있는지 확인
-        // Post쪽에서 확인해야 하는건가 - No post는 comment를 관리할 책임이 없음.
         boolean alreadyAdopted = postCommentRepository.existsByPostAndIsAdoptedTrue(post);
         if (alreadyAdopted) {
             throw new ServiceException("400", "이미 채택된 댓글이 있습니다.");
