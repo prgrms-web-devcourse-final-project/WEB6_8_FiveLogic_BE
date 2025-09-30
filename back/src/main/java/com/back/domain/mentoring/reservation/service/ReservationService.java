@@ -86,16 +86,9 @@ public class ReservationService {
     }
 
     @Transactional
-    public ReservationResponse cancelReservation(Mentor mentor, Long reservationId) {
+    public ReservationResponse cancelReservation(Member member, Long reservationId) {
         Reservation reservation = mentoringStorage.findReservation(reservationId);
-        reservation.cancel(mentor);
-        return ReservationResponse.from(reservation);
-    }
-
-    @Transactional
-    public ReservationResponse cancelReservation(Mentee mentee, Long reservationId) {
-        Reservation reservation = mentoringStorage.findReservation(reservationId);
-        reservation.cancel(mentee);
+        reservation.cancel(member);
         return ReservationResponse.from(reservation);
     }
 

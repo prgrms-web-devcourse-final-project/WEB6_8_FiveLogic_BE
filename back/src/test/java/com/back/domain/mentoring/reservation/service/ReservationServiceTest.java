@@ -62,12 +62,15 @@ class ReservationServiceTest {
     @BeforeEach
     void setUp() {
         Member mentorMember = MemberFixture.create("mentor@test.com", "Mentor", "pass123");
+        ReflectionTestUtils.setField(mentorMember, "id", 1L);
         mentor = MentorFixture.create(1L, mentorMember);
 
         Member menteeMember = MemberFixture.create("mentee@test.com", "Mentee", "pass123");
+        ReflectionTestUtils.setField(menteeMember, "id", 2L);
         mentee = MenteeFixture.create(1L, menteeMember);
 
         Member menteeMember2 = MemberFixture.create("mentee2@test.com", "Mentee2", "pass123");
+        ReflectionTestUtils.setField(menteeMember2, "id", 3L);
         mentee2 = MenteeFixture.create(2L, menteeMember2);
 
         mentoring = MentoringFixture.create(1L, mentor);
@@ -382,7 +385,7 @@ class ReservationServiceTest {
                 .thenReturn(reservation);
 
             // when
-            ReservationResponse result = reservationService.cancelReservation(mentor, reservation.getId());
+            ReservationResponse result = reservationService.cancelReservation(mentor.getMember(), reservation.getId());
 
             // then
             assertThat(result.reservation().status()).isEqualTo(ReservationStatus.CANCELED);
@@ -396,7 +399,7 @@ class ReservationServiceTest {
                 .thenReturn(reservation);
 
             // when
-            ReservationResponse result = reservationService.cancelReservation(mentee, reservation.getId());
+            ReservationResponse result = reservationService.cancelReservation(mentee.getMember(), reservation.getId());
 
             // then
             assertThat(result.reservation().status()).isEqualTo(ReservationStatus.CANCELED);
@@ -419,7 +422,7 @@ class ReservationServiceTest {
                 .thenReturn(completedReservation);
 
             // when & then
-            assertThatThrownBy(() -> reservationService.cancelReservation(mentor, completedReservation.getId()))
+            assertThatThrownBy(() -> reservationService.cancelReservation(mentor.getMember(), completedReservation.getId()))
                 .isInstanceOf(ServiceException.class)
                 .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.CANNOT_CANCEL.getCode());
         }
@@ -434,9 +437,9 @@ class ReservationServiceTest {
                 .thenReturn(reservation);
 
             // when & then
-            assertThatThrownBy(() -> reservationService.cancelReservation(anotherMentor, reservation.getId()))
+            assertThatThrownBy(() -> reservationService.cancelReservation(anotherMentor.getMember(), reservation.getId()))
                 .isInstanceOf(ServiceException.class)
-                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.FORBIDDEN_NOT_MENTOR.getCode());
+                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.FORBIDDEN_NOT_PARTICIPANT.getCode());
         }
 
         @Test
@@ -447,9 +450,9 @@ class ReservationServiceTest {
                 .thenReturn(reservation);
 
             // when & then
-            assertThatThrownBy(() -> reservationService.cancelReservation(mentee2, reservation.getId()))
+            assertThatThrownBy(() -> reservationService.cancelReservation(mentee2.getMember(), reservation.getId()))
                 .isInstanceOf(ServiceException.class)
-                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.FORBIDDEN_NOT_MENTEE.getCode());
+                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.FORBIDDEN_NOT_PARTICIPANT.getCode());
         }
     }
 }

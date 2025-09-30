@@ -16,8 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
-
 @RestController
 @RequestMapping("/reservations")
 @RequiredArgsConstructor
@@ -100,15 +98,8 @@ public class ReservationController {
         @PathVariable Long reservationId
     ) {
         Member member = rq.getActor();
-        ReservationResponse resDto;
 
-        Optional<Mentor> mentor = memberStorage.findMentorByMemberOptional(member);
-        if (mentor.isPresent()) {
-            resDto = reservationService.cancelReservation(mentor.get(), reservationId);
-        } else {
-            Mentee mentee = memberStorage.findMenteeByMember(member);
-            resDto = reservationService.cancelReservation(mentee, reservationId);
-        }
+        ReservationResponse resDto = reservationService.cancelReservation(member, reservationId);
 
         return new RsData<>(
             "200",

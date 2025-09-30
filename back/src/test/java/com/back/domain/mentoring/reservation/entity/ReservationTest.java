@@ -35,12 +35,15 @@ class ReservationTest {
     @BeforeEach
     void setUp() {
         Member mentorMember = MemberFixture.create("mentor@test.com", "Mentor", "pass123");
+        ReflectionTestUtils.setField(mentorMember, "id", 1L);
         mentor = MentorFixture.create(1L, mentorMember);
 
         Member otherMentorMember = MemberFixture.create("other@test.com", "Other", "pass123");
+        ReflectionTestUtils.setField(otherMentorMember, "id", 2L);
         otherMentor = MentorFixture.create(2L, otherMentorMember);
 
         Member menteeMember = MemberFixture.create("mentee@test.com", "Mentee", "pass123");
+        ReflectionTestUtils.setField(menteeMember, "id", 3L);
         mentee = MenteeFixture.create(1L, menteeMember);
 
         Member otherMenteeMember = MemberFixture.create("other_mentee@test.com", "OtherMentee", "pass123");
@@ -145,7 +148,7 @@ class ReservationTest {
         @DisplayName("취소 성공 - PENDING")
         void cancelPending() {
             // when
-            reservation.cancel(mentor);
+            reservation.cancel(mentor.getMember());
 
             // then
             assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CANCELED);
@@ -160,7 +163,7 @@ class ReservationTest {
             reservation.approve(mentor);
 
             // when
-            reservation.cancel(mentor);
+            reservation.cancel(mentor.getMember());
 
             // then
             assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CANCELED);
@@ -176,7 +179,7 @@ class ReservationTest {
             ReflectionTestUtils.setField(reservation, "status", ReservationStatus.COMPLETED);
 
             // when & then
-            assertThatThrownBy(() -> reservation.cancel(mentor))
+            assertThatThrownBy(() -> reservation.cancel(mentor.getMember()))
                 .isInstanceOf(ServiceException.class)
                 .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.CANNOT_CANCEL.getCode());
         }
@@ -190,7 +193,7 @@ class ReservationTest {
         @DisplayName("취소 성공 - PENDING")
         void cancelPending() {
             // when
-            reservation.cancel(mentee);
+            reservation.cancel(mentee.getMember());
 
             // then
             assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CANCELED);
@@ -205,7 +208,7 @@ class ReservationTest {
             reservation.approve(mentor);
 
             // when
-            reservation.cancel(mentee);
+            reservation.cancel(mentee.getMember());
 
             // then
             assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CANCELED);
@@ -216,9 +219,9 @@ class ReservationTest {
         @Test
         @DisplayName("다른 멘티가 취소하려고 하면 예외")
         void throwExceptionWhenNotMentee() {
-            assertThatThrownBy(() -> reservation.cancel(otherMentee))
+            assertThatThrownBy(() -> reservation.cancel(otherMentee.getMember()))
                 .isInstanceOf(ServiceException.class)
-                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.FORBIDDEN_NOT_MENTEE.getCode());
+                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.FORBIDDEN_NOT_PARTICIPANT.getCode());
         }
 
         @Test
@@ -229,7 +232,7 @@ class ReservationTest {
             ReflectionTestUtils.setField(reservation, "status", ReservationStatus.COMPLETED);
 
             // when & then
-            assertThatThrownBy(() -> reservation.cancel(mentee))
+            assertThatThrownBy(() -> reservation.cancel(mentee.getMember()))
                 .isInstanceOf(ServiceException.class)
                 .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.CANNOT_CANCEL.getCode());
         }
