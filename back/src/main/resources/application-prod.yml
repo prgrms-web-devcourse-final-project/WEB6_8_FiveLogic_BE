@@ -2,11 +2,27 @@ spring:
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-  datasource: #임시
-    url: jdbc:h2:mem:proddb
-    username: sa
-    password:
+  datasource:
+    url: jdbc:mysql://devcos-team10-mysql.czvbgr7hie3i.ap-northeast-2.rds.amazonaws.com:3306/fivelogic?useSSL=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: {DB_USERNAME}
+    password: {DB_PASSWORD}
     driver-class-name: org.h2.Driver
+    hikari:
+      auto-commit: false
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+  jpa:
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 100
+
 logging:
   level:
     org.hibernate.orm.jdbc.bind: INFO

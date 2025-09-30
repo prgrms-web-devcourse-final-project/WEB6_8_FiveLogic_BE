@@ -65,6 +65,8 @@ dependencies {
 	implementation ("software.amazon.awssdk:s3:2.25.0")
 
 	implementation ("org.springframework.kafka:spring-kafka")
+
+	runtimeOnly("com.mysql:mysql-connector-j")
 }
 
 tasks.withType<Test> {

@@ -262,3 +262,106 @@ output "existing_s3_bucket" {
   value       = "fivelogic-files-bucket"
   description = "기존 S3 버킷 이름"
 }
+
+# =========================
+# RDS MySQL 설정 시작
+# =========================
+
+# Subnet 추가 (RDS는 최소 2개 AZ 필요)
+resource "aws_subnet" "subnet_2" {
+  vpc_id                  = aws_vpc.vpc_1.id
+  cidr_block              = "10.0.2.0/24"
+  availability_zone       = "${var.region}c"
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "${var.prefix}-subnet-2"
+  }
+}
+
+resource "aws_route_table_association" "association_2" {
+  subnet_id      = aws_subnet.subnet_2.id
+  route_table_id = aws_route_table.rt_1.id
+}
+
+# RDS Subnet Group
+resource "aws_db_subnet_group" "rds_subnet_group" {
+  name       = "${var.prefix}-rds-subnet-group"
+  subnet_ids = [
+    aws_subnet.subnet_1.id,
+    aws_subnet.subnet_2.id
+  ]
+
+  tags = {
+    Name = "${var.prefix}-rds-subnet-group"
+  }
+}
+
+# RDS Security Group (별도로 생성)
+resource "aws_security_group" "rds_sg" {
+  name   = "${var.prefix}-rds-sg"
+  vpc_id = aws_vpc.vpc_1.id
+
+  # EC2에서 RDS로의 접근만 허용
+  ingress {
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.sg_1.id]
+    description     = "MySQL from EC2"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.prefix}-rds-sg"
+  }
+}
+
+# RDS MySQL Instance
+resource "aws_db_instance" "mysql" {
+  identifier           = "${var.prefix}-mysql"
+  engine               = "mysql"
+  engine_version       = "8.0"
+  instance_class       = "db.t3.micro"
+  allocated_storage    = 20
+  storage_type         = "gp3"
+
+  db_name              = "fivelogic"
+  username             = "admin"
+  password             = var.password_1
+
+  db_subnet_group_name   = aws_db_subnet_group.rds_subnet_group.name
+  vpc_security_group_ids = [aws_security_group.rds_sg.id]
+
+  publicly_accessible      = false
+  skip_final_snapshot      = true
+  backup_retention_period  = 7
+  backup_window            = "03:00-04:00"
+  maintenance_window       = "mon:04:00-mon:05:00"
+
+  tags = {
+    Name = "${var.prefix}-mysql"
+  }
+}
+
+# Outputs
+output "rds_endpoint" {
+  value       = aws_db_instance.mysql.endpoint
+  description = "RDS MySQL endpoint"
+  sensitive   = false
+}
+
+output "rds_database_name" {
+  value       = aws_db_instance.mysql.db_name
+  description = "RDS database name"
+}
+
+# =========================
+# RDS MySQL 설정 끝
+# =========================
