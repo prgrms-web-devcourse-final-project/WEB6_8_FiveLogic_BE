@@ -26,11 +26,11 @@ public class MentoringRepositoryImpl implements MentoringRepositoryCustom {
 
         BooleanBuilder builder = new BooleanBuilder();
 
-        // 제목, 멘토 이름 검색 조건
+        // 제목, 멘토 닉네임 검색 조건
         if (keyword != null && !keyword.isBlank()) {
             builder.and(
                 mentoring.title.containsIgnoreCase(keyword)
-                    .or(mentor.member.name.containsIgnoreCase(keyword))
+                    .or(mentor.member.nickname.containsIgnoreCase(keyword))
             );
         }
 

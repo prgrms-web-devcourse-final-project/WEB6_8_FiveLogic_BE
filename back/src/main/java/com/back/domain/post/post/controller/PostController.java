@@ -64,9 +64,9 @@ public class PostController {
     @Operation(summary = "게시글 단건 조회")
     @GetMapping("/{post_id}")
     public RsData<PostSingleResponse> getSinglePost(@PathVariable Long post_id) {
-        Post post = postService.findById(post_id);
+        PostSingleResponse postSingleResponse = postService.makePostSingleResponse(post_id);
 
-        PostSingleResponse postSingleResponse = new PostSingleResponse(post);
+
 
         return new RsData<>("200", "게시글 단건 조회 성공", postSingleResponse);
     }

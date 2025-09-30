@@ -80,6 +80,9 @@ public class MentorSlotService {
     public void createMentorSlotRepetition(MentorSlotRepetitionRequest reqDto, Mentor mentor) {
         List<MentorSlot> mentorSlots = new ArrayList<>();
 
+        DateTimeValidator.validateRepetitionSlot(reqDto.repeatStartDate(), reqDto.startTime(),
+            reqDto.repeatEndDate(), reqDto.endTime());
+
         // 지정한 요일별로 슬롯 목록 생성
         for(DayOfWeek targetDayOfWeek : reqDto.daysOfWeek()) {
             mentorSlots.addAll(generateSlotsForDayOfWeek(reqDto, targetDayOfWeek, mentor));

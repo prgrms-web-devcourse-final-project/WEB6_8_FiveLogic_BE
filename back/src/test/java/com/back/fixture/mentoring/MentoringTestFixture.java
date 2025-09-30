@@ -1,4 +1,4 @@
-package com.back.fixture;
+package com.back.fixture.mentoring;
 
 import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentor.entity.Mentor;
@@ -45,11 +45,17 @@ public class MentoringTestFixture {
         );
     }
 
-    // TODO: saveAll로 변경 필요
     public List<Mentoring> createMentorings(Mentor mentor, int count) {
-        return IntStream.range(0, count)
-            .mapToObj(i -> createMentoring(mentor))
+        List<Mentoring> mentorings = IntStream.range(0, count)
+            .mapToObj(i -> Mentoring.builder()
+                .mentor(mentor)
+                .title("테스트 멘토링 " + (++counter))
+                .bio("테스트 설명")
+                .tags(List.of("Spring", "Java"))
+                .build())
             .toList();
+
+        return mentoringRepository.saveAll(mentorings);
     }
 
 
@@ -66,7 +72,7 @@ public class MentoringTestFixture {
 
     public MentorSlot createMentorSlot(Mentor mentor) {
         LocalDateTime baseDateTime = LocalDateTime.of(2025, 9, 30, 10, 0);
-        return createMentorSlot(mentor,baseDateTime, baseDateTime.minusHours(1));
+        return createMentorSlot(mentor,baseDateTime, baseDateTime.plusHours(1));
     }
 
     public List<MentorSlot> createMentorSlots(Mentor mentor, LocalDateTime baseDateTime, int days, int slots) {

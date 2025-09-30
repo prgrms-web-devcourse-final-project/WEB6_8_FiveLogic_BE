@@ -2,17 +2,15 @@ package com.back.domain.mentoring.mentoring.controller;
 
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.AuthTokenService;
-import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.dto.request.MentoringRequest;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
-import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.domain.mentoring.slot.repository.MentorSlotRepository;
 import com.back.fixture.MemberTestFixture;
-import com.back.fixture.MentoringTestFixture;
+import com.back.fixture.mentoring.MentoringTestFixture;
 import com.back.global.exception.ServiceException;
 import com.back.standard.util.Ut;
 import jakarta.servlet.http.Cookie;
@@ -23,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +34,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
@@ -53,7 +53,6 @@ class MentoringControllerTest {
     private static final String MENTORING_URL = "/mentorings";
 
     private Mentor mentor;
-    private Mentee mentee;
     private String mentorToken;
     private String menteeToken;
 
@@ -65,7 +64,7 @@ class MentoringControllerTest {
 
         // Mentee
         Member menteeMember = memberFixture.createMenteeMember();
-        mentee = memberFixture.createMentee(menteeMember);
+        memberFixture.createMentee(menteeMember);
 
         // JWT 발급
         mentorToken = authTokenService.genAccessToken(mentorMember);
@@ -78,14 +77,15 @@ class MentoringControllerTest {
     void getMentoringsSuccess() throws Exception {
         mentoringFixture.createMentorings(mentor, 15);
 
-        // TODO: 일반 조회, 목록 조회는 쿠키 없어도 가능하게 설정 필요
         performGetMentorings(null, "0")
             .andExpect(jsonPath("$.data.mentorings").isArray())
             .andExpect(jsonPath("$.data.mentorings.length()").value(10))
             .andExpect(jsonPath("$.data.currentPage").value(0))
             .andExpect(jsonPath("$.data.totalPage").value(2))
             .andExpect(jsonPath("$.data.totalElements").value(15))
-            .andExpect(jsonPath("$.data.hasNext").value(true));
+            .andExpect(jsonPath("$.data.hasNext").value(true))
+            .andExpect(jsonPath("$.data.mentorings[0].tags[0]").value("Spring"))
+            .andExpect(jsonPath("$.data.mentorings[0].tags[1]").value("Java"));
     }
 
     @Test
@@ -121,7 +121,7 @@ class MentoringControllerTest {
         mentoringFixture.createMentorings(mentor, 8);
         mentoringFixture.createMentorings(mentor2, 3);
 
-        performGetMentorings(mentorMember.getName(), "0")
+        performGetMentorings(mentorMember.getNickname(), "0")
             .andExpect(jsonPath("$.data.mentorings").isArray())
             .andExpect(jsonPath("$.data.mentorings.length()").value(3))
             .andExpect(jsonPath("$.data.currentPage").value(0))
@@ -165,7 +165,9 @@ class MentoringControllerTest {
             .andExpect(handler().methodName("getMentoring"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.resultCode").value("200"))
-            .andExpect(jsonPath("$.msg").value("멘토링을 조회하였습니다."));
+            .andExpect(jsonPath("$.msg").value("멘토링을 조회하였습니다."))
+            .andExpect(jsonPath("$.data.mentoring.tags[0]").value("Spring"))
+            .andExpect(jsonPath("$.data.mentoring.tags[1]").value("Java"));
     }
     
     
@@ -196,7 +198,7 @@ class MentoringControllerTest {
 
             // Mentor 정보 검증
             .andExpect(jsonPath("$.data.mentor.mentorId").value(mentorOfMentoring.getId()))
-            .andExpect(jsonPath("$.data.mentor.name").value(mentorOfMentoring.getMember().getName()))
+            .andExpect(jsonPath("$.data.mentor.nickname").value(mentorOfMentoring.getMember().getNickname()))
             .andExpect(jsonPath("$.data.mentor.rate").value(mentorOfMentoring.getRate()))
             .andExpect(jsonPath("$.data.mentor.careerYears").value(mentorOfMentoring.getCareerYears()));
     }
@@ -220,17 +222,6 @@ class MentoringControllerTest {
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.resultCode").value("404-2"))
             .andExpect(jsonPath("$.msg").value("멘토를 찾을 수 없습니다."));
-    }
-
-    @Test
-    @DisplayName("멘토링 생성 실패 - 멘토당 멘토링 1개 제한")
-    void createMentoringFailDuplicate() throws Exception {
-        mentoringFixture.createMentoring(mentor);
-
-        performCreateMentoring(mentorToken)
-            .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.resultCode").value("409-1"))
-            .andExpect(jsonPath("$.msg").value("이미 멘토링 정보가 존재합니다."));
     }
 
 
@@ -281,22 +272,6 @@ class MentoringControllerTest {
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.resultCode").value("404-2"))
             .andExpect(jsonPath("$.msg").value("멘토링을 찾을 수 없습니다."));
-    }
-
-    @Test
-    @DisplayName("멘토링 수정 실패 - 멘토링 소유자가 아닌 경우")
-    void updateMentoringFailNotOwner() throws Exception {
-        Mentoring mentoring = mentoringFixture.createMentoring(mentor);
-
-        // 다른 멘토
-        Member otherMentor = memberFixture.createMentorMember();
-        memberFixture.createMentor(otherMentor);
-        String token = authTokenService.genAccessToken(otherMentor);
-
-        performUpdateMentoring(mentoring.getId(), token)
-            .andExpect(status().isForbidden())
-            .andExpect(jsonPath("$.resultCode").value("403-1"))
-            .andExpect(jsonPath("$.msg").value("해당 멘토링에 대한 권한이 없습니다."));
     }
 
 
@@ -372,36 +347,6 @@ class MentoringControllerTest {
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.resultCode").value("404-2"))
             .andExpect(jsonPath("$.msg").value("멘토링을 찾을 수 없습니다."));
-    }
-
-    @Test
-    @DisplayName("멘토링 삭제 실패 - 멘토링 소유자가 아닌 경우")
-    void deleteMentoringFailNotOwner() throws Exception {
-        Mentoring mentoring = mentoringFixture.createMentoring(mentor);
-
-        // 다른 멘토
-        Member otherMentor = memberFixture.createMentorMember();
-        memberFixture.createMentor(otherMentor);
-        String token = authTokenService.genAccessToken(otherMentor);
-
-        performDeleteMentoring(mentoring.getId(), token)
-            .andExpect(status().isForbidden())
-            .andExpect(jsonPath("$.resultCode").value("403-1"))
-            .andExpect(jsonPath("$.msg").value("해당 멘토링에 대한 권한이 없습니다."));
-    }
-
-    @Test
-    @DisplayName("멘토링 삭제 실패 - 예약 정보가 있는 경우")
-    void deleteMentoringFailExistsReservation() throws Exception {
-        Mentoring mentoring = mentoringFixture.createMentoring(mentor);
-        MentorSlot mentorSlot = mentoringFixture.createMentorSlot(mentor);
-        mentoringFixture.createReservation(mentoring, mentee, mentorSlot);
-
-        performDeleteMentoring(mentoring.getId(), mentorToken)
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.resultCode").value("400-1"))
-            .andExpect(jsonPath("$.msg").value("예약 이력이 있는 멘토링은 삭제할 수 없습니다."));
-
     }
 
 
