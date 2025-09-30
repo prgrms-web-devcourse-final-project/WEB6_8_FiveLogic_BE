@@ -40,9 +40,9 @@ public class MentoringSession extends BaseEntity {
         this.chatMessages = new ArrayList<>();
     }
 
-    public static MentoringSession create() {
+    public static MentoringSession create(Reservation reservation) {
         return MentoringSession.builder()
-                .reservation(null)
+                .reservation(reservation)
                 .build();
     }
 

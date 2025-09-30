@@ -14,14 +14,15 @@ import java.time.LocalDateTime;
 public class ChatMessage extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "mestoring_session_id", nullable = false)
+    @JoinColumn(name = "mentoring_session_id", nullable = false)
     private MentoringSession mentoringSession;
 
-    @Column(nullable = false)
-    private Long senderId; // 멘토 또는 멘티의 ID
+    @Column
+    private Long senderId;
 
     @Column
-    private String senderRole; // "MENTOR" 또는 "MENTEE"
+    @Enumerated(EnumType.STRING)
+    private SenderRole senderRole;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
@@ -34,18 +35,20 @@ public class ChatMessage extends BaseEntity {
     private LocalDateTime timestamp;
 
     @Builder(access = lombok.AccessLevel.PRIVATE)
-    private ChatMessage(MentoringSession mentoringSession, Long senderId, String content, MessageType type, LocalDateTime timestamp) {
+    private ChatMessage(MentoringSession mentoringSession, Long senderId, SenderRole senderRole, String content, MessageType type, LocalDateTime timestamp) {
         this.mentoringSession = mentoringSession;
         this.senderId = senderId;
+        this.senderRole = senderRole;
         this.content = content;
         this.type = type;
         this.timestamp = timestamp;
     }
 
-    public static ChatMessage create(MentoringSession mentoringSession, Long senderId, String content, MessageType type) {
+    public static ChatMessage create(MentoringSession mentoringSession, Long senderId, SenderRole senderRole, String content, MessageType type) {
         return ChatMessage.builder()
                 .mentoringSession(mentoringSession)
                 .senderId(senderId)
+                .senderRole(senderRole)
                 .content(content)
                 .type(type)
                 .timestamp(LocalDateTime.now())
