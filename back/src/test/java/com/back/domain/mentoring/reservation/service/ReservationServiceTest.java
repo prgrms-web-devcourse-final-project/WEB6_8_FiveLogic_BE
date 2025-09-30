@@ -267,5 +267,24 @@ class ReservationServiceTest {
                 .isInstanceOf(ServiceException.class)
                 .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.INVALID_MENTOR_SLOT.getCode());
         }
+
+        @Test
+        @DisplayName("동시성 충돌 발생 시 예외")
+        void throwExceptionOnConcurrentApproval() {
+            // given
+            Reservation mockReservation = spy(reservation);
+
+            when(mentoringStorage.findReservation(reservation.getId()))
+                .thenReturn(mockReservation);
+
+            // approve() 호출 시 OptimisticLockException 발생
+            doThrow(new OptimisticLockException("다른 트랜잭션이 먼저 수락했습니다"))
+                .when(mockReservation).approve(mentor);
+
+            // when & then
+            assertThatThrownBy(() -> reservationService.approveReservation(mentor, reservation.getId()))
+                .isInstanceOf(ServiceException.class)
+                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.CONCURRENT_APPROVAL_CONFLICT.getCode());
+        }
     }
 }

@@ -40,6 +40,9 @@ public class Reservation extends BaseEntity {
     @Column(nullable = false)
     private ReservationStatus status;
 
+    @Version
+    private Long version;
+
     @Builder
     public Reservation(Mentoring mentoring, Mentee mentee, MentorSlot mentorSlot, String preQuestion) {
         this.mentoring = mentoring;

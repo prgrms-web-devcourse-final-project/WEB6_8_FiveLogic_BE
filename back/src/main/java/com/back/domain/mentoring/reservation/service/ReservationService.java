@@ -56,13 +56,17 @@ public class ReservationService {
 
     @Transactional
     public ReservationResponse approveReservation(Mentor mentor, Long reservationId) {
-        Reservation reservation = mentoringStorage.findReservation(reservationId);
+        try {
+            Reservation reservation = mentoringStorage.findReservation(reservationId);
 
-        reservation.approve(mentor);
+            reservation.approve(mentor);
 
-        // 세션
+            // 세션
 
-        return ReservationResponse.from(reservation);
+            return ReservationResponse.from(reservation);
+        } catch (OptimisticLockException e) {
+            throw new ServiceException(ReservationErrorCode.CONCURRENT_APPROVAL_CONFLICT);
+        }
     }
 
 
