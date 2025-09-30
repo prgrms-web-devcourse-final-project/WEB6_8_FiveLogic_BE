@@ -4,12 +4,21 @@ import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 public class MentorSlotFixture {
 
-    private static final LocalDateTime DEFAULT_START_TIME = LocalDateTime.of(2025, 10, 1, 14, 0);
-    private static final LocalDateTime DEFAULT_END_TIME = LocalDateTime.of(2025, 10, 1, 16, 0);
+    private static final LocalDateTime DEFAULT_START_TIME = LocalDateTime.of(
+        LocalDate.now().plusMonths(1),
+        LocalTime.of(10, 0, 0)
+    );
+
+    private static final LocalDateTime DEFAULT_END_TIME = LocalDateTime.of(
+        LocalDate.now().plusMonths(1),
+        LocalTime.of(11, 0, 0)
+    );
 
     public static MentorSlot create(Mentor mentor) {
         return MentorSlot.builder()

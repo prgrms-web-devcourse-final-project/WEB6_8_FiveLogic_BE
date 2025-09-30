@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -71,21 +72,21 @@ public class MentoringTestFixture {
     }
 
     public MentorSlot createMentorSlot(Mentor mentor) {
-        LocalDateTime baseDateTime = LocalDateTime.of(2025, 9, 30, 10, 0);
+        LocalDateTime baseDateTime = LocalDateTime.now().plusWeeks(2).truncatedTo(ChronoUnit.SECONDS);
         return createMentorSlot(mentor,baseDateTime, baseDateTime.plusHours(1));
     }
 
-    public List<MentorSlot> createMentorSlots(Mentor mentor, LocalDateTime baseDateTime, int days, int slots) {
+    public List<MentorSlot> createMentorSlots(Mentor mentor, LocalDateTime baseDateTime, int days, int slots, Long minutes) {
         List<MentorSlot> mentorSlots = new ArrayList<>();
 
         // days 반복
         for(int day = 0; day < days; day++) {
-            LocalDateTime weekStart = baseDateTime.plusDays(day);
+            LocalDateTime weekStart = baseDateTime.plusDays(day).truncatedTo(ChronoUnit.SECONDS);
 
             // 30분 단위 슬롯
             for(int slot = 0; slot < slots; slot++) {
-                LocalDateTime startDateTime = weekStart.plusMinutes(slot * 30L);
-                LocalDateTime endDateTime = startDateTime.plusMinutes(30L);
+                LocalDateTime startDateTime = weekStart.plusMinutes(slot * minutes).truncatedTo(ChronoUnit.SECONDS);
+                LocalDateTime endDateTime = startDateTime.plusMinutes(minutes).truncatedTo(ChronoUnit.SECONDS);
 
                 MentorSlot mentorSlot = MentorSlot.builder()
                     .mentor(mentor)
