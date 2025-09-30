@@ -17,5 +17,4 @@ custom:
   site: # 임시입니다
     cookieDomain: fivelogic.com
     frontUrl: "https://fivelogic.vercel.app"
-    backUrl: "https://api.fivelogic.com"
-    name: fivelogic
+    backUrl: "http://http://13.124.192.14:8080"

@@ -52,4 +52,6 @@ cookies.txt
 .terraform
 .terraform.lock.hcl
 terraform.tfstate
-terraform.tfstate.backupgradle.properties
+terraform.tfstate.backup
+secrets.tf
+gradle.properties

@@ -78,6 +78,22 @@ resource "aws_security_group" "sg_1" {
   }
 
   ingress {
+    from_port   = 9000
+    to_port     = 9000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "MinIO API"
+  }
+
+  ingress {
+    from_port   = 9001
+    to_port     = 9001
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "MinIO Console"
+  }
+
+  ingress {
     from_port   = 9092
     to_port     = 9092
     protocol    = "tcp"
@@ -218,6 +234,23 @@ COMPOSE
 
 # Kafka 실행
 docker-compose up -d
+
+# Nginx Proxy Manager 실행
+docker network create common || true
+
+docker run -d \
+  --name npm_1 \
+  --restart unless-stopped \
+  --network common \
+  -p 80:80 \
+  -p 443:443 \
+  -p 81:81 \
+  -e TZ=Asia/Seoul \
+  -e INITIAL_ADMIN_EMAIL=admin@npm.com \
+  -e INITIAL_ADMIN_PASSWORD=${var.password_1} \
+  -v /dockerProjects/npm_1/volumes/data:/data \
+  -v /dockerProjects/npm_1/volumes/etc/letsencrypt:/etc/letsencrypt \
+  jc21/nginx-proxy-manager:latest
 
 # 스프링부트 실행 스크립트 생성 (나중에 jar 배포 후 사용)
 cat > /home/ec2-user/app/start-spring.sh <<'SPRING'
