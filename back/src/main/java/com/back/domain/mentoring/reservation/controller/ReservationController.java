@@ -1,5 +1,6 @@
 package com.back.domain.mentoring.reservation.controller;
 
+import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberStorage;
 import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentor.entity.Mentor;
@@ -14,6 +15,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/reservations")
@@ -42,7 +45,7 @@ public class ReservationController {
         );
     }
 
-    @PatchMapping("/{reservationId}")
+    @PatchMapping("/{reservationId}/approve")
     @PreAuthorize("hasRole('MENTOR')")
     @Operation(summary = "예약 수락", description = "멘토가 멘티의 예약 신청을 수락합니다. 로그인한 멘토만 예약 수락할 수 있습니다.")
     public RsData<ReservationResponse> approveReservation(
@@ -55,6 +58,46 @@ public class ReservationController {
         return new RsData<>(
             "200",
             "예약이 수락되었습니다.",
+            resDto
+        );
+    }
+
+    @PatchMapping("/{reservationId}/reject")
+    @PreAuthorize("hasRole('MENTOR')")
+    @Operation(summary = "예약 거절", description = "멘토가 멘티의 예약 신청을 거절합니다. 로그인한 멘토만 예약 거절할 수 있습니다.")
+    public RsData<ReservationResponse> rejectReservation(
+        @PathVariable Long reservationId
+    ) {
+        Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
+
+        ReservationResponse resDto = reservationService.rejectReservation(mentor, reservationId);
+
+        return new RsData<>(
+            "200",
+            "예약이 거절되었습니다.",
+            resDto
+        );
+    }
+
+    @PatchMapping("/{reservationId}/cancel")
+    @Operation(summary = "예약 취소", description = "멘토 또는 멘티가 예약을 취소합니다. 로그인 후 예약 취소할 수 있습니다.")
+    public RsData<ReservationResponse> cancelReservation(
+        @PathVariable Long reservationId
+    ) {
+        Member member = rq.getActor();
+        ReservationResponse resDto;
+
+        Optional<Mentor> mentor = memberStorage.findMentorByMemberOptional(member);
+        if (mentor.isPresent()) {
+            resDto = reservationService.cancelReservation(mentor.get(), reservationId);
+        } else {
+            Mentee mentee = memberStorage.findMenteeByMember(member);
+            resDto = reservationService.cancelReservation(mentee, reservationId);
+        }
+
+        return new RsData<>(
+            "200",
+            "예약이 취소되었습니다.",
             resDto
         );
     }

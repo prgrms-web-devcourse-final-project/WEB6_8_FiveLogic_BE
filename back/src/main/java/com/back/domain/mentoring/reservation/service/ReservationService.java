@@ -45,6 +45,7 @@ public class ReservationService {
                 .build();
 
             mentorSlot.setReservation(reservation);
+            // flush 필요...?
 
             reservationRepository.save(reservation);
 
@@ -67,6 +68,27 @@ public class ReservationService {
         } catch (OptimisticLockException e) {
             throw new ServiceException(ReservationErrorCode.CONCURRENT_APPROVAL_CONFLICT);
         }
+    }
+
+    @Transactional
+    public ReservationResponse rejectReservation(Mentor mentor, Long reservationId) {
+        Reservation reservation = mentoringStorage.findReservation(reservationId);
+        reservation.reject(mentor);
+        return ReservationResponse.from(reservation);
+    }
+
+    @Transactional
+    public ReservationResponse cancelReservation(Mentor mentor, Long reservationId) {
+        Reservation reservation = mentoringStorage.findReservation(reservationId);
+        reservation.cancel(mentor);
+        return ReservationResponse.from(reservation);
+    }
+
+    @Transactional
+    public ReservationResponse cancelReservation(Mentee mentee, Long reservationId) {
+        Reservation reservation = mentoringStorage.findReservation(reservationId);
+        reservation.cancel(mentee);
+        return ReservationResponse.from(reservation);
     }
 
 
