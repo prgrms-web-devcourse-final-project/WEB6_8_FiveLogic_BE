@@ -16,6 +16,8 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 public class MentoringSession extends BaseEntity {
+    private String sessionUrl;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reservation_id", nullable = false)
     private Reservation reservation;
@@ -34,6 +36,7 @@ public class MentoringSession extends BaseEntity {
 
     @Builder(access = AccessLevel.PRIVATE)
     private MentoringSession(Reservation reservation) {
+        this.sessionUrl = java.util.UUID.randomUUID().toString();
         this.reservation = reservation;
         this.mentoring = reservation.getMentoring();
         this.status = MentoringSessionStatus.CLOSED;
