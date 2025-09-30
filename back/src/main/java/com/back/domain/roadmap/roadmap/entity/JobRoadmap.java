@@ -3,9 +3,9 @@ package com.back.domain.roadmap.roadmap.entity;
 import com.back.domain.job.job.entity.Job;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "job_roadmap")
-@Getter @Setter
+@Getter
 @NoArgsConstructor
 public class JobRoadmap extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
@@ -26,9 +26,10 @@ public class JobRoadmap extends BaseEntity {
     @OrderBy("level ASC, stepOrder ASC")
     private List<RoadmapNode> nodes;
 
-    public JobRoadmap(Job job) {
+    @Builder
+    public JobRoadmap(Job job, List<RoadmapNode> nodes) {
         this.job = job;
-        this.nodes = new ArrayList<>();
+        this.nodes = nodes != null ? nodes : new ArrayList<>();
     }
 
     public RoadmapNode getRootNode() {

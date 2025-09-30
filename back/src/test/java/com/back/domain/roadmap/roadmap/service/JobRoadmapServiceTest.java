@@ -67,7 +67,9 @@ class JobRoadmapServiceTest {
         }
 
         // 테스트용 JobRoadmap 생성
-        testJobRoadmap = new JobRoadmap(testJob);
+        testJobRoadmap = JobRoadmap.builder()
+                .job(testJob)
+                .build();
         testJobRoadmap = jobRoadmapRepository.save(testJobRoadmap);
 
         // 테스트용 RoadmapNode 생성 (트리 구조)

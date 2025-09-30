@@ -67,7 +67,9 @@ class JobRoadmapControllerTest {
         reactTask = taskService.create("TestReact_" + timestamp);
 
         // 테스트용 JobRoadmap 1 생성 (백엔드)
-        testJobRoadmap1 = new JobRoadmap(testJob1);
+        testJobRoadmap1 = JobRoadmap.builder()
+                .job(testJob1)
+                .build();
         testJobRoadmap1 = jobRoadmapRepository.save(testJobRoadmap1);
 
         // 백엔드 로드맵 노드 생성
@@ -97,7 +99,9 @@ class JobRoadmapControllerTest {
         jobRoadmapRepository.save(testJobRoadmap1);
 
         // 테스트용 JobRoadmap 2 생성 (프론트엔드)
-        testJobRoadmap2 = new JobRoadmap(testJob2);
+        testJobRoadmap2 = JobRoadmap.builder()
+                .job(testJob2)
+                .build();
         testJobRoadmap2 = jobRoadmapRepository.save(testJobRoadmap2);
 
         RoadmapNode reactNode = RoadmapNode.builder()
