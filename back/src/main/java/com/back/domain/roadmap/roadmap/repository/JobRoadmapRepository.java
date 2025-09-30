@@ -21,8 +21,8 @@ public interface JobRoadmapRepository extends JpaRepository<JobRoadmap, Long> {
             SELECT jr FROM JobRoadmap jr
             JOIN FETCH jr.job j
             WHERE (:keyword IS NULL OR :keyword = '' OR
-                   LOWER(j.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-            ORDER BY jr.id DESC
+                   LOWER(j.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                   LOWER(j.description) LIKE LOWER(CONCAT('%', :keyword, '%')))
             """)
     Page<JobRoadmap> findAllWithJobAndKeyword(@Param("keyword") String keyword, Pageable pageable);
 
@@ -30,6 +30,7 @@ public interface JobRoadmapRepository extends JpaRepository<JobRoadmap, Long> {
             SELECT jr FROM JobRoadmap jr
             JOIN FETCH jr.job
             LEFT JOIN FETCH jr.nodes n
+            LEFT JOIN FETCH n.task t
             WHERE jr.id = :id
             ORDER BY n.level, n.stepOrder""")
     Optional<JobRoadmap> findByIdWithJobAndNodes(@Param("id") Long id);

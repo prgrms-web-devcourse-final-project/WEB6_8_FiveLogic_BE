@@ -56,12 +56,12 @@ class JobRoadmapControllerTest {
     }
 
     private void setupTestData() {
-        // 테스트용 Job 생성 (UNIQUE 제약 조건 회피)
+        // 테스트용 Job 생성
         long timestamp = System.currentTimeMillis();
         testJob1 = jobService.create("테스트 백엔드_" + timestamp, "테스트용 서버 사이드 개발자");
         testJob2 = jobService.create("테스트 프론트엔드_" + timestamp, "테스트용 클라이언트 사이드 개발자");
 
-        // 테스트용 Task 생성 (UNIQUE 제약 조건 회피)
+        // 테스트용 Task 생성
         javaTask = taskService.create("TestJava_" + timestamp);
         springTask = taskService.create("TestSpring_" + timestamp);
         reactTask = taskService.create("TestReact_" + timestamp);

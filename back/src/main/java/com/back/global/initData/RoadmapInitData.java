@@ -9,6 +9,9 @@ import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.member.mentor.repository.MentorRepository;
 import com.back.domain.roadmap.roadmap.dto.request.MentorRoadmapSaveRequest;
 import com.back.domain.roadmap.roadmap.dto.request.RoadmapNodeRequest;
+import com.back.domain.roadmap.roadmap.entity.JobRoadmap;
+import com.back.domain.roadmap.roadmap.entity.RoadmapNode;
+import com.back.domain.roadmap.roadmap.repository.JobRoadmapRepository;
 import com.back.domain.roadmap.roadmap.repository.MentorRoadmapRepository;
 import com.back.domain.roadmap.roadmap.service.MentorRoadmapService;
 import com.back.domain.roadmap.task.entity.Task;
@@ -22,16 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/**
- * RoadmapInitData (풀버전)
- *
- * - 모든 멘토 로드맵 상단에 '기초' 항목을 추가합니다.
- * - Mini Project(권장 실습)는 Task가 아니라 각 노드의 description에 구체적으로 적습니다.
- * - Task가 DB에 없으면 자동 생성하도록 createNodeRequest에서 안전장치 적용.
- *
- * 목적: 청소년(고등학생) 대상의 서비스에서 기초를 우선적으로 확보하고,
- *       통합(직업) 로드맵 생성시 의미있는 통계가 나오도록 샘플을 보강합니다.
- */
 @Configuration
 @RequiredArgsConstructor
 @Transactional
@@ -44,6 +37,7 @@ public class RoadmapInitData {
     private final MentorRepository mentorRepository;
     private final MentorRoadmapService mentorRoadmapService;
     private final MentorRoadmapRepository mentorRoadmapRepository;
+    private final JobRoadmapRepository jobRoadmapRepository;
 
     @Bean
     ApplicationRunner baseInitDataApplicationRunner2() {
@@ -55,6 +49,7 @@ public class RoadmapInitData {
         initJobData();
         initTaskData();           // 보강된 Task 목록
         //initSampleMentorRoadmaps(); // 활성화: 다양한 멘토 로드맵 생성
+        initSampleJobRoadmap();   // 직업 로드맵 조회 API 테스트용 샘플 데이터
     }
 
     // --- Job 초기화 ---
@@ -537,5 +532,141 @@ public class RoadmapInitData {
                 description,
                 stepOrder
         );
+    }
+
+    // --- 직업 로드맵 샘플 데이터 생성 (API 테스트용) ---
+    public void initSampleJobRoadmap() {
+        if (jobRoadmapRepository.count() > 0) return;
+
+        Job backendJob = jobRepository.findByName("백엔드 개발자")
+                .orElseThrow(() -> new RuntimeException("백엔드 개발자 직업을 찾을 수 없습니다."));
+
+        Job frontendJob = jobRepository.findByName("프론트엔드 개발자")
+                .orElseThrow(() -> new RuntimeException("프론트엔드 개발자 직업을 찾을 수 없습니다."));
+
+        // 백엔드 개발자 직업 로드맵 생성 (트리 구조로 구성)
+        JobRoadmap jobRoadmap = JobRoadmap.builder()
+                .job(backendJob)
+                .build();
+        jobRoadmap = jobRoadmapRepository.save(jobRoadmap);
+
+        // 다건 조회 확인용 프론트엔드 개발자 직업 로드맵 생성 (빈 로드맵)
+        JobRoadmap frontendRoadmap = JobRoadmap.builder()
+                .job(frontendJob)
+                .build();
+
+        // Task 조회 (이미 생성된 Task들 사용)
+        Task programmingFundamentals = taskRepository.findByNameIgnoreCase("Programming Fundamentals").orElse(null);
+        Task git = taskRepository.findByNameIgnoreCase("Git").orElse(null);
+        Task java = taskRepository.findByNameIgnoreCase("Java").orElse(null);
+        Task springBoot = taskRepository.findByNameIgnoreCase("Spring Boot").orElse(null);
+        Task mysql = taskRepository.findByNameIgnoreCase("MySQL").orElse(null);
+        Task jpa = taskRepository.findByNameIgnoreCase("JPA").orElse(null);
+        Task docker = taskRepository.findByNameIgnoreCase("Docker").orElse(null);
+        Task aws = taskRepository.findByNameIgnoreCase("AWS").orElse(null);
+
+        // 트리 구조로 노드 생성 (루트 노드들과 자식 노드들)
+
+        // 루트 노드 1: Programming Fundamentals (level=0, stepOrder=1)
+        RoadmapNode fundamentalsNode = RoadmapNode.builder()
+                .roadmapId(jobRoadmap.getId())
+                .roadmapType(RoadmapNode.RoadmapType.JOB)
+                .task(programmingFundamentals)
+                .taskName("Programming Fundamentals")
+                .description("프로그래밍의 기초 개념: 변수, 조건문, 반복문, 함수 등을 이해하고 활용할 수 있습니다.")
+                .stepOrder(1)
+                .level(0)
+                .build();
+
+        // 루트 노드 2: Git (level=0, stepOrder=2)
+        RoadmapNode gitNode = RoadmapNode.builder()
+                .roadmapId(jobRoadmap.getId())
+                .roadmapType(RoadmapNode.RoadmapType.JOB)
+                .task(git)
+                .taskName("Git")
+                .description("버전 관리 시스템으로 코드 히스토리 관리 및 협업을 위한 필수 도구입니다.")
+                .stepOrder(2)
+                .level(0)
+                .build();
+
+        // Fundamentals의 자식 노드들
+        RoadmapNode javaNode = RoadmapNode.builder()
+                .roadmapId(jobRoadmap.getId())
+                .roadmapType(RoadmapNode.RoadmapType.JOB)
+                .task(java)
+                .taskName("Java")
+                .description("객체지향 프로그래밍 언어로 백엔드 개발의 기초가 되는 언어입니다.")
+                .stepOrder(1)
+                .level(1)
+                .build();
+
+        RoadmapNode springBootNode = RoadmapNode.builder()
+                .roadmapId(jobRoadmap.getId())
+                .roadmapType(RoadmapNode.RoadmapType.JOB)
+                .task(springBoot)
+                .taskName("Spring Boot")
+                .description("Java 기반의 웹 애플리케이션 프레임워크로 REST API 개발에 필수입니다.")
+                .stepOrder(2)
+                .level(1)
+                .build();
+
+        // Java의 자식 노드들
+        RoadmapNode mysqlNode = RoadmapNode.builder()
+                .roadmapId(jobRoadmap.getId())
+                .roadmapType(RoadmapNode.RoadmapType.JOB)
+                .task(mysql)
+                .taskName("MySQL")
+                .description("관계형 데이터베이스로 데이터 저장 및 관리를 위한 기본 기술입니다.")
+                .stepOrder(1)
+                .level(2)
+                .build();
+
+        RoadmapNode jpaNode = RoadmapNode.builder()
+                .roadmapId(jobRoadmap.getId())
+                .roadmapType(RoadmapNode.RoadmapType.JOB)
+                .task(jpa)
+                .taskName("JPA")
+                .description("Java 진영의 ORM 기술로 객체와 관계형 데이터베이스를 매핑합니다.")
+                .stepOrder(2)
+                .level(2)
+                .build();
+
+        // Spring Boot의 자식 노드들
+        RoadmapNode dockerNode = RoadmapNode.builder()
+                .roadmapId(jobRoadmap.getId())
+                .roadmapType(RoadmapNode.RoadmapType.JOB)
+                .task(docker)
+                .taskName("Docker")
+                .description("컨테이너 기술로 애플리케이션 배포 및 환경 관리를 간소화합니다.")
+                .stepOrder(1)
+                .level(2)
+                .build();
+
+        RoadmapNode awsNode = RoadmapNode.builder()
+                .roadmapId(jobRoadmap.getId())
+                .roadmapType(RoadmapNode.RoadmapType.JOB)
+                .task(aws)
+                .taskName("AWS")
+                .description("클라우드 서비스로 애플리케이션을 확장 가능하게 배포하고 운영합니다.")
+                .stepOrder(2)
+                .level(2)
+                .build();
+
+        // 트리 구조 연결 (addChild 메서드 사용)
+        fundamentalsNode.addChild(javaNode);
+        fundamentalsNode.addChild(springBootNode);
+        javaNode.addChild(mysqlNode);
+        javaNode.addChild(jpaNode);
+        springBootNode.addChild(dockerNode);
+        springBootNode.addChild(awsNode);
+
+        // 모든 노드를 JobRoadmap에 추가
+        jobRoadmap.getNodes().addAll(List.of(
+                fundamentalsNode, gitNode, javaNode, springBootNode,
+                mysqlNode, jpaNode, dockerNode, awsNode
+        ));
+
+        jobRoadmapRepository.save(jobRoadmap);
+        jobRoadmapRepository.save(frontendRoadmap); // 빈 로드맵 저장
     }
 }
