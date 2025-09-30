@@ -27,14 +27,8 @@ public class MentoringSession extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private MentoringSessionStatus status;
 
-    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "mentoringSession", cascade = CascadeType.ALL)
     private List<ChatMessage> chatMessages = new ArrayList<>();
-    public MentoringSession(Reservation reservation, Mentoring mentoring, MentoringSessionStatus status, List<ChatMessage> chatMessages) {
-        this.reservation = reservation;
-        this.mentoring = mentoring;
-        this.status = status;
-        this.chatMessages = chatMessages;
-    }
 
     // 화면 공유, WebRTC 관련 필드 등 추가 가능
 
@@ -43,9 +37,10 @@ public class MentoringSession extends BaseEntity {
         this.reservation = reservation;
         this.mentoring = reservation.getMentoring();
         this.status = MentoringSessionStatus.CLOSED;
+        this.chatMessages = new ArrayList<>();
     }
 
-    public static MentoringSession create(){
+    public static MentoringSession create() {
         return MentoringSession.builder()
                 .reservation(null)
                 .build();

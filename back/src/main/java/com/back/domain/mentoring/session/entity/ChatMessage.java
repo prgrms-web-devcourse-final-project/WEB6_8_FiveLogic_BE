@@ -14,11 +14,14 @@ import java.time.LocalDateTime;
 public class ChatMessage extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "session_id", nullable = false)
+    @JoinColumn(name = "mestoring_session_id", nullable = false)
     private MentoringSession mentoringSession;
 
     @Column(nullable = false)
     private Long senderId; // 멘토 또는 멘티의 ID
+
+    @Column
+    private String senderRole; // "MENTOR" 또는 "MENTEE"
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
