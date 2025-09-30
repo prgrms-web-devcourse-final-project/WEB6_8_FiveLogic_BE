@@ -28,6 +28,21 @@ public class ReservationController {
     private final ReservationService reservationService;
     private final MemberStorage memberStorage;
 
+    @GetMapping("/{reservationId}")
+    @Operation(summary = "예약 조회", description = "특정 예약을 조회합니다. 로그인 후 예약 조회할 수 있습니다.")
+    public RsData<ReservationResponse> getReservation(
+        @PathVariable Long reservationId
+    ) {
+        Member member = rq.getActor();
+        ReservationResponse resDto = reservationService.getReservation(member, reservationId);
+
+        return new RsData<>(
+            "200",
+            "예약을 조회하였습니다.",
+            resDto
+        );
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('MENTEE')")
     @Operation(summary = "예약 신청", description = "멘티가 멘토의 슬롯을 선택해 예약 신청을 합니다. 로그인한 멘티만 예약 신청할 수 있습니다.")

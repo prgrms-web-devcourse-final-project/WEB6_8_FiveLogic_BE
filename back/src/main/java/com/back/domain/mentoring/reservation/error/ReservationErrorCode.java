@@ -20,6 +20,7 @@ public enum ReservationErrorCode implements ErrorCode {
     // 403
     FORBIDDEN_NOT_MENTOR("403-1", "해당 예약에 대한 멘토 권한이 없습니다."),
     FORBIDDEN_NOT_MENTEE("403-2", "해당 예약에 대한 멘티 권한이 없습니다."),
+    RESERVATION_NOT_ACCESSIBLE("403-3", "예약을 찾을 수 없거나 권한이 없습니다"),
 
     // 404
     NOT_FOUND_RESERVATION("404-1", "예약이 존재하지 않습니다."),

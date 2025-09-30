@@ -77,6 +77,49 @@ class ReservationServiceTest {
     }
 
     @Nested
+    @DisplayName("멘토링 예약 조회")
+    class Describe_getReservation {
+
+        @Test
+        void getReservation() {
+            // given
+            Long reservationId = reservation.getId();
+            Long memberId = mentor.getMember().getId();
+
+            when(reservationRepository.findByIdAndMemberId(reservationId, memberId))
+                .thenReturn(Optional.of(reservation));
+
+            // when
+            ReservationResponse response = reservationService.getReservation(
+                mentor.getMember(),
+                reservationId
+            );
+
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.mentoring().mentoringId()).isEqualTo(mentoring.getId());
+            assertThat(response.mentee().menteeId()).isEqualTo(mentee.getId());
+            assertThat(response.mentor().mentorId()).isEqualTo(mentor.getId());
+            assertThat(response.reservation().mentorSlotId()).isEqualTo(mentorSlot2.getId());
+            verify(reservationRepository).findByIdAndMemberId(reservationId, memberId);
+        }
+
+        @Test
+        @DisplayName("권한이 없을 경우 예외")
+        void getReservation_notAccessible() {
+            // given
+            when(reservationRepository.findByIdAndMemberId(reservation.getId(), mentee2.getMember().getId()))
+                .thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> reservationService.getReservation(mentee2.getMember(), reservation.getId()))
+                .isInstanceOf(ServiceException.class)
+                .hasFieldOrPropertyWithValue("resultCode",
+                    ReservationErrorCode.RESERVATION_NOT_ACCESSIBLE.getCode());
+        }
+    }
+
+    @Nested
     @DisplayName("멘토링 예약 생성")
     class Describe_createReservation {
 

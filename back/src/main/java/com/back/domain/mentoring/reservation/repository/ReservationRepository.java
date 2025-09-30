@@ -3,6 +3,8 @@ package com.back.domain.mentoring.reservation.repository;
 import com.back.domain.mentoring.reservation.constant.ReservationStatus;
 import com.back.domain.mentoring.reservation.entity.Reservation;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,6 +12,18 @@ import java.util.Optional;
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
     Optional<Reservation> findTopByOrderByIdDesc();
     Optional<Reservation> findByMentorSlotIdAndStatusIn(Long mentorSlotId, List<ReservationStatus> statuses);
+
+    @Query("""
+        SELECT r
+        FROM Reservation r
+        WHERE r.id = :reservationId
+        AND (r.mentee.member.id = :memberId
+            OR r.mentor.member.id = :memberId)
+        """)
+    Optional<Reservation> findByIdAndMemberId(
+        @Param("reservationId") Long reservationId,
+        @Param("memberId") Long memberId
+    );
 
     boolean existsByMentoringId(Long mentoringId);
 

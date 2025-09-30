@@ -1,5 +1,6 @@
 package com.back.domain.mentoring.reservation.service;
 
+import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
@@ -27,6 +28,13 @@ public class ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final MentoringStorage mentoringStorage;
+
+    public ReservationResponse getReservation(Member member, Long reservationId) {
+        Reservation reservation = reservationRepository.findByIdAndMemberId(reservationId, member.getId())
+            .orElseThrow(() -> new ServiceException(ReservationErrorCode.RESERVATION_NOT_ACCESSIBLE));
+
+        return ReservationResponse.from(reservation);
+    }
 
     @Transactional
     public ReservationResponse createReservation(Mentee mentee, ReservationRequest reqDto) {
