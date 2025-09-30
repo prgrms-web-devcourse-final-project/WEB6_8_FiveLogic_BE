@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MentorRoadmapRepository extends JpaRepository<MentorRoadmap, Long> {
@@ -38,4 +39,17 @@ public interface MentorRoadmapRepository extends JpaRepository<MentorRoadmap, Lo
      * - 로드맵 생성 시 중복 체크용
      */
     boolean existsByMentor(Mentor mentor);
+
+    /**
+     * 직업 ID로 멘토 로드맵 목록 조회 (노드 포함)
+     * - 특정 직업에 속한 멘토들의 로드맵 목록 조회
+     * - 통합된 직업 로드맵 생성용
+     */
+    @Query("""
+    SELECT mr FROM MentorRoadmap mr
+    LEFT JOIN FETCH mr.nodes n
+    WHERE mr.mentor.jobId = :jobId
+    ORDER BY mr.id, n.stepOrder
+    """)
+    List<MentorRoadmap> findAllByMentorJobIdWithNodes(@Param("jobId") Long jobId);
 }
