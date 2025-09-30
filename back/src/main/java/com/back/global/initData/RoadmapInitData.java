@@ -49,7 +49,7 @@ public class RoadmapInitData {
         initJobData();
         initTaskData();           // 보강된 Task 목록
         //initSampleMentorRoadmaps(); // 활성화: 다양한 멘토 로드맵 생성
-        initSampleJobRoadmap();   // 직업 로드맵 조회 API 테스트용 샘플 데이터
+        //initSampleJobRoadmap();   // 직업 로드맵 조회 API 테스트용 샘플 데이터
     }
 
     // --- Job 초기화 ---
