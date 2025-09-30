@@ -24,12 +24,12 @@ public class MemberStorage {
     }
 
     public Mentor findMentorByMemberId(Long memberId) {
-        return mentorRepository.findByMemberId(memberId)
+        return mentorRepository.findByMemberIdWithMember(memberId)
             .orElseThrow(() -> new ServiceException(MemberErrorCode.NOT_FOUND_MENTOR));
     }
 
     public Mentee findMenteeByMember(Member member) {
-        return menteeRepository.findByMemberId(member.getId())
+        return menteeRepository.findByMemberIdWithMember(member.getId())
             .orElseThrow(() -> new ServiceException(MemberErrorCode.NOT_FOUND_MENTEE));
     }
 

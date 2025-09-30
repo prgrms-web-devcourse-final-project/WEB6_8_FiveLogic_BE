@@ -12,6 +12,9 @@ public interface MenteeRepository extends JpaRepository<Mentee, Long> {
     @Query("SELECT m FROM Mentee m WHERE m.member.id = :memberId AND m.isDeleted = false")
     Optional<Mentee> findByMemberId(@Param("memberId") Long memberId);
 
+    @Query("SELECT m FROM Mentee m JOIN FETCH m.member WHERE m.member.id = :memberId AND m.isDeleted = false")
+    Optional<Mentee> findByMemberIdWithMember(@Param("memberId") Long memberId);
+
     @Query("SELECT m FROM Mentee m WHERE m.id = :id AND m.isDeleted = false")
     Optional<Mentee> findById(@Param("id") Long id);
 
