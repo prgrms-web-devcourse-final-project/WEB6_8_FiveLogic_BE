@@ -54,7 +54,7 @@ public class Reservation extends BaseEntity {
         this.status = status;
 
         // 양방향 동기화
-        if (status.equals(ReservationStatus.CANCELED) || status.equals(ReservationStatus.REJECTED)) {
+        if (status == ReservationStatus.CANCELED || status == ReservationStatus.REJECTED) {
             mentorSlot.removeReservation();
         } else {
             mentorSlot.updateStatus();
@@ -97,6 +97,11 @@ public class Reservation extends BaseEntity {
         updateStatus(ReservationStatus.CANCELED);
     }
 
+    public void complete() {
+        ensureCanComplete();
+        updateStatus(ReservationStatus.COMPLETED);
+    }
+
 
     // ===== 헬퍼 메서드 =====
 
@@ -127,6 +132,16 @@ public class Reservation extends BaseEntity {
     private void ensureCanCancel() {
         if(!this.status.canCancel()) {
             throw new ServiceException(ReservationErrorCode.CANNOT_CANCEL);
+        }
+    }
+
+    private void ensureCanComplete() {
+        if(!this.status.canComplete()) {
+            throw new ServiceException(ReservationErrorCode.CANNOT_COMPLETE);
+        }
+        // 시작 이후 완료 가능 (조기 종료 허용)
+        if (!mentorSlot.isPast()) {
+            throw new ServiceException(ReservationErrorCode.MENTORING_NOT_STARTED);
         }
     }
 

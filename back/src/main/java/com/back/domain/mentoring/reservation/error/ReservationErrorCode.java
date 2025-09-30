@@ -12,7 +12,10 @@ public enum ReservationErrorCode implements ErrorCode {
     CANNOT_APPROVE("400-1", "예약 요청 상태가 아닙니다. 수락이 불가능합니다."),
     CANNOT_REJECT("400-2", "예약 요청 상태가 아닙니다. 거절이 불가능합니다."),
     CANNOT_CANCEL("400-3", "예약 요청 상태 또는 예약 승인 상태가 아닙니다. 취소가 불가능합니다."),
-    INVALID_MENTOR_SLOT("400-4", "이미 시간이 지난 슬롯입니다. 예약 상태 변경이 불가능합니다."),
+    CANNOT_COMPLETE("400-4", "예약 승인 상태가 아닙니다. 완료가 불가능합니다."),
+    INVALID_MENTOR_SLOT("400-5", "이미 시간이 지난 슬롯입니다. 예약 상태 변경이 불가능합니다."),
+    MENTORING_NOT_STARTED("400-6", "멘토링이 시작되지 않았습니다. 완료가 불가능합니다."),
+
 
     // 403
     FORBIDDEN_NOT_MENTOR("403-1", "해당 예약에 대한 멘토 권한이 없습니다."),
