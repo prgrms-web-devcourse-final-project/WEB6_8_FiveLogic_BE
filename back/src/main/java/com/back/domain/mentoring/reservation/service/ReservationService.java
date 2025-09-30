@@ -1,6 +1,7 @@
 package com.back.domain.mentoring.reservation.service;
 
 import com.back.domain.member.mentee.entity.Mentee;
+import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.service.MentoringStorage;
 import com.back.domain.mentoring.reservation.constant.ReservationStatus;
@@ -51,6 +52,17 @@ public class ReservationService {
         } catch (OptimisticLockException e) {
             throw new ServiceException(ReservationErrorCode.CONCURRENT_RESERVATION_CONFLICT);
         }
+    }
+
+    @Transactional
+    public ReservationResponse approveReservation(Mentor mentor, Long reservationId) {
+        Reservation reservation = mentoringStorage.findReservation(reservationId);
+
+        reservation.approve(mentor);
+
+        // 세션
+
+        return ReservationResponse.from(reservation);
     }
 
 

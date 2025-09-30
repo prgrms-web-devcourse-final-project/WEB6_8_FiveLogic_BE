@@ -18,6 +18,7 @@ import com.back.fixture.MenteeFixture;
 import com.back.fixture.MentorFixture;
 import com.back.fixture.mentoring.MentorSlotFixture;
 import com.back.fixture.mentoring.MentoringFixture;
+import com.back.fixture.mentoring.ReservationFixture;
 import com.back.global.exception.ServiceException;
 import jakarta.persistence.OptimisticLockException;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,7 +54,8 @@ class ReservationServiceTest {
     private Mentor mentor;
     private Mentee mentee, mentee2;
     private Mentoring mentoring;
-    private MentorSlot mentorSlot;
+    private MentorSlot mentorSlot, mentorSlot2;
+    private Reservation reservation;
 
     @BeforeEach
     void setUp() {
@@ -68,6 +70,8 @@ class ReservationServiceTest {
 
         mentoring = MentoringFixture.create(1L, mentor);
         mentorSlot = MentorSlotFixture.create(1L, mentor);
+        mentorSlot2 = MentorSlotFixture.create(2L, mentor);
+        reservation = ReservationFixture.create(1L, mentoring, mentee, mentorSlot2);
     }
 
     @Nested
@@ -207,6 +211,61 @@ class ReservationServiceTest {
             assertThatThrownBy(() -> reservationService.createReservation(mentee, request))
                 .isInstanceOf(ServiceException.class)
                 .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.CONCURRENT_RESERVATION_CONFLICT.getCode());
+        }
+    }
+
+    @Nested
+    @DisplayName("예약 수락")
+    class Describe_approveReservation {
+
+        @Test
+        @DisplayName("예약 수락 성공")
+        void approveReservation() {
+            // given
+            when(mentoringStorage.findReservation(reservation.getId()))
+                .thenReturn(reservation);
+
+            // when
+            ReservationResponse result = reservationService.approveReservation(mentor, reservation.getId());
+
+            // then
+            assertThat(result.reservation().status()).isEqualTo(ReservationStatus.APPROVED);
+            assertThat(result.reservation().mentorSlotId()).isEqualTo(mentorSlot2.getId());
+            assertThat(result.mentor().mentorId()).isEqualTo(mentor.getId());
+            assertThat(result.mentee().menteeId()).isEqualTo(mentee.getId());
+        }
+
+        @Test
+        @DisplayName("PENDING 상태가 아니면 수락 불가")
+        void throwExceptionWhenAlreadyApproved() {
+            // given
+            reservation.approve(mentor);
+
+            when(mentoringStorage.findReservation(reservation.getId()))
+                .thenReturn(reservation);
+
+            // when & then
+            assertThatThrownBy(() -> reservationService.approveReservation(mentor, reservation.getId()))
+                .isInstanceOf(ServiceException.class)
+                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.CANNOT_APPROVE.getCode());
+        }
+
+        @Test
+        @DisplayName("이미 시작 시간이 지난 슬롯은 수락 불가")
+        void throwExceptionWhenMentorSlotInPast() {
+            // given
+            MentorSlot pastSlot = MentorSlotFixture.create(3L, mentor,
+                LocalDateTime.now().minusDays(1), LocalDateTime.now().minusDays(1).plusHours(1));
+
+            Reservation pastReservation = ReservationFixture.create(2L, mentoring, mentee, pastSlot);
+
+            when(mentoringStorage.findReservation(pastReservation.getId()))
+                .thenReturn(pastReservation);
+
+            // when
+            assertThatThrownBy(() -> reservationService.approveReservation(mentor, pastReservation.getId()))
+                .isInstanceOf(ServiceException.class)
+                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.INVALID_MENTOR_SLOT.getCode());
         }
     }
 }

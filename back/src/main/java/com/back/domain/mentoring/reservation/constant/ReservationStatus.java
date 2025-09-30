@@ -5,5 +5,17 @@ public enum ReservationStatus {
     APPROVED,   // 승인됨
     REJECTED,   // 거절됨
     CANCELED,   // 취소됨
-    COMPLETED   // 완료됨
+    COMPLETED;   // 완료됨
+
+    public boolean canApprove() {
+        return this == PENDING;
+    }
+
+    public boolean canReject() {
+        return this == PENDING;
+    }
+
+    public boolean canCancel() {
+        return this == PENDING || this == APPROVED;
+    }
 }

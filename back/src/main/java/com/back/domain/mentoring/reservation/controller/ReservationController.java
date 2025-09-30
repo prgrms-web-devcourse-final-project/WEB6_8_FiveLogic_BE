@@ -2,6 +2,7 @@ package com.back.domain.mentoring.reservation.controller;
 
 import com.back.domain.member.member.service.MemberStorage;
 import com.back.domain.member.mentee.entity.Mentee;
+import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.reservation.dto.request.ReservationRequest;
 import com.back.domain.mentoring.reservation.dto.response.ReservationResponse;
 import com.back.domain.mentoring.reservation.service.ReservationService;
@@ -12,10 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/reservations")
@@ -40,6 +38,23 @@ public class ReservationController {
         return new RsData<>(
             "201",
             "예약 신청이 완료되었습니다.",
+            resDto
+        );
+    }
+
+    @PatchMapping("/{reservationId}")
+    @PreAuthorize("hasRole('MENTOR')")
+    @Operation(summary = "예약 수락", description = "멘토가 멘티의 예약 신청을 수락합니다. 로그인한 멘토만 예약 수락할 수 있습니다.")
+    public RsData<ReservationResponse> approveReservation(
+        @PathVariable Long reservationId
+    ) {
+        Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
+
+        ReservationResponse resDto = reservationService.approveReservation(mentor, reservationId);
+
+        return new RsData<>(
+            "200",
+            "예약이 수락되었습니다.",
             resDto
         );
     }
