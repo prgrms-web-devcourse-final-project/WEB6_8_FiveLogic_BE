@@ -3,12 +3,12 @@ package com.back.domain.roadmap.roadmap.dto.response;
 import com.back.domain.roadmap.roadmap.entity.RoadmapNode;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public record JobRoadmapNodeResponse(
     Long id,
     Long parentId,       // 부모 노드 ID (null이면 루트 노드)
+    List<Long> childIds, // 자식 노드 ID 목록 (프론트엔드 렌더링용)
     Long taskId,         // Task와 연결된 경우의 표준 Task ID
     String taskName,     // 표시용 Task 이름
     String description,
@@ -21,11 +21,16 @@ public record JobRoadmapNodeResponse(
     List<JobRoadmapNodeResponse> children
 ) {
 
-    // 정적 팩터리 메서드 - RoadmapNode로부터 Response DTO 생성
-    public static JobRoadmapNodeResponse from(RoadmapNode node) {
+    // 정적 팩토리 메서드 - RoadmapNode로부터 Response DTO 생성 (자식 노드 정보 포함)
+    public static JobRoadmapNodeResponse from(RoadmapNode node, List<JobRoadmapNodeResponse> children) {
+        List<Long> childIds = children != null ?
+            children.stream().map(JobRoadmapNodeResponse::id).toList() :
+            List.of();
+
         return new JobRoadmapNodeResponse(
             node.getId(),
             node.getParent() != null ? node.getParent().getId() : null,
+            childIds,
             node.getTask() != null ? node.getTask().getId() : null,
             node.getTask() != null ? node.getTask().getName() : node.getTaskName(),
             node.getDescription(),
@@ -33,19 +38,14 @@ public record JobRoadmapNodeResponse(
             node.getLevel(),
             node.getTask() != null,
             null, // weight는 서비스에서 별도로 설정
-            new ArrayList<>() // children 초기화
+            children != null ? children : List.of()
         );
-    }
-
-    // 자식 노드 추가 헬퍼 메서드
-    public void addChild(JobRoadmapNodeResponse child) {
-        this.children.add(child);
     }
 
     // 가중치 설정 헬퍼 메서드 (불변 객체이므로 새 인스턴스 반환)
     public JobRoadmapNodeResponse withWeight(Double weight) {
         return new JobRoadmapNodeResponse(
-            this.id, this.parentId, this.taskId, this.taskName, this.description,
+            this.id, this.parentId, this.childIds, this.taskId, this.taskName, this.description,
             this.stepOrder, this.level, this.isLinkedToTask, weight, this.children
         );
     }

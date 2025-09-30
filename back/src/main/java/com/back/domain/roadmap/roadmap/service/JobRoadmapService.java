@@ -1,6 +1,5 @@
 package com.back.domain.roadmap.roadmap.service;
 
-import com.back.domain.job.job.repository.JobRepository;
 import com.back.domain.roadmap.roadmap.dto.response.JobRoadmapListResponse;
 import com.back.domain.roadmap.roadmap.dto.response.JobRoadmapResponse;
 import com.back.domain.roadmap.roadmap.entity.JobRoadmap;
@@ -22,7 +21,6 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class JobRoadmapService {
     private final JobRoadmapRepository jobRoadmapRepository;
-    private final JobRepository jobRepository;
 
     public List<JobRoadmapListResponse> getAllJobRoadmaps() {
         return jobRoadmapRepository.findAllWithJob()
