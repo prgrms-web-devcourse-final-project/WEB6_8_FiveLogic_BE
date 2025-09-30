@@ -84,7 +84,7 @@ public class MentorRoadmapService {
     // 멘토 ID로 멘토 로드맵 상세 조회 (미래 API 확장성 대비)
     @Transactional(readOnly = true)
     public MentorRoadmapResponse getByMentorId(Long mentorId) {
-        // 멘토 ID로 로드맵과 노드들을 한 번에 조회 (성능 최적화)
+        // 멘토 ID로 로드맵과 노드들을 한 번에 조회
         MentorRoadmap mentorRoadmap = mentorRoadmapRepository.findByMentorIdWithNodes(mentorId)
                 .orElseThrow(() -> new ServiceException("404", "해당 멘토의 로드맵을 찾을 수 없습니다."));
 
@@ -94,7 +94,7 @@ public class MentorRoadmapService {
     // 멘토 로드맵 수정
     @Transactional
     public MentorRoadmapSaveResponse update(Long id, Long mentorId, MentorRoadmapSaveRequest request) {
-        // 수정하려는 로드맵이 실제로 있는지 확인 (노드 정보는 불필요하므로 가벼운 조회)
+        // 수정하려는 로드맵이 실제로 있는지 확인
         MentorRoadmap mentorRoadmap = mentorRoadmapRepository.findById(id)
                 .orElseThrow(() -> new ServiceException("404", "로드맵을 찾을 수 없습니다."));
 
@@ -110,13 +110,13 @@ public class MentorRoadmapService {
         mentorRoadmap.updateTitle(request.title());
         mentorRoadmap.updateDescription(request.description());
 
-        // 1. 기존 노드들을 DB에서 직접 삭제 (roadmap_id NULL 처리 없음)
+        // 1. 기존 노드들을 DB에서 직접 삭제
         roadmapNodeRepository.deleteByRoadmapIdAndRoadmapType(
             mentorRoadmap.getId(),
             RoadmapNode.RoadmapType.MENTOR
         );
 
-        // 2. 새 노드들 생성 및 추가 (재조회 불필요 - 처음부터 노드 없이 조회했음)
+        // 2. 새 노드들 생성 및 추가
         List<RoadmapNode> allNodes = createValidatedNodesWithRoadmapId(request.nodes(), mentorRoadmap.getId());
         mentorRoadmap.addNodes(allNodes);
 
@@ -147,7 +147,7 @@ public class MentorRoadmapService {
             throw new ServiceException("403", "본인의 로드맵만 삭제할 수 있습니다.");
         }
 
-        // 1. 관련 노드들을 먼저 직접 삭제 (안전한 삭제)
+        // 1. 관련 노드들을 먼저 직접 삭제
         roadmapNodeRepository.deleteByRoadmapIdAndRoadmapType(
             roadmapId,
             RoadmapNode.RoadmapType.MENTOR
@@ -167,26 +167,24 @@ public class MentorRoadmapService {
         validateStepOrderSequence(request.nodes());
     }
 
-    // stepOrder 연속성 검증 (멘토 로드맵은 선형 구조) - 성능 최적화
+    // stepOrder 연속성 검증 (멘토 로드맵은 선형 구조)
     private void validateStepOrderSequence(List<RoadmapNodeRequest> nodes) {
         int nodeCount = nodes.size();
         boolean[] stepExists = new boolean[nodeCount + 1]; // 1부터 nodeCount까지 사용
 
-        // 한 번의 순회로 중복 검증 및 stepOrder 수집
+        // 중복 검증 및 stepOrder 수집
         for (RoadmapNodeRequest node : nodes) {
             int stepOrder = node.stepOrder();
 
             // 범위 검증
             if (stepOrder < 1 || stepOrder > nodeCount) {
                 throw new ServiceException("400",
-                    String.format("stepOrder는 1부터 %d 사이의 값이어야 합니다. 현재값: %d",
-                        nodeCount, stepOrder));
+                    String.format("stepOrder는 1부터 %d 사이의 값이어야 합니다.", nodeCount));
             }
 
             // 중복 검증
             if (stepExists[stepOrder]) {
-                throw new ServiceException("400",
-                    String.format("stepOrder %d가 중복되었습니다.", stepOrder));
+                throw new ServiceException("400", "stepOrder에 중복된 값이 있습니다");
             }
 
             stepExists[stepOrder] = true;
@@ -196,7 +194,7 @@ public class MentorRoadmapService {
         for (int i = 1; i <= nodeCount; i++) {
             if (!stepExists[i]) {
                 throw new ServiceException("400",
-                    String.format("stepOrder는 1부터 시작하는 연속된 숫자여야 합니다. 누락된 값: %d", i));
+                    String.format("stepOrder는 1부터 시작하는 연속된 숫자여야 합니다."));
             }
         }
     }
