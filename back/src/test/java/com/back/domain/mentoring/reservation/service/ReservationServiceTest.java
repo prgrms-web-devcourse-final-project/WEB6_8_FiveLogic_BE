@@ -18,6 +18,7 @@ import com.back.fixture.MenteeFixture;
 import com.back.fixture.MentorFixture;
 import com.back.fixture.mentoring.MentorSlotFixture;
 import com.back.fixture.mentoring.MentoringFixture;
+import com.back.fixture.mentoring.ReservationFixture;
 import com.back.global.exception.ServiceException;
 import jakarta.persistence.OptimisticLockException;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,8 +29,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,7 +56,8 @@ class ReservationServiceTest {
     private Mentor mentor;
     private Mentee mentee, mentee2;
     private Mentoring mentoring;
-    private MentorSlot mentorSlot;
+    private MentorSlot mentorSlot, mentorSlot2;
+    private Reservation reservation;
 
     @BeforeEach
     void setUp() {
@@ -68,6 +72,8 @@ class ReservationServiceTest {
 
         mentoring = MentoringFixture.create(1L, mentor);
         mentorSlot = MentorSlotFixture.create(1L, mentor);
+        mentorSlot2 = MentorSlotFixture.create(2L, mentor);
+        reservation = ReservationFixture.create(1L, mentoring, mentee, mentorSlot2);
     }
 
     @Nested
@@ -207,6 +213,200 @@ class ReservationServiceTest {
             assertThatThrownBy(() -> reservationService.createReservation(mentee, request))
                 .isInstanceOf(ServiceException.class)
                 .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.CONCURRENT_RESERVATION_CONFLICT.getCode());
+        }
+    }
+
+    @Nested
+    @DisplayName("예약 수락")
+    class Describe_approveReservation {
+
+        @Test
+        @DisplayName("예약 수락 성공")
+        void approveReservation() {
+            // given
+            when(mentoringStorage.findReservation(reservation.getId()))
+                .thenReturn(reservation);
+
+            // when
+            ReservationResponse result = reservationService.approveReservation(mentor, reservation.getId());
+
+            // then
+            assertThat(result.reservation().status()).isEqualTo(ReservationStatus.APPROVED);
+            assertThat(result.reservation().mentorSlotId()).isEqualTo(mentorSlot2.getId());
+            assertThat(result.mentor().mentorId()).isEqualTo(mentor.getId());
+            assertThat(result.mentee().menteeId()).isEqualTo(mentee.getId());
+        }
+
+        @Test
+        @DisplayName("PENDING 상태가 아니면 수락 불가")
+        void throwExceptionWhenAlreadyApproved() {
+            // given
+            reservation.approve(mentor);
+
+            when(mentoringStorage.findReservation(reservation.getId()))
+                .thenReturn(reservation);
+
+            // when & then
+            assertThatThrownBy(() -> reservationService.approveReservation(mentor, reservation.getId()))
+                .isInstanceOf(ServiceException.class)
+                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.CANNOT_APPROVE.getCode());
+        }
+
+        @Test
+        @DisplayName("이미 시작 시간이 지난 슬롯은 수락 불가")
+        void throwExceptionWhenMentorSlotInPast() {
+            // given
+            MentorSlot pastSlot = MentorSlotFixture.create(3L, mentor,
+                LocalDateTime.now().minusDays(1), LocalDateTime.now().minusDays(1).plusHours(1));
+
+            Reservation pastReservation = ReservationFixture.create(2L, mentoring, mentee, pastSlot);
+
+            when(mentoringStorage.findReservation(pastReservation.getId()))
+                .thenReturn(pastReservation);
+
+            // when
+            assertThatThrownBy(() -> reservationService.approveReservation(mentor, pastReservation.getId()))
+                .isInstanceOf(ServiceException.class)
+                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.INVALID_MENTOR_SLOT.getCode());
+        }
+
+        @Test
+        @DisplayName("동시성 충돌 발생 시 예외")
+        void throwExceptionOnConcurrentApproval() {
+            // given
+            Reservation mockReservation = spy(reservation);
+
+            when(mentoringStorage.findReservation(reservation.getId()))
+                .thenReturn(mockReservation);
+
+            // approve() 호출 시 OptimisticLockException 발생
+            doThrow(new OptimisticLockException("다른 트랜잭션이 먼저 수락했습니다"))
+                .when(mockReservation).approve(mentor);
+
+            // when & then
+            assertThatThrownBy(() -> reservationService.approveReservation(mentor, reservation.getId()))
+                .isInstanceOf(ServiceException.class)
+                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.CONCURRENT_APPROVAL_CONFLICT.getCode());
+        }
+    }
+
+    @Nested
+    @DisplayName("예약 거절")
+    class Describe_rejectReservation {
+
+        @Test
+        @DisplayName("예약 거절 성공")
+        void rejectReservation() {
+            // given
+            when(mentoringStorage.findReservation(reservation.getId()))
+                .thenReturn(reservation);
+
+            // when
+            ReservationResponse result = reservationService.rejectReservation(mentor, reservation.getId());
+
+            // then
+            assertThat(result.reservation().status()).isEqualTo(ReservationStatus.REJECTED);
+            assertThat(result.reservation().mentorSlotId()).isEqualTo(mentorSlot2.getId());
+            assertThat(result.mentor().mentorId()).isEqualTo(mentor.getId());
+            assertThat(result.mentee().menteeId()).isEqualTo(mentee.getId());
+        }
+
+        @Test
+        @DisplayName("PENDING 상태가 아니면 거절 불가")
+        void throwExceptionWhenNotPending() {
+            // given
+            reservation.approve(mentor);
+
+            when(mentoringStorage.findReservation(reservation.getId()))
+                .thenReturn(reservation);
+
+            // when & then
+            assertThatThrownBy(() -> reservationService.rejectReservation(mentor, reservation.getId()))
+                .isInstanceOf(ServiceException.class)
+                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.CANNOT_REJECT.getCode());
+        }
+    }
+
+    @Nested
+    @DisplayName("예약 취소")
+    class Describe_cancelReservation {
+
+        @Test
+        @DisplayName("멘토가 예약 취소 성공")
+        void cancelReservationByMentor() {
+            // given
+            when(mentoringStorage.findReservation(reservation.getId()))
+                .thenReturn(reservation);
+
+            // when
+            ReservationResponse result = reservationService.cancelReservation(mentor, reservation.getId());
+
+            // then
+            assertThat(result.reservation().status()).isEqualTo(ReservationStatus.CANCELED);
+        }
+
+        @Test
+        @DisplayName("멘티가 예약 취소 성공")
+        void cancelReservationByMentee() {
+            // given
+            when(mentoringStorage.findReservation(reservation.getId()))
+                .thenReturn(reservation);
+
+            // when
+            ReservationResponse result = reservationService.cancelReservation(mentee, reservation.getId());
+
+            // then
+            assertThat(result.reservation().status()).isEqualTo(ReservationStatus.CANCELED);
+        }
+
+        @Test
+        @DisplayName("COMPLETED 상태는 취소 불가")
+        void throwExceptionWhenCompleted() {
+            // given
+            // 완료 상태의 과거 슬롯
+            LocalDateTime pastTime = LocalDateTime.now().minusDays(1).truncatedTo(ChronoUnit.SECONDS);
+            MentorSlot pastSlot = MentorSlotFixture.create(3L, mentor, pastTime, pastTime.plusHours(1));
+            Reservation completedReservation = ReservationFixture.create(2L, mentoring, mentee, pastSlot);
+
+            // PENDING -> APPROVED는 미래 시간에 해야 하므로 리플렉션으로 직접 상태 변경
+            ReflectionTestUtils.setField(completedReservation, "status", ReservationStatus.APPROVED);
+            completedReservation.complete();
+
+            when(mentoringStorage.findReservation(completedReservation.getId()))
+                .thenReturn(completedReservation);
+
+            // when & then
+            assertThatThrownBy(() -> reservationService.cancelReservation(mentor, completedReservation.getId()))
+                .isInstanceOf(ServiceException.class)
+                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.CANNOT_CANCEL.getCode());
+        }
+
+        @Test
+        @DisplayName("다른 멘토는 취소 불가")
+        void throwExceptionWhenNotMentor() {
+            // given
+            Member anotherMentorMember = MemberFixture.create("another@test.com", "Another", "pass123");
+            Mentor anotherMentor = MentorFixture.create(2L, anotherMentorMember);
+            when(mentoringStorage.findReservation(reservation.getId()))
+                .thenReturn(reservation);
+
+            // when & then
+            assertThatThrownBy(() -> reservationService.cancelReservation(anotherMentor, reservation.getId()))
+                .isInstanceOf(ServiceException.class)
+                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.FORBIDDEN_NOT_MENTOR.getCode());
+        }
+
+        @Test
+        @DisplayName("다른 멘티는 취소 불가")
+        void throwExceptionWhenNotMentee() {
+            // given
+            when(mentoringStorage.findReservation(reservation.getId()))
+                .thenReturn(reservation);
+
+            // when & then
+            assertThatThrownBy(() -> reservationService.cancelReservation(mentee2, reservation.getId()))
+                .isInstanceOf(ServiceException.class)
+                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.FORBIDDEN_NOT_MENTEE.getCode());
         }
     }
 }
