@@ -54,7 +54,7 @@ public class RoadmapInitData {
     public void runInitData() {
         initJobData();
         initTaskData();           // 보강된 Task 목록
-        //initSampleMentorRoadmaps(); // 활성화: 다양한 멘토 로드맵 생성
+        initSampleMentorRoadmaps(); // 활성화: 다양한 멘토 로드맵 생성
     }
 
     // --- Job 초기화 ---

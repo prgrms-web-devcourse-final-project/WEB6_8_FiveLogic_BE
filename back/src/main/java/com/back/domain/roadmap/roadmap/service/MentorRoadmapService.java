@@ -9,6 +9,7 @@ import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapResponse;
 import com.back.domain.roadmap.roadmap.entity.MentorRoadmap;
 import com.back.domain.roadmap.roadmap.entity.RoadmapNode;
 import com.back.domain.roadmap.roadmap.repository.MentorRoadmapRepository;
+import com.back.domain.roadmap.roadmap.repository.RoadmapNodeRepository;
 import com.back.domain.roadmap.task.entity.Task;
 import com.back.domain.roadmap.task.repository.TaskRepository;
 import com.back.global.exception.ServiceException;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MentorRoadmapService {
     private final MentorRoadmapRepository mentorRoadmapRepository;
+    private final RoadmapNodeRepository roadmapNodeRepository;
     private final TaskRepository taskRepository;
     private final MentorRepository mentorRepository;
 
@@ -54,8 +56,7 @@ public class MentorRoadmapService {
         List<RoadmapNode> allNodes = createValidatedNodesWithRoadmapId(request.nodes(), mentorRoadmap.getId());
         mentorRoadmap.addNodes(allNodes);
 
-        // 최종 저장 (노드들 CASCADE INSERT)
-        mentorRoadmap = mentorRoadmapRepository.save(mentorRoadmap);
+        // CASCADE로 노드들이 자동 저장됨 (추가 save() 호출 불필요)
 
         log.info("멘토 로드맵 생성 완료 - 멘토 ID: {}, 로드맵 ID: {}, 노드 수: {} (cascade 활용)",
                  mentorId, mentorRoadmap.getId(), mentorRoadmap.getNodes().size());
@@ -93,8 +94,8 @@ public class MentorRoadmapService {
     // 멘토 로드맵 수정
     @Transactional
     public MentorRoadmapSaveResponse update(Long id, Long mentorId, MentorRoadmapSaveRequest request) {
-        // 수정하려는 로드맵이 실제로 있는지 확인
-        MentorRoadmap mentorRoadmap = mentorRoadmapRepository.findByIdWithNodes(id)
+        // 수정하려는 로드맵이 실제로 있는지 확인 (노드 정보는 불필요하므로 가벼운 조회)
+        MentorRoadmap mentorRoadmap = mentorRoadmapRepository.findById(id)
                 .orElseThrow(() -> new ServiceException("404", "로드맵을 찾을 수 없습니다."));
 
         // 권한 확인 - 본인의 로드맵만 수정 가능
@@ -109,8 +110,13 @@ public class MentorRoadmapService {
         mentorRoadmap.updateTitle(request.title());
         mentorRoadmap.updateDescription(request.description());
 
-        // 기존 노드 제거 후 roadmapId를 포함한 새 노드들 추가
-        mentorRoadmap.clearNodes();
+        // 1. 기존 노드들을 DB에서 직접 삭제 (roadmap_id NULL 처리 없음)
+        roadmapNodeRepository.deleteByRoadmapIdAndRoadmapType(
+            mentorRoadmap.getId(),
+            RoadmapNode.RoadmapType.MENTOR
+        );
+
+        // 2. 새 노드들 생성 및 추가 (재조회 불필요 - 처음부터 노드 없이 조회했음)
         List<RoadmapNode> allNodes = createValidatedNodesWithRoadmapId(request.nodes(), mentorRoadmap.getId());
         mentorRoadmap.addNodes(allNodes);
 
@@ -141,7 +147,13 @@ public class MentorRoadmapService {
             throw new ServiceException("403", "본인의 로드맵만 삭제할 수 있습니다.");
         }
 
-        // cascade로 자동으로 관련 노드들도 함께 삭제됨
+        // 1. 관련 노드들을 먼저 직접 삭제 (안전한 삭제)
+        roadmapNodeRepository.deleteByRoadmapIdAndRoadmapType(
+            roadmapId,
+            RoadmapNode.RoadmapType.MENTOR
+        );
+
+        // 2. 로드맵 삭제
         mentorRoadmapRepository.delete(mentorRoadmap);
 
         log.info("멘토 로드맵 삭제 완료 - 멘토 ID: {}, 로드맵 ID: {}", mentorId, roadmapId);
@@ -155,28 +167,36 @@ public class MentorRoadmapService {
         validateStepOrderSequence(request.nodes());
     }
 
-    // stepOrder 연속성 검증 (멘토 로드맵은 선형 구조)
+    // stepOrder 연속성 검증 (멘토 로드맵은 선형 구조) - 성능 최적화
     private void validateStepOrderSequence(List<RoadmapNodeRequest> nodes) {
-        List<Integer> stepOrders = nodes.stream()
-                .map(RoadmapNodeRequest::stepOrder)
-                .toList();
+        int nodeCount = nodes.size();
+        boolean[] stepExists = new boolean[nodeCount + 1]; // 1부터 nodeCount까지 사용
 
-        // 중복 검증 먼저 수행
-        long distinctCount = stepOrders.stream().distinct().count();
-        if (distinctCount != stepOrders.size()) {
-            throw new ServiceException("400", "stepOrder에 중복된 값이 있습니다.");
+        // 한 번의 순회로 중복 검증 및 stepOrder 수집
+        for (RoadmapNodeRequest node : nodes) {
+            int stepOrder = node.stepOrder();
+
+            // 범위 검증
+            if (stepOrder < 1 || stepOrder > nodeCount) {
+                throw new ServiceException("400",
+                    String.format("stepOrder는 1부터 %d 사이의 값이어야 합니다. 현재값: %d",
+                        nodeCount, stepOrder));
+            }
+
+            // 중복 검증
+            if (stepExists[stepOrder]) {
+                throw new ServiceException("400",
+                    String.format("stepOrder %d가 중복되었습니다.", stepOrder));
+            }
+
+            stepExists[stepOrder] = true;
         }
 
-        // 정렬 후 연속성 검증
-        List<Integer> sortedStepOrders = stepOrders.stream().sorted().toList();
-
-        // 1부터 시작하는 연속된 숫자인지 검증
-        for (int i = 0; i < sortedStepOrders.size(); i++) {
-            int expectedOrder = i + 1;
-            if (!sortedStepOrders.get(i).equals(expectedOrder)) {
+        // 연속성 검증 (1부터 nodeCount까지 모든 값이 존재하는지 확인)
+        for (int i = 1; i <= nodeCount; i++) {
+            if (!stepExists[i]) {
                 throw new ServiceException("400",
-                    String.format("stepOrder는 1부터 시작하는 연속된 숫자여야 합니다. 현재: %s, 기대값: %d",
-                        sortedStepOrders, expectedOrder));
+                    String.format("stepOrder는 1부터 시작하는 연속된 숫자여야 합니다. 누락된 값: %d", i));
             }
         }
     }
