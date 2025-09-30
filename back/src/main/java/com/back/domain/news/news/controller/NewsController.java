@@ -1,9 +1,9 @@
 package com.back.domain.news.news.controller;
 
-import com.back.domain.file.entity.Video;
-import com.back.domain.file.service.VideoService;
+import com.back.domain.file.video.entity.Video;
+import com.back.domain.file.video.service.VideoService;
 import com.back.domain.member.member.entity.Member;
-import com.back.domain.news.like.service.LikeService;
+import com.back.domain.news.like.service.NewsLikeService;
 import com.back.domain.news.news.dto.*;
 import com.back.domain.news.news.entity.News;
 import com.back.domain.news.news.service.NewsService;
@@ -22,7 +22,7 @@ import java.util.List;
 public class NewsController {
     private final NewsService newsService;
     private final VideoService videoService;
-    private final LikeService likeService;
+    private final NewsLikeService newsLikeService;
     private final Rq rq;
 
     @PostMapping
@@ -45,6 +45,7 @@ public class NewsController {
     @Operation(summary = "뉴스 단건 조회", description = "특정 ID의 뉴스를 읽어옵니다.")
     public RsData<NewsGetResponse> getNews(@PathVariable("newsId") Long newsId) {
         News news = newsService.getNewsById(newsId);
+        newsService.incrementViews(news);
         NewsGetResponse response = new NewsGetResponse(news);
         return new RsData<>("200", "뉴스 읽어오기 완료", response);
     }
@@ -72,8 +73,8 @@ public class NewsController {
             return new RsData<>("401", "로그인 후 이용해주세요.", null);
         }
         try {
-            likeService.likeNews(member, newsId);
-            NewsLikeResponse response = new NewsLikeResponse(member.getId(), newsId, likeService.getLikeCount(newsId));
+            newsLikeService.likeNews(member, newsId);
+            NewsLikeResponse response = new NewsLikeResponse(member.getId(), newsId, newsLikeService.getLikeCount(newsId));
             return new RsData<>("200", "뉴스를 좋아합니다.", response);
         } catch (IllegalArgumentException e) {
             return new RsData<>("404", e.getMessage(), null);

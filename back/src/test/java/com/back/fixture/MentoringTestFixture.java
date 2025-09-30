@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 @Component
-public class MentoringFixture {
+public class MentoringTestFixture {
     @Autowired private MentoringRepository mentoringRepository;
     @Autowired private MentorSlotRepository mentorSlotRepository;
     @Autowired private ReservationRepository reservationRepository;
@@ -102,6 +102,7 @@ public class MentoringFixture {
             .mentorSlot(slot)
             .preQuestion(preQuestion)
             .build();
+        slot.setReservation(reservation);
         return reservationRepository.save(reservation);
     }
 

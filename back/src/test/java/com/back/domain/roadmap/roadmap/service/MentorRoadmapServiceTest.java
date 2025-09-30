@@ -303,6 +303,114 @@ class MentorRoadmapServiceTest {
         assertThat(retrieved.nodes().get(1).taskName()).isEqualTo("직접 입력 노드");
     }
 
+    @Test
+    @DisplayName("stepOrder 검증 실패 - 비연속 숫자")
+    void t13() {
+        // Given
+        MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
+                "잘못된 로드맵", "stepOrder가 비연속",
+                List.of(
+                        new RoadmapNodeRequest(null, "Java", "1단계", 1),
+                        new RoadmapNodeRequest(null, "Spring", "3단계", 3), // 2가 빠짐
+                        new RoadmapNodeRequest(null, "Database", "5단계", 5) // 4가 빠짐
+                )
+        );
+
+        // When & Then
+        assertThatThrownBy(() -> mentorRoadmapService.create(mentorId, request))
+                .isInstanceOf(ServiceException.class)
+                .hasMessageContaining("stepOrder는 1부터 시작하는 연속된 숫자여야 합니다");
+    }
+
+    @Test
+    @DisplayName("stepOrder 검증 실패 - 중복된 값")
+    void t14() {
+        // Given
+        MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
+                "잘못된 로드맵", "stepOrder가 중복",
+                List.of(
+                        new RoadmapNodeRequest(null, "Java", "1단계", 1),
+                        new RoadmapNodeRequest(null, "Spring", "중복 1단계", 1), // 중복
+                        new RoadmapNodeRequest(null, "Database", "2단계", 2)
+                )
+        );
+
+        // When & Then
+        assertThatThrownBy(() -> mentorRoadmapService.create(mentorId, request))
+                .isInstanceOf(ServiceException.class)
+                .hasMessageContaining("stepOrder에 중복된 값이 있습니다");
+    }
+
+    @Test
+    @DisplayName("stepOrder 검증 실패 - 2부터 시작하는 연속 숫자")
+    void t15() {
+        // Given - 1부터 시작하지 않는 경우
+        MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
+                "잘못된 로드맵", "stepOrder가 2부터 시작",
+                List.of(
+                        new RoadmapNodeRequest(null, "Java", "2단계", 2), // 2부터 시작
+                        new RoadmapNodeRequest(null, "Spring", "3단계", 3)
+                )
+        );
+
+        // When & Then
+        assertThatThrownBy(() -> mentorRoadmapService.create(mentorId, request))
+                .isInstanceOf(ServiceException.class)
+                .hasMessageContaining("stepOrder는 1부터 시작하는 연속된 숫자여야 합니다");
+    }
+
+    @Test
+    @DisplayName("stepOrder 검증 성공 - 순서 무관한 입력")
+    void t16() {
+        // Given - 입력 순서와 stepOrder가 다름 (정렬 후 검증)
+        MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
+                "순서 무관 로드맵", "입력 순서와 stepOrder가 달라도 성공",
+                List.of(
+                        new RoadmapNodeRequest(null, "Database", "3단계", 3),
+                        new RoadmapNodeRequest(null, "Java", "1단계", 1),
+                        new RoadmapNodeRequest(null, "Spring", "2단계", 2)
+                )
+        );
+
+        // When
+        MentorRoadmapSaveResponse response = mentorRoadmapService.create(mentorId, request);
+
+        // Then
+        assertThat(response.nodeCount()).isEqualTo(3);
+
+        MentorRoadmapResponse retrieved = mentorRoadmapService.getById(response.id());
+        assertThat(retrieved.nodes()).hasSize(3);
+        // 결과는 stepOrder 순으로 정렬되어 반환
+        assertThat(retrieved.nodes().get(0).stepOrder()).isEqualTo(1);
+        assertThat(retrieved.nodes().get(0).taskName()).isEqualTo("Java");
+        assertThat(retrieved.nodes().get(1).stepOrder()).isEqualTo(2);
+        assertThat(retrieved.nodes().get(1).taskName()).isEqualTo("Spring");
+        assertThat(retrieved.nodes().get(2).stepOrder()).isEqualTo(3);
+        assertThat(retrieved.nodes().get(2).taskName()).isEqualTo("Database");
+    }
+
+    @Test
+    @DisplayName("stepOrder 검증 - 수정 시에도 동일하게 적용")
+    void t17() {
+        // Given
+        MentorRoadmapSaveRequest originalRequest = createSampleRequest();
+        MentorRoadmapSaveResponse created = mentorRoadmapService.create(mentorId, originalRequest);
+
+        // 잘못된 stepOrder로 수정 시도
+        MentorRoadmapSaveRequest updateRequest = new MentorRoadmapSaveRequest(
+                "수정된 로드맵", "잘못된 stepOrder",
+                List.of(
+                        new RoadmapNodeRequest(null, "Java", "1단계", 1),
+                        new RoadmapNodeRequest(null, "Spring", "3단계", 3) // 2가 빠짐
+                )
+        );
+
+        // When & Then
+        assertThatThrownBy(() -> mentorRoadmapService.update(created.id(), mentorId, updateRequest))
+                .isInstanceOf(ServiceException.class)
+                .hasMessageContaining("stepOrder는 1부터 시작하는 연속된 숫자여야 합니다");
+    }
+
     private MentorRoadmapSaveRequest createSampleRequest() {
         return new MentorRoadmapSaveRequest(
                 "백엔드 개발자 로드맵",

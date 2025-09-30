@@ -1,25 +1,27 @@
 package com.back.domain.roadmap.roadmap.controller;
 
-import com.back.domain.member.member.entity.Member;
+import com.back.domain.member.member.service.MemberStorage;
+import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.roadmap.roadmap.dto.request.MentorRoadmapSaveRequest;
 import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapSaveResponse;
 import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapResponse;
 import com.back.domain.roadmap.roadmap.service.MentorRoadmapService;
-import com.back.global.exception.ServiceException;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/mentor-roadmaps")
 @RequiredArgsConstructor
-@Tag(name = "MentorRoadmap", description = "멘토 로드맵 관리 API")
+@Tag(name = "MentorRoadmapController", description = "멘토 로드맵 API")
 public class MentorRoadmapController {
     private final MentorRoadmapService mentorRoadmapService;
+    private final MemberStorage memberStorage;
     private final Rq rq;
 
     @Operation(
@@ -35,15 +37,16 @@ public class MentorRoadmapController {
                     사용 시나리오:
                     1. TaskController로 Task 검색
                     2. Task 선택 시 TaskId와 TaskName 획득
-                    3. Task 없는 경우 TaskId null, TaskName 직접 입력
-                    4. 노드 설명과 입력
+                    3. Task 없는 경우 TaskId는 null, TaskName 직접 입력
+                    4. description(Task에 대한 멘토의 경험, 조언, 학습 방법 등) 입력
                     """
     )
     @PostMapping
+    @PreAuthorize("hasRole('MENTOR')")
     public RsData<MentorRoadmapSaveResponse> create(@Valid @RequestBody MentorRoadmapSaveRequest request) {
-        Member member = validateMentorAuth();
+        Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
 
-        MentorRoadmapSaveResponse response = mentorRoadmapService.create(member.getId(), request);
+        MentorRoadmapSaveResponse response = mentorRoadmapService.create(mentor.getId(), request);
 
         return new RsData<>(
                 "201",
@@ -53,9 +56,10 @@ public class MentorRoadmapController {
     }
 
     @Operation(
-            summary = "멘토 로드맵 상세 조회",
+            summary = "멘토 로드맵 상세 조회 (로드맵 ID)",
             description = """
                     로드맵 ID로 멘토 로드맵 상세 정보를 조회합니다.
+                    로그인한 사용자만 조회할 수 있습니다.
 
                     반환 정보:
                     - 로드맵 기본 정보 (로드맵 ID, 멘토 ID, 제목, 설명, 생성일, 수정일 등)
@@ -63,8 +67,34 @@ public class MentorRoadmapController {
                     """
     )
     @GetMapping("/{id}")
-    public RsData<MentorRoadmapResponse> getByMentorId(@PathVariable Long id) {
+    @PreAuthorize("isAuthenticated()")
+    public RsData<MentorRoadmapResponse> getById(@PathVariable Long id) {
         MentorRoadmapResponse response = mentorRoadmapService.getById(id);
+
+        return new RsData<>(
+                "200",
+                "멘토 로드맵 조회 성공",
+                response
+        );
+    }
+
+    @Operation(
+            summary = "멘토 로드맵 상세 조회 (멘토 ID)",
+            description = """
+                    멘토 ID로 해당 멘토의 로드맵 상세 정보를 조회합니다.
+                    로그인한 사용자만 조회할 수 있습니다.
+
+                    반환 정보:
+                    - 로드맵 기본 정보 (로드맵 ID, 멘토 ID, 제목, 설명, 생성일, 수정일 등)
+                    - 모든 노드 정보 (stepOrder 순으로 정렬)
+
+                    주의: 멘토가 로드맵을 생성하지 않았다면 404 에러가 발생합니다.
+                    """
+    )
+    @GetMapping("/mentor/{mentorId}")
+    @PreAuthorize("isAuthenticated()")
+    public RsData<MentorRoadmapResponse> getByMentorId(@PathVariable Long mentorId) {
+        MentorRoadmapResponse response = mentorRoadmapService.getByMentorId(mentorId);
 
         return new RsData<>(
                 "200",
@@ -75,10 +105,11 @@ public class MentorRoadmapController {
 
     @Operation(summary = "멘토 로드맵 수정", description = "로드맵 ID로 로드맵을 찾아 수정합니다. 본인이 생성한 로드맵만 수정할 수 있습니다.")
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('MENTOR')")
     public RsData<MentorRoadmapSaveResponse> update(@PathVariable Long id, @Valid @RequestBody MentorRoadmapSaveRequest request) {
-        Member member = validateMentorAuth();
+        Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
 
-        MentorRoadmapSaveResponse response = mentorRoadmapService.update(id, member.getId(), request);
+        MentorRoadmapSaveResponse response = mentorRoadmapService.update(id, mentor.getId(), request);
 
         return new RsData<>(
                 "200",
@@ -89,11 +120,11 @@ public class MentorRoadmapController {
 
     @Operation(summary = "멘토 로드맵 삭제", description = "로드맵 ID로 로드맵을 삭제합니다. 본인이 생성한 로드맵만 삭제할 수 있습니다.")
     @DeleteMapping("/{id}")
-    public RsData<Void> delete( @PathVariable Long id) {
+    @PreAuthorize("hasRole('MENTOR')")
+    public RsData<Void> delete(@PathVariable Long id) {
+        Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
 
-        Member member = validateMentorAuth();
-
-        mentorRoadmapService.delete(id, member.getId());
+        mentorRoadmapService.delete(id, mentor.getId());
 
         return new RsData<>(
                 "200",
@@ -102,15 +133,4 @@ public class MentorRoadmapController {
         );
     }
 
-    // 멘토 권한 검증
-    private Member validateMentorAuth() {
-        Member member = rq.getActor();
-        if (member == null) {
-            throw new ServiceException("401", "로그인이 필요합니다.");
-        }
-        if (member.getRole() != Member.Role.MENTOR) {
-            throw new ServiceException("403", "멘토만 접근 가능합니다.");
-        }
-        return member;
-    }
 }

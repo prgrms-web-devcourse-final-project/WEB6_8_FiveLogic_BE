@@ -5,11 +5,4 @@ public record NewsCreateResponse(
         String videoUrl,
         String content,
         String author
-) {
-    public NewsCreateResponse(String title, String videoUrl, String content, String author) {
-        this.title = title;
-        this.videoUrl = videoUrl;
-        this.content = content;
-        this.author = author;
-    }
-}
+) {}

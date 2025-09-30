@@ -63,6 +63,8 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
 	implementation ("software.amazon.awssdk:s3:2.25.0")
+
+	implementation ("org.springframework.kafka:spring-kafka")
 }
 
 tasks.withType<Test> {
