@@ -4,6 +4,8 @@ import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
+import com.back.domain.mentoring.reservation.entity.Reservation;
+import com.back.domain.mentoring.reservation.error.ReservationErrorCode;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.domain.mentoring.slot.error.MentorSlotErrorCode;
@@ -50,6 +52,11 @@ public class MentoringStorage {
     public MentorSlot findMentorSlot(Long slotId) {
         return mentorSlotRepository.findById(slotId)
             .orElseThrow(() -> new ServiceException(MentorSlotErrorCode.NOT_FOUND_MENTOR_SLOT));
+    }
+
+    public Reservation findReservation(Long reservationId) {
+        return reservationRepository.findById(reservationId)
+            .orElseThrow(() -> new ServiceException(ReservationErrorCode.NOT_FOUND_RESERVATION));
     }
 
 

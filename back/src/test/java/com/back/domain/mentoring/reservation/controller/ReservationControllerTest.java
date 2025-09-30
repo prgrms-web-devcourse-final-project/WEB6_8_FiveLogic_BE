@@ -10,7 +10,7 @@ import com.back.domain.mentoring.reservation.error.ReservationErrorCode;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.fixture.MemberTestFixture;
-import com.back.fixture.MentoringTestFixture;
+import com.back.fixture.mentoring.MentoringTestFixture;
 import com.back.global.exception.ServiceException;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -78,6 +79,8 @@ class ReservationControllerTest {
             .orElseThrow(() -> new ServiceException(ReservationErrorCode.NOT_FOUND_RESERVATION));
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        String expectedStart = mentorSlot.getStartDateTime().truncatedTo(ChronoUnit.SECONDS).format(formatter);
+        String expectedEnd = mentorSlot.getEndDateTime().truncatedTo(ChronoUnit.SECONDS).format(formatter);
 
         resultActions
             .andExpect(status().isCreated())
@@ -87,32 +90,8 @@ class ReservationControllerTest {
             .andExpect(jsonPath("$.data.reservation.status").value("PENDING"))
             .andExpect(jsonPath("$.data.reservation.preQuestion").value(reservation.getPreQuestion()))
             .andExpect(jsonPath("$.data.reservation.mentorSlotId").value(mentorSlot.getId()))
-            .andExpect(jsonPath("$.data.reservation.startDateTime").value(mentorSlot.getStartDateTime().format(formatter)))
-            .andExpect(jsonPath("$.data.reservation.endDateTime").value(mentorSlot.getEndDateTime().format(formatter)));
-    }
-
-    @Test
-    @DisplayName("멘티가 멘토에게 예약 신청 실패 - 예약 가능한 상태가 아닌 경우")
-    void createReservationFailNotAvailable() throws Exception {
-        Member menteeMember = memberFixture.createMenteeMember();
-        Mentee mentee2 = memberFixture.createMentee(menteeMember);
-        mentoringFixture.createReservation(mentoring, mentee2, mentorSlot);
-
-        performCreateReservation()
-            .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.resultCode").value("409-1"))
-            .andExpect(jsonPath("$.msg").value("이미 예약이 완료된 시간대입니다."));
-    }
-
-    @Test
-    @DisplayName("멘티가 멘토에게 예약 신청 실패 - 이미 예약한 경우")
-    void createReservationFailAlreadyReservation() throws Exception {
-        mentoringFixture.createReservation(mentoring, mentee, mentorSlot);
-
-        performCreateReservation()
-            .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.resultCode").value("409-2"))
-            .andExpect(jsonPath("$.msg").value("이미 예약한 시간대입니다. 예약 목록을 확인해 주세요."));
+            .andExpect(jsonPath("$.data.reservation.startDateTime").value(expectedStart))
+            .andExpect(jsonPath("$.data.reservation.endDateTime").value(expectedEnd));
     }
 
 

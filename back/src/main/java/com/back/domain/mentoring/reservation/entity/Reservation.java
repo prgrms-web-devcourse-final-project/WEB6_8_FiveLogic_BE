@@ -4,7 +4,9 @@ import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.reservation.constant.ReservationStatus;
+import com.back.domain.mentoring.reservation.error.ReservationErrorCode;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
+import com.back.global.exception.ServiceException;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -38,6 +40,9 @@ public class Reservation extends BaseEntity {
     @Column(nullable = false)
     private ReservationStatus status;
 
+    @Version
+    private Long version;
+
     @Builder
     public Reservation(Mentoring mentoring, Mentee mentee, MentorSlot mentorSlot, String preQuestion) {
         this.mentoring = mentoring;
@@ -48,18 +53,104 @@ public class Reservation extends BaseEntity {
         this.status = ReservationStatus.PENDING;
     }
 
-    public void updateStatus(ReservationStatus status) {
+    private void updateStatus(ReservationStatus status) {
         this.status = status;
 
         // 양방향 동기화
-        if (status.equals(ReservationStatus.CANCELED) || status.equals(ReservationStatus.REJECTED)) {
+        if (status == ReservationStatus.CANCELED || status == ReservationStatus.REJECTED) {
             mentorSlot.removeReservation();
         } else {
             mentorSlot.updateStatus();
         }
     }
 
+    public boolean isMentor(Mentor mentor) {
+        return this.mentor.equals(mentor);
+    }
+
     public boolean isMentee(Mentee mentee) {
         return this.mentee.equals(mentee);
+    }
+
+    public void approve(Mentor mentor) {
+        ensureMentor(mentor);
+        ensureCanApprove();
+        ensureNotPast();
+        updateStatus(ReservationStatus.APPROVED);
+    }
+
+    public void reject(Mentor mentor) {
+        ensureMentor(mentor);
+        ensureCanReject();
+        ensureNotPast();
+        updateStatus(ReservationStatus.REJECTED);
+    }
+
+    public void cancel(Mentor mentor) {
+        ensureMentor(mentor);
+        ensureCanCancel();
+        ensureNotPast();
+        updateStatus(ReservationStatus.CANCELED);
+    }
+
+    public void cancel(Mentee mentee) {
+        ensureMentee(mentee);
+        ensureCanCancel();
+        ensureNotPast();
+        updateStatus(ReservationStatus.CANCELED);
+    }
+
+    public void complete() {
+        ensureCanComplete();
+        updateStatus(ReservationStatus.COMPLETED);
+    }
+
+
+    // ===== 헬퍼 메서드 =====
+
+    private void ensureMentor(Mentor mentor) {
+        if (!isMentor(mentor)) {
+            throw new ServiceException(ReservationErrorCode.FORBIDDEN_NOT_MENTOR);
+        }
+    }
+
+    private void ensureMentee(Mentee mentee) {
+        if (!isMentee(mentee)) {
+            throw new ServiceException(ReservationErrorCode.FORBIDDEN_NOT_MENTEE);
+        }
+    }
+
+    private void ensureCanApprove() {
+        if(!this.status.canApprove()) {
+            throw new ServiceException(ReservationErrorCode.CANNOT_APPROVE);
+        }
+    }
+
+    private void ensureCanReject() {
+        if(!this.status.canReject()) {
+            throw new ServiceException(ReservationErrorCode.CANNOT_REJECT);
+        }
+    }
+
+    private void ensureCanCancel() {
+        if(!this.status.canCancel()) {
+            throw new ServiceException(ReservationErrorCode.CANNOT_CANCEL);
+        }
+    }
+
+    private void ensureCanComplete() {
+        if(!this.status.canComplete()) {
+            throw new ServiceException(ReservationErrorCode.CANNOT_COMPLETE);
+        }
+        // 시작 이후 완료 가능 (조기 종료 허용)
+        if (!mentorSlot.isPast()) {
+            throw new ServiceException(ReservationErrorCode.MENTORING_NOT_STARTED);
+        }
+    }
+
+    private void ensureNotPast() {
+        if (mentorSlot.isPast()) {
+            throw new ServiceException(ReservationErrorCode.INVALID_MENTOR_SLOT);
+        }
     }
 }

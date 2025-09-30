@@ -1,4 +1,4 @@
-package com.back.fixture;
+package com.back.fixture.mentoring;
 
 import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentor.entity.Mentor;
@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -45,11 +46,17 @@ public class MentoringTestFixture {
         );
     }
 
-    // TODO: saveAll로 변경 필요
     public List<Mentoring> createMentorings(Mentor mentor, int count) {
-        return IntStream.range(0, count)
-            .mapToObj(i -> createMentoring(mentor))
+        List<Mentoring> mentorings = IntStream.range(0, count)
+            .mapToObj(i -> Mentoring.builder()
+                .mentor(mentor)
+                .title("테스트 멘토링 " + (++counter))
+                .bio("테스트 설명")
+                .tags(List.of("Spring", "Java"))
+                .build())
             .toList();
+
+        return mentoringRepository.saveAll(mentorings);
     }
 
 
@@ -65,21 +72,21 @@ public class MentoringTestFixture {
     }
 
     public MentorSlot createMentorSlot(Mentor mentor) {
-        LocalDateTime baseDateTime = LocalDateTime.of(2025, 9, 30, 10, 0);
-        return createMentorSlot(mentor,baseDateTime, baseDateTime.minusHours(1));
+        LocalDateTime baseDateTime = LocalDateTime.now().plusWeeks(2).truncatedTo(ChronoUnit.SECONDS);
+        return createMentorSlot(mentor,baseDateTime, baseDateTime.plusHours(1));
     }
 
-    public List<MentorSlot> createMentorSlots(Mentor mentor, LocalDateTime baseDateTime, int days, int slots) {
+    public List<MentorSlot> createMentorSlots(Mentor mentor, LocalDateTime baseDateTime, int days, int slots, Long minutes) {
         List<MentorSlot> mentorSlots = new ArrayList<>();
 
         // days 반복
         for(int day = 0; day < days; day++) {
-            LocalDateTime weekStart = baseDateTime.plusDays(day);
+            LocalDateTime weekStart = baseDateTime.plusDays(day).truncatedTo(ChronoUnit.SECONDS);
 
             // 30분 단위 슬롯
             for(int slot = 0; slot < slots; slot++) {
-                LocalDateTime startDateTime = weekStart.plusMinutes(slot * 30L);
-                LocalDateTime endDateTime = startDateTime.plusMinutes(30L);
+                LocalDateTime startDateTime = weekStart.plusMinutes(slot * minutes).truncatedTo(ChronoUnit.SECONDS);
+                LocalDateTime endDateTime = startDateTime.plusMinutes(minutes).truncatedTo(ChronoUnit.SECONDS);
 
                 MentorSlot mentorSlot = MentorSlot.builder()
                     .mentor(mentor)

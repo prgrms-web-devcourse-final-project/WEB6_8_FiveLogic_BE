@@ -4,6 +4,7 @@ import com.back.domain.member.member.entity.Member;
 import com.back.domain.post.post.dto.PostAllResponse;
 import com.back.domain.post.post.dto.PostCreateRequest;
 import com.back.domain.post.post.dto.PostDto;
+import com.back.domain.post.post.dto.PostSingleResponse;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.repository.PostRepository;
 import com.back.global.exception.ServiceException;
@@ -112,12 +113,18 @@ public class PostService {
         return post;
     }
 
+    @Transactional
+    public PostSingleResponse makePostSingleResponse(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+
+        PostSingleResponse postSingleResponse = new PostSingleResponse(post);
+        return postSingleResponse;
+    }
+
     public List<PostAllResponse> getAllPostResponse() {
         return postRepository.findAllWithMember().stream()
                 .map(PostAllResponse::new)
                 .toList();
     }
-
-    //채택된 comment 받아오기
 
 }

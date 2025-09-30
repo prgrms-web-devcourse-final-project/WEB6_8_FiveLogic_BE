@@ -21,12 +21,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/post/comment")
-
+@RequiredArgsConstructor
 public class PostCommentController {
-    @Autowired
-    private Rq rq;
-    @Autowired
-    private PostCommentService postCommentService;
+
+    private final Rq rq;
+    private final PostCommentService postCommentService;
 
     @Operation(summary = "댓글 생성")
     @PostMapping("/post/{post_id}")
