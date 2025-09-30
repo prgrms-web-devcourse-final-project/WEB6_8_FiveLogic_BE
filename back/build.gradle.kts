@@ -68,6 +68,7 @@ dependencies {
 	implementation ("software.amazon.awssdk:s3:2.25.0")
 
 	implementation ("org.springframework.kafka:spring-kafka")
+	implementation("org.springframework.boot:spring-boot-starter-websocket")
 }
 
 tasks.withType<Test> {
