@@ -1,6 +1,7 @@
 package com.back.domain.mentoring.reservation.service;
 
 import com.back.domain.member.mentee.entity.Mentee;
+import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.service.MentoringStorage;
 import com.back.domain.mentoring.reservation.constant.ReservationStatus;
@@ -44,6 +45,7 @@ public class ReservationService {
                 .build();
 
             mentorSlot.setReservation(reservation);
+            // flush 필요...?
 
             reservationRepository.save(reservation);
 
@@ -51,6 +53,42 @@ public class ReservationService {
         } catch (OptimisticLockException e) {
             throw new ServiceException(ReservationErrorCode.CONCURRENT_RESERVATION_CONFLICT);
         }
+    }
+
+    @Transactional
+    public ReservationResponse approveReservation(Mentor mentor, Long reservationId) {
+        try {
+            Reservation reservation = mentoringStorage.findReservation(reservationId);
+
+            reservation.approve(mentor);
+
+            // 세션
+
+            return ReservationResponse.from(reservation);
+        } catch (OptimisticLockException e) {
+            throw new ServiceException(ReservationErrorCode.CONCURRENT_APPROVAL_CONFLICT);
+        }
+    }
+
+    @Transactional
+    public ReservationResponse rejectReservation(Mentor mentor, Long reservationId) {
+        Reservation reservation = mentoringStorage.findReservation(reservationId);
+        reservation.reject(mentor);
+        return ReservationResponse.from(reservation);
+    }
+
+    @Transactional
+    public ReservationResponse cancelReservation(Mentor mentor, Long reservationId) {
+        Reservation reservation = mentoringStorage.findReservation(reservationId);
+        reservation.cancel(mentor);
+        return ReservationResponse.from(reservation);
+    }
+
+    @Transactional
+    public ReservationResponse cancelReservation(Mentee mentee, Long reservationId) {
+        Reservation reservation = mentoringStorage.findReservation(reservationId);
+        reservation.cancel(mentee);
+        return ReservationResponse.from(reservation);
     }
 
 
