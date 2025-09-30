@@ -16,8 +16,8 @@ logging:
 custom:
   site: # 임시입니다
     cookieDomain: ""
-    frontUrl: "http://http://13.124.192.14:8080"
-    backUrl: "http://http://13.124.192.14:8080"
+    frontUrl: "http://13.124.192.14:8080"
+    backUrl: "http://13.124.192.14:8080"
   cookie:
     httpOnly: true
     secure: false

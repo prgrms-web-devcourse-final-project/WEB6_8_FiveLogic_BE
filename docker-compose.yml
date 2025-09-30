@@ -76,14 +76,5 @@ services:
     restart: unless-stopped
     expose:
       - "8080"
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    depends_on:
-      - spring-boot
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
 volumes:
   minio-data:
