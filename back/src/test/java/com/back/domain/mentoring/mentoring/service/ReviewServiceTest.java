@@ -18,6 +18,7 @@ import com.back.fixture.MentorFixture;
 import com.back.fixture.mentoring.MentorSlotFixture;
 import com.back.fixture.mentoring.MentoringFixture;
 import com.back.fixture.mentoring.ReservationFixture;
+import com.back.fixture.mentoring.ReviewFixture;
 import com.back.global.exception.ServiceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,6 +29,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -144,6 +147,72 @@ class ReviewServiceTest {
             assertThatThrownBy(() -> reviewService.createReview(reservation.getId(), request, mentee))
                 .isInstanceOf(ServiceException.class)
                 .hasFieldOrPropertyWithValue("resultCode", ReviewErrorCode.ALREADY_EXISTS_REVIEW.getCode());
+        }
+    }
+
+    @Nested
+    @DisplayName("멘토링 리뷰 수정")
+    class Describe_updateReview {
+
+        private Review review;
+
+        @BeforeEach
+        void setUp() {
+            review = ReviewFixture.create(1L, reservation, mentee);
+        }
+
+        @Test
+        @DisplayName("리뷰 수정 성공")
+        void updateReview() {
+            // given
+            ReviewRequest updateRequest = new ReviewRequest(4.0, "수정된 리뷰 내용입니다.");
+
+            when(reviewRepository.findById(review.getId()))
+                .thenReturn(Optional.of(review));
+            when(reviewRepository.findAverageRating(mentor))
+                .thenReturn(4.0);
+
+            // when
+            ReviewResponse response = reviewService.updateReview(review.getId(), updateRequest, mentee);
+
+            // then
+            assertThat(response.rating()).isEqualTo(updateRequest.rating());
+            assertThat(response.content()).isEqualTo(updateRequest.content());
+            assertThat(response.menteeId()).isEqualTo(mentee.getId());
+            assertThat(mentor.getRate()).isEqualTo(4.0);
+
+            verify(reviewRepository).findById(review.getId());
+            verify(reviewRepository).findAverageRating(mentor);
+        }
+
+        @Test
+        @DisplayName("리뷰 없으면 예외")
+        void throwExceptionWhenReviewNotFound() {
+            // given
+            ReviewRequest updateRequest = new ReviewRequest(4.0, "수정된 리뷰 내용입니다.");
+
+            when(reviewRepository.findById(review.getId()))
+                .thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> reviewService.updateReview(review.getId(), updateRequest, mentee))
+                .isInstanceOf(ServiceException.class)
+                .hasFieldOrPropertyWithValue("resultCode", ReviewErrorCode.REVIEW_NOT_FOUND.getCode());
+        }
+
+        @Test
+        @DisplayName("리뷰 작성자가 아니면 예외")
+        void throwExceptionWhenNotReviewAuthor() {
+            // given
+            ReviewRequest updateRequest = new ReviewRequest(4.0, "수정된 리뷰 내용입니다.");
+
+            when(reviewRepository.findById(review.getId()))
+                .thenReturn(Optional.of(review));
+
+            // when & then
+            assertThatThrownBy(() -> reviewService.updateReview(review.getId(), updateRequest, mentee2))
+                .isInstanceOf(ServiceException.class)
+                .hasFieldOrPropertyWithValue("resultCode", ReviewErrorCode.FORBIDDEN_NOT_MENTEE.getCode());
         }
     }
 }

@@ -12,10 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -33,11 +30,28 @@ public class ReviewController {
         @RequestBody @Valid ReviewRequest reqDto
     ) {
         Mentee mentee = memberStorage.findMenteeByMember(rq.getActor());
-
         ReviewResponse resDto = reviewService.createReview(reservationId, reqDto, mentee);
+
         return new RsData<>(
             "201",
             "멘토링 리뷰가 작성되었습니다.",
+            resDto
+        );
+    }
+
+    @PutMapping("/reviews/{reviewId}")
+    @PreAuthorize("hasRole('MENTEE')")
+    @Operation(summary = "멘토링 리뷰 수정", description = "멘토링 리뷰를 수정합니다.")
+    public RsData<ReviewResponse> updateReview(
+        @PathVariable Long reviewId,
+        @RequestBody @Valid ReviewRequest reqDto
+    ) {
+        Mentee mentee = memberStorage.findMenteeByMember(rq.getActor());
+        ReviewResponse resDto = reviewService.updateReview(reviewId, reqDto, mentee);
+
+        return new RsData<>(
+            "200",
+            "멘토링 리뷰가 수정되었습니다.",
             resDto
         );
     }

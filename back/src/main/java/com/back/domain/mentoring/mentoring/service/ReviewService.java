@@ -41,12 +41,32 @@ public class ReviewService {
         return ReviewResponse.from(review);
     }
 
+    @Transactional
+    public ReviewResponse updateReview(Long reviewId, ReviewRequest reqDto, Mentee mentee) {
+        Review review = findReview(reviewId);
+
+        validateMentee(mentee, review);
+        validateRating(reqDto.rating());
+
+        review.update(reqDto.rating(), reqDto.content());
+        updateMentorRating(review.getReservation().getMentor());
+
+        return ReviewResponse.from(review);
+    }
+
 
     // ===== 평점 업데이트 =====
 
     private void updateMentorRating(Mentor mentor) {
         Double averageRating = reviewRepository.findAverageRating(mentor);
         mentor.updateRating(averageRating != null ? averageRating : 0.0);
+    }
+
+
+    // ===== 헬퍼 메서드 =====
+    private Review findReview(Long reviewId) {
+        return reviewRepository.findById(reviewId)
+            .orElseThrow(() -> new ServiceException(ReviewErrorCode.REVIEW_NOT_FOUND));
     }
 
 
@@ -67,6 +87,12 @@ public class ReviewService {
     private void validateNoDuplicate(Reservation reservation) {
         if (reviewRepository.existsByReservationId(reservation.getId())) {
             throw new ServiceException(ReviewErrorCode.ALREADY_EXISTS_REVIEW);
+        }
+    }
+
+    private static void validateMentee(Mentee mentee, Review review) {
+        if (!review.isMentee(mentee)) {
+            throw new ServiceException(ReviewErrorCode.FORBIDDEN_NOT_MENTEE);
         }
     }
 }

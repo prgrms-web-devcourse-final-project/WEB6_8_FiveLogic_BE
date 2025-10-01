@@ -45,6 +45,15 @@ public class Review extends BaseEntity {
         this.content = content;
     }
 
+    public void update(double rating, String content) {
+        this.rating = rating;
+        this.content = content;
+    }
+
+    public boolean isMentee(Mentee mentee) {
+        return mentee.equals(this.mentee);
+    }
+
 
     // ===== 헬퍼 메서드 =====
 
