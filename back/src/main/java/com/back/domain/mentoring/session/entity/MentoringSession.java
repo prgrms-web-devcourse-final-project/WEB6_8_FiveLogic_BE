@@ -1,6 +1,7 @@
 package com.back.domain.mentoring.session.entity;
 
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
+import com.back.domain.mentoring.reservation.constant.ReservationStatus;
 import com.back.domain.mentoring.reservation.entity.Reservation;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
@@ -44,6 +45,9 @@ public class MentoringSession extends BaseEntity {
     }
 
     public static MentoringSession create(Reservation reservation) {
+        if (reservation.getStatus() != ReservationStatus.APPROVED) {
+            throw new IllegalArgumentException("Reservation must be APPROVED to create a MentoringSession.");
+        }
         return MentoringSession.builder()
                 .reservation(reservation)
                 .build();
