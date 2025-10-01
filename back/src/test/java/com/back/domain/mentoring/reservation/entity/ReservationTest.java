@@ -34,19 +34,16 @@ class ReservationTest {
 
     @BeforeEach
     void setUp() {
-        Member mentorMember = MemberFixture.create("mentor@test.com", "Mentor", "pass123");
-        ReflectionTestUtils.setField(mentorMember, "id", 1L);
+        Member mentorMember = MemberFixture.create(1L, "mentor@test.com", "Mentor", "pass123", Member.Role.MENTOR);
         mentor = MentorFixture.create(1L, mentorMember);
 
-        Member otherMentorMember = MemberFixture.create("other@test.com", "Other", "pass123");
-        ReflectionTestUtils.setField(otherMentorMember, "id", 2L);
+        Member otherMentorMember = MemberFixture.create(2L, "other@test.com", "Other", "pass123", Member.Role.MENTOR);
         otherMentor = MentorFixture.create(2L, otherMentorMember);
 
-        Member menteeMember = MemberFixture.create("mentee@test.com", "Mentee", "pass123");
-        ReflectionTestUtils.setField(menteeMember, "id", 3L);
+        Member menteeMember = MemberFixture.create(3L, "mentee@test.com", "Mentee", "pass123", Member.Role.MENTEE);
         mentee = MenteeFixture.create(1L, menteeMember);
 
-        Member otherMenteeMember = MemberFixture.create("other_mentee@test.com", "OtherMentee", "pass123");
+        Member otherMenteeMember = MemberFixture.create(4L, "other_mentee@test.com", "OtherMentee", "pass123", Member.Role.MENTEE);
         otherMentee = MenteeFixture.create(2L, otherMenteeMember);
 
         mentoring = MentoringFixture.create(1L, mentor);
