@@ -33,6 +33,7 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final MentoringStorage mentoringStorage;
 
+    @Transactional(readOnly = true)
     public Page<ReservationDto> getReservations(Member member, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
@@ -46,6 +47,7 @@ public class ReservationService {
         return reservations.map(ReservationDto::from);
     }
 
+    @Transactional(readOnly = true)
     public ReservationResponse getReservation(Member member, Long reservationId) {
         Reservation reservation = reservationRepository.findByIdAndMember(reservationId, member)
             .orElseThrow(() -> new ServiceException(ReservationErrorCode.RESERVATION_NOT_ACCESSIBLE));
