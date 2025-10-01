@@ -8,7 +8,7 @@ public record PostCreateRequest(
         String postType,
         @NotBlank(message = "제목은 null 혹은 공백일 수 없습니다.")
         String title,
-        @NotBlank(message = "제목은 null 혹은 공백일 수 없습니다.")
+        @NotBlank(message = "내용은 null 혹은 공백일 수 없습니다.")
         String content
 ) {
 
