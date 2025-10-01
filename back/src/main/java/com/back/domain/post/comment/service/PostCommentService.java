@@ -75,7 +75,7 @@ public class PostCommentService {
     public void updatePostComment(Long postId, CommentModifyRequest commentModifyRequest, Member member) {
         validatePostExists(postId);
 
-        PostComment postComment = getPostCommentById(commentModifyRequest.getCommentId());
+        PostComment postComment = getPostCommentById(commentModifyRequest.commentId());
         Member author = postComment.getMember();
 
 
@@ -83,11 +83,11 @@ public class PostCommentService {
             throw new ServiceException("400", "수정 권한이 없습니다.");
         }
 
-        if ( commentModifyRequest.getContent() == null || commentModifyRequest.getContent().isEmpty()) {
+        if ( commentModifyRequest.content() == null || commentModifyRequest.content().isEmpty()) {
             throw new ServiceException("400", "댓글은 비어 있을 수 없습니다.");
         }
 
-        postComment.updateContent(commentModifyRequest.getContent());
+        postComment.updateContent(commentModifyRequest.content());
     }
 
 

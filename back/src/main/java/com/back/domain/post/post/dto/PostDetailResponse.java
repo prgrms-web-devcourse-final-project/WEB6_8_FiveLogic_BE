@@ -2,11 +2,13 @@ package com.back.domain.post.post.dto;
 
 import com.back.domain.post.comment.dto.CommentAllResponse;
 import com.back.domain.post.post.entity.Post;
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.List;
 @Data
+@Builder
 public class PostDetailResponse {
 
     private Long id;
@@ -24,25 +26,25 @@ public class PostDetailResponse {
 
 
 
-    public static PostDetailResponse from(Post post, List<CommentAllResponse> comments, int likeCount, int dislikeCount, String userLikeStatus) {
-        PostDetailResponse postDetailResponse = new PostDetailResponse();
-
-        postDetailResponse.setId(post.getId());
-        postDetailResponse.setTitle(post.getTitle());
-        postDetailResponse.setContent(post.getContent());
-        postDetailResponse.setAuthorName(post.getAuthorName());
-        postDetailResponse.setCreatedAt(post.getCreateDate());
-        postDetailResponse.setViewCount(post.getViewCount());
-
-        postDetailResponse.setLikeCount(likeCount);
-        postDetailResponse.setDislikeCount(dislikeCount);
-        postDetailResponse.setUserLikeStatus(userLikeStatus);
-
-        postDetailResponse.setComments(comments);
-
-
-
-        return postDetailResponse;
+    public static PostDetailResponse from(
+            Post post,
+            List<CommentAllResponse> comments,
+            int likeCount,
+            int dislikeCount,
+            String userLikeStatus
+    ) {
+        return PostDetailResponse.builder()
+                .id(post.getId())
+                .title(post.getTitle())
+                .content(post.getContent())
+                .authorName(post.getAuthorName())
+                .createdAt(post.getCreateDate())
+                .viewCount(post.getViewCount())
+                .likeCount(likeCount)
+                .dislikeCount(dislikeCount)
+                .userLikeStatus(userLikeStatus)
+                .comments(comments)
+                .build();
     }
 
 }

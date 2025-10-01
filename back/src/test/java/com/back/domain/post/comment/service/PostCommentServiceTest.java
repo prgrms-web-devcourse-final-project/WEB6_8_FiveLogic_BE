@@ -216,9 +216,7 @@ class PostCommentServiceTest {
             PostComment comment = createComment(author, post, "원본 댓글");
             Long postId = 1L;
             Long commentId = 1L;
-            CommentModifyRequest request = new CommentModifyRequest();
-            request.setCommentId(commentId);
-            request.setContent("수정된 댓글");
+            CommentModifyRequest request = new CommentModifyRequest(commentId,"수정된 댓글");
 
             when(postRepository.existsById(postId)).thenReturn(true);
             when(postCommentRepository.findById(commentId)).thenReturn(Optional.of(comment));
@@ -241,9 +239,7 @@ class PostCommentServiceTest {
             Long postId = 1L;
             Long commentId = 1L;
 
-            CommentModifyRequest request = new CommentModifyRequest();
-            request.setCommentId(commentId);
-            request.setContent("400 : 수정된 댓글");
+            CommentModifyRequest request = new CommentModifyRequest(commentId, "400 : 수정된 댓글");
 
             when(postRepository.existsById(postId)).thenReturn(true);
             when(postCommentRepository.findById(commentId)).thenReturn(Optional.of(comment));
@@ -264,9 +260,8 @@ class PostCommentServiceTest {
             Long postId = 1L;
             Long commentId = 1L;
 
-            CommentModifyRequest request = new CommentModifyRequest();
-            request.setCommentId(commentId);
-            request.setContent("");
+            CommentModifyRequest request = new CommentModifyRequest(commentId, "");
+
 
             when(postRepository.existsById(postId)).thenReturn(true);
             when(postCommentRepository.findById(commentId)).thenReturn(Optional.of(comment));
@@ -286,9 +281,7 @@ class PostCommentServiceTest {
             PostComment comment = createComment(author, post, "원본 댓글");
             Long postId = 1L;
             Long commentId = 1L;
-            CommentModifyRequest request = new CommentModifyRequest();
-            request.setCommentId(commentId);
-            request.setContent(null);
+            CommentModifyRequest request = new CommentModifyRequest(commentId, null);
 
             when(postRepository.existsById(postId)).thenReturn(true);
             when(postCommentRepository.findById(commentId)).thenReturn(Optional.of(comment));
