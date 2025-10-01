@@ -8,7 +8,8 @@ import com.back.domain.post.post.entity.Post;
 public record PostDto(
         Long postId,
         String title,
-        String content
+        String content,
+        int viewCount
 ) {
 
 
@@ -16,7 +17,8 @@ public record PostDto(
         return new PostDto(
                 post.getId(),
                 post.getTitle(),
-                post.getContent()
+                post.getContent(),
+                post.getViewCount()
         );
     }
 }
