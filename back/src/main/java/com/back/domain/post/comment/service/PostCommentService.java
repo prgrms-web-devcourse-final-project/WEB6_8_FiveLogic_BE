@@ -29,7 +29,7 @@ public class PostCommentService {
 
         PostComment postComment = PostComment.builder()
                 .post(post)
-                .content(commentCreateRequest.getComment())
+                .content(commentCreateRequest.comment())
                 .member(member)
                 .role(member.getRole().name())
                 .build();

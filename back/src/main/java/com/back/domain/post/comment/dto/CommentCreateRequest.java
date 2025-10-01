@@ -1,11 +1,12 @@
 package com.back.domain.post.comment.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
 
-@Data
-public class CommentCreateRequest {
-    private String role;
-    @NotBlank(message = "댓글을 입력해주세요")
-    private String comment;
+public record CommentCreateRequest(
+        String role,
+
+        @NotBlank(message = "댓글을 입력해주세요")
+        String comment
+) {
+
 }
