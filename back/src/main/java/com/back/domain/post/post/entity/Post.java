@@ -42,7 +42,7 @@ public class Post extends BaseEntity {
     private int viewCount;
 
     private Boolean isMento;
-    private String career;
+    private String job;
 
     private Boolean isResolve;
 
@@ -108,7 +108,7 @@ public class Post extends BaseEntity {
         this.isResolve = isResolve;
     }
 
-    public void updateCareer(String career) {
-        this.career = career;
+    public void updateJob(String job) {
+        this.job = job;
     }
 }

@@ -73,7 +73,7 @@ public class PostService {
                 .postType(postType)
                 .build();
 
-        post.updateCareer(practicePostCreateRequest.job());
+        post.updateJob(practicePostCreateRequest.job());
 
         postRepository.save(post);
 
