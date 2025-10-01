@@ -5,20 +5,20 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Data
-public class PostAllResponse {
-    private Long id;
-    private String title;
-    private String authorName;
-    private LocalDateTime createdAt;
-    private int viewCount;
-
-    public PostAllResponse(Post post) {
-        this.id = post.getId();
-        this.title = post.getTitle();
-        this.authorName = post.getAuthorName();
-        this.createdAt = post.getCreateDate();
-        this.viewCount = post.getViewCount();
+public record PostAllResponse(
+        Long id,
+        String title,
+        String authorName,
+        LocalDateTime createdAt,
+        int viewCount
+) {
+    public static PostAllResponse from(Post post) {
+        return new PostAllResponse(
+                post.getId(),
+                post.getTitle(),
+                post.getAuthorName(),
+                post.getCreateDate(),
+                post.getViewCount()
+        );
     }
-
 }

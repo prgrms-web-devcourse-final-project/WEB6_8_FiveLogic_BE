@@ -74,7 +74,7 @@ public class Post extends BaseEntity {
     }
 
     public String getAuthorName() {
-        return member.getName();
+        return member.getNickname();
     }
 
 

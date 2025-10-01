@@ -34,7 +34,7 @@ public class PostService {
 
     @Transactional
     public Post createPost(PostCreateRequest postCreateRequest, Member member) {
-        String postTypeStr = postCreateRequest.getPostType();
+        String postTypeStr = postCreateRequest.postType();
         Post.validPostType(postTypeStr);
         Post.PostType postType = Post.PostType.valueOf(postTypeStr);
 
@@ -50,8 +50,8 @@ public class PostService {
 //        }
 
         Post post = Post.builder()
-                .title(postCreateRequest.getTitle())
-                .content(postCreateRequest.getContent())
+                .title(postCreateRequest.title())
+                .content(postCreateRequest.content())
                 .member(member)
                 .postType(postType)
                 .build();
@@ -80,16 +80,16 @@ public class PostService {
         Post post = findById(postId);
         if (!post.isAuthor(member)) throw new ServiceException("400", "수정 권한이 없습니다.");
 
-        if ( postCreateRequest.getTitle() == null || postCreateRequest.getTitle().isBlank()) {
+        if ( postCreateRequest.title() == null || postCreateRequest.title().isBlank()) {
             throw new ServiceException("400", "제목을 입력해주세요.");
         }
 
-        if ( postCreateRequest.getContent() == null || postCreateRequest.getContent().isBlank()) {
+        if ( postCreateRequest.content() == null || postCreateRequest.content().isBlank()) {
             throw new ServiceException("400", "내용을 입력해주세요.");
         }
 
-        post.updateTitle(postCreateRequest.getTitle());
-        post.updateContent(postCreateRequest.getContent());
+        post.updateTitle(postCreateRequest.title());
+        post.updateContent(postCreateRequest.content());
 
         postRepository.save(post);
     }
@@ -117,13 +117,13 @@ public class PostService {
     public PostSingleResponse makePostSingleResponse(Long postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
 
-        PostSingleResponse postSingleResponse = new PostSingleResponse(post);
+        PostSingleResponse postSingleResponse = PostSingleResponse.from(post);
         return postSingleResponse;
     }
 
     public List<PostAllResponse> getAllPostResponse() {
         return postRepository.findAllWithMember().stream()
-                .map(PostAllResponse::new)
+                .map(PostAllResponse::from)
                 .toList();
     }
 
