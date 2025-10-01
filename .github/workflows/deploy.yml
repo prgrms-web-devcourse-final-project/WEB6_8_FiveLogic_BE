@@ -40,32 +40,32 @@ jobs:
   # ---------------------------------------------------------
   # 1) 테스트
   # ---------------------------------------------------------
-  test:
-    runs-on: ubuntu-latest
+test:
+  runs-on: ubuntu-latest
 
-    steps:
-      - name: 코드 체크아웃
-        uses: actions/checkout@v4
+  steps:
+    - name: 코드 체크아웃
+      uses: actions/checkout@v4
 
-      - name: Java 21 설정
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-          cache: 'gradle'
+    - name: Java 21 설정
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+        cache: 'gradle'
 
-      - name: Gradle 권한 설정
-        run: chmod +x ./gradlew
+    - name: 테스트 실행
+      run: |
+        cd back
+        chmod +x gradlew
+        ./gradlew test
 
-      - name: 테스트 실행
-        run: ./gradlew test
-
-      - name: 테스트 결과 업로드
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: build/reports/tests/test/
+    - name: 테스트 결과 업로드
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: back/build/reports/tests/test/
 
   # ---------------------------------------------------------
   # 2) 태그/릴리즈 생성 (main 브랜치만)
