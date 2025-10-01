@@ -7,6 +7,8 @@ services:
     environment:
       - ZOOKEEPER_CLIENT_PORT=2181
       - ZOOKEEPER_TICK_TIME=2000
+    networks:
+      - app-network
 
   kafka:
     image: confluentinc/cp-kafka:7.0.1
@@ -23,6 +25,8 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - app-network
 
   minio:
     image: minio/minio
@@ -42,6 +46,9 @@ services:
       - minio-data:/data
     depends_on:
       - kafka
+    networks:
+      - app-network
+
   minio-consumer:
     build:
       context: .
@@ -52,32 +59,34 @@ services:
       - minio
     environment:
       - KAFKA_TOPIC=s3-events
-      - KAFKA_BOOTSTRAP=kafka:29092    # 컨테이너 네트워크 내부 주소
+      - KAFKA_BOOTSTRAP=kafka:29092
       - MINIO_ENDPOINT=http://minio:9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
       - DOWNLOAD_DIR=/downloads
     volumes:
       - ./downloads:/downloads
+    networks:
+      - app-network
 
   spring-boot:
-    build:
-      context: ./back
-      dockerfile: Dockerfile
+    # ✅ GHCR 이미지
+    image: ghcr.io/your-github-username/fivelogic:latest
     container_name: spring-boot
     depends_on:
       - kafka
     ports:
       - "8080:8080"
     environment:
+      # ✅ 프로파일만! 나머지는 application-prod.yml에서
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
+    networks:
+      - app-network
     restart: unless-stopped
 
 volumes:
   minio-data:
+
+networks:
+  app-network:
+    driver: bridge
