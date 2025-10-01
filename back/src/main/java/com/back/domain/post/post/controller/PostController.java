@@ -127,7 +127,7 @@ public class PostController {
 
 
     @Operation(summary = "게시글 상세페이지")
-    @GetMapping("/Detail/{post_id}")
+    @GetMapping("/detail/{post_id}")
     public RsData<PostDetailResponse> getPostDetail(@PathVariable Long post_id) {
 
         PostDetailResponse response = postDetailFacade.getDetailWithViewIncrement(post_id);

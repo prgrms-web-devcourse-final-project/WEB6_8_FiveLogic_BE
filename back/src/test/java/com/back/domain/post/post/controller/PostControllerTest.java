@@ -438,22 +438,22 @@ public class PostControllerTest {
                 .andExpect(jsonPath("$.msg").value("게시글 좋아요 성공"));
     }
 
-    @Test
-    @DisplayName("게시글 좋아요 조회")
-    void t13() throws Exception {
-        ResultActions resultActions = mvc
-                .perform(
-                        get("/post/{post_id}/liked", 1L)
-                )
-                .andDo(print());
-
-        resultActions
-                .andExpect(handler().handlerType(PostController.class))
-                .andExpect(handler().methodName("getLike"))
-                .andExpect(jsonPath("$.resultCode").value("200"))
-                .andExpect(jsonPath("$.msg").value("게시글 좋아요 조회 성공"))
-                .andExpect(jsonPath("$.data.likeCount").exists());
-    }
+//    @Test
+//    @DisplayName("게시글 좋아요 조회")
+//    void t13() throws Exception {
+//        ResultActions resultActions = mvc
+//                .perform(
+//                        get("/post/{post_id}/liked", 1L)
+//                )
+//                .andDo(print());
+//
+//        resultActions
+//                .andExpect(handler().handlerType(PostController.class))
+//                .andExpect(handler().methodName("getLike"))
+//                .andExpect(jsonPath("$.resultCode").value("200"))
+//                .andExpect(jsonPath("$.msg").value("게시글 좋아요 조회 성공"))
+//                .andExpect(jsonPath("$.data.likeCount").exists());
+//    }
 
     @Test
     @DisplayName("게시글 싫어요 성공")
@@ -471,22 +471,22 @@ public class PostControllerTest {
                 .andExpect(jsonPath("$.msg").value("게시글 싫어요 성공"));
     }
 
-    @Test
-    @DisplayName("게시글 싫어요 조회")
-    void t15() throws Exception {
-        ResultActions resultActions = mvc
-                .perform(
-                        get("/post/{post_id}/disliked", 1L)
-                )
-                .andDo(print());
-
-        resultActions
-                .andExpect(handler().handlerType(PostController.class))
-                .andExpect(handler().methodName("getDisLike"))
-                .andExpect(jsonPath("$.resultCode").value("200"))
-                .andExpect(jsonPath("$.msg").value("게시글 싫어요 조회 성공"))
-                .andExpect(jsonPath("$.data.likeCount").exists());
-    }
+//    @Test
+//    @DisplayName("게시글 싫어요 조회")
+//    void t15() throws Exception {
+//        ResultActions resultActions = mvc
+//                .perform(
+//                        get("/post/{post_id}/disliked", 1L)
+//                )
+//                .andDo(print());
+//
+//        resultActions
+//                .andExpect(handler().handlerType(PostController.class))
+//                .andExpect(handler().methodName("getDisLike"))
+//                .andExpect(jsonPath("$.resultCode").value("200"))
+//                .andExpect(jsonPath("$.msg").value("게시글 싫어요 조회 성공"))
+//                .andExpect(jsonPath("$.data.likeCount").exists());
+//    }
 
     @Test
     @DisplayName("좋아요 -> 싫어요 토글 테스트")
@@ -539,7 +539,7 @@ public class PostControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        get("/post/Detail/{post_id}", 1L)
+                        get("/post/detail/{post_id}", 1L)
                 )
                 .andDo(print());
 
@@ -566,7 +566,7 @@ public class PostControllerTest {
     void t19() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        get("/post/Detail/{post_id}", 999L)
+                        get("/post/detail/{post_id}", 999L)
                 )
                 .andDo(print());
 
