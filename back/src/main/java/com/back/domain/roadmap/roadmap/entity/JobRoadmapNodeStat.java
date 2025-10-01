@@ -37,6 +37,9 @@ public class JobRoadmapNodeStat extends BaseEntity {
     @Column(name = "transition_counts", columnDefinition = "TEXT")
     private String transitionCounts; // (선택) JSON 직렬화: { "T:5":3, "T:7":1 } 형태로 보관 가능
 
+    @Column(name = "alternative_parents", columnDefinition = "TEXT")
+    private String alternativeParents; // 대안 부모 후보들: JSON 형태 { "T:1": 8, "N:kotlin": 7 }
+
     @Builder
     public JobRoadmapNodeStat(Integer stepOrder, Double weight, RoadmapNode node) {
         this.stepOrder = stepOrder;
@@ -74,5 +77,9 @@ public class JobRoadmapNodeStat extends BaseEntity {
 
     public void setTransitionCounts(String transitionCounts) {
         this.transitionCounts = transitionCounts;
+    }
+
+    public void setAlternativeParents(String alternativeParents) {
+        this.alternativeParents = alternativeParents;
     }
 }
