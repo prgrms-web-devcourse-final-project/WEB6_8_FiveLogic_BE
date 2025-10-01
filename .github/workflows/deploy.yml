@@ -11,11 +11,6 @@ on:
   push:
     branches:
       - main
-      - chore/107
-  pull_request:
-    branches:
-      - main
-      - develop
   workflow_dispatch:
 
 permissions:

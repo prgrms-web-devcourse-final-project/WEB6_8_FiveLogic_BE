@@ -32,12 +32,12 @@ logging:
     org.springframework.transaction.interceptor: INFO
     com.back: INFO
 custom:
-  site: # 임시입니다
-    cookieDomain: ""
-    frontUrl: "http://13.124.192.14:8080"
-    backUrl: "http://13.124.192.14:8080"
+  site:
+    cookieDomain: ".jobmate.info"  # 도메인 설정
+    frontUrl: "https://jobmate.info"
+    backUrl: "https://api.jobmate.info"  # HTTPS로 변경
   cookie:
     httpOnly: true
-    secure: false
+    secure: true  # HTTPS에서는 true로 변경
     sameSite: "Lax"
     maxAge: "#{60*60*24}"
