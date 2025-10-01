@@ -182,7 +182,7 @@ jobs:
             echo "📦 이미지: ${IMAGE}"
             echo "📦 컨테이너: ${CONTAINER_NAME}"
 
-            cd ~/WEB6_8_FiveLogic_BE || exit 1
+            cd /home/ssm-user/WEB6_8_FiveLogic_BE || exit 1
 
             echo "📥 Docker 이미지 다운로드 중..."
             docker pull $IMAGE
