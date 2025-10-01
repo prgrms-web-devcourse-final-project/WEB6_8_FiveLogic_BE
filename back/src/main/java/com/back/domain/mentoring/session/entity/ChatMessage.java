@@ -1,5 +1,6 @@
 package com.back.domain.mentoring.session.entity;
 
+import com.back.domain.member.member.entity.Member;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -17,8 +18,8 @@ public class ChatMessage extends BaseEntity {
     @JoinColumn(name = "mentoring_session_id", nullable = false)
     private MentoringSession mentoringSession;
 
-    @Column
-    private Long senderId;
+    @ManyToOne
+    private Member sender;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -35,19 +36,19 @@ public class ChatMessage extends BaseEntity {
     private LocalDateTime timestamp;
 
     @Builder(access = lombok.AccessLevel.PRIVATE)
-    private ChatMessage(MentoringSession mentoringSession, Long senderId, SenderRole senderRole, String content, MessageType type, LocalDateTime timestamp) {
+    private ChatMessage(MentoringSession mentoringSession, Member sender, SenderRole senderRole, String content, MessageType type, LocalDateTime timestamp) {
         this.mentoringSession = mentoringSession;
-        this.senderId = senderId;
+        this.sender = sender;
         this.senderRole = senderRole;
         this.content = content;
         this.type = type;
         this.timestamp = timestamp;
     }
 
-    public static ChatMessage create(MentoringSession mentoringSession, Long senderId, SenderRole senderRole, String content, MessageType type) {
+    public static ChatMessage create(MentoringSession mentoringSession, Member sender, SenderRole senderRole, String content, MessageType type) {
         return ChatMessage.builder()
                 .mentoringSession(mentoringSession)
-                .senderId(senderId)
+                .sender(sender)
                 .senderRole(senderRole)
                 .content(content)
                 .type(type)
