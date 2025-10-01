@@ -43,4 +43,36 @@ public class JobRoadmapNodeStat extends BaseEntity {
         this.weight = weight != null ? weight : 0.0;
         this.node = node;
     }
+
+    public void setStepOrder(Integer stepOrder) {
+        this.stepOrder = stepOrder;
+    }
+
+    public void setWeight(Double weight) {
+        this.weight = weight;
+    }
+
+    public void setNode(RoadmapNode node) {
+        this.node = node;
+    }
+
+    public void setAveragePosition(Double averagePosition) {
+        this.averagePosition = averagePosition;
+    }
+
+    public void setMentorCount(Integer mentorCount) {
+        this.mentorCount = mentorCount;
+    }
+
+    public void setOutgoingTransitions(Integer outgoingTransitions) {
+        this.outgoingTransitions = outgoingTransitions;
+    }
+
+    public void setIncomingTransitions(Integer incomingTransitions) {
+        this.incomingTransitions = incomingTransitions;
+    }
+
+    public void setTransitionCounts(String transitionCounts) {
+        this.transitionCounts = transitionCounts;
+    }
 }

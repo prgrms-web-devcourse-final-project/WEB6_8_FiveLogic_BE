@@ -78,11 +78,35 @@ public class RoadmapNode extends BaseEntity {
         child.setLevel(this.level + 1); // 부모 level + 1로 자동 설정
     }
 
-    private void setParent(RoadmapNode parent) {
+    public void setParent(RoadmapNode parent) {
         this.parent = parent;
     }
 
-    private void setLevel(int level) {
+    public void setLevel(int level) {
         this.level = level;
+    }
+
+    public void setStepOrder(int stepOrder) {
+        this.stepOrder = stepOrder;
+    }
+
+    public void setRoadmapId(Long roadmapId) {
+        this.roadmapId = roadmapId;
+    }
+
+    public void setRoadmapType(RoadmapType roadmapType) {
+        this.roadmapType = roadmapType;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setTask(Task task) {
+        this.task = task;
+    }
+
+    public void setTaskName(String taskName) {
+        this.taskName = taskName;
     }
 }
