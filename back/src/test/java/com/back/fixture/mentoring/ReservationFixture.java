@@ -28,6 +28,10 @@ public class ReservationFixture {
             .build();
 
         ReflectionTestUtils.setField(reservation, "id", id);
+
+        // 양방향 연결 설정
+        mentorSlot.setReservation(reservation);
+
         return reservation;
     }
 }

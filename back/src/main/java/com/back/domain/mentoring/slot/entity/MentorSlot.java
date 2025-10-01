@@ -97,4 +97,8 @@ public class MentorSlot extends BaseEntity {
     public boolean isOwnerBy(Mentor mentor) {
         return this.mentor.equals(mentor);
     }
+
+    public boolean isPast() {
+        return startDateTime.isBefore(LocalDateTime.now());
+    }
 }

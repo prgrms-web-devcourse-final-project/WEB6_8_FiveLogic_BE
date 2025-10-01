@@ -24,8 +24,11 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -51,6 +54,7 @@ class MentorSlotControllerTest {
 
     private static final String TOKEN = "accessToken";
     private static final String MENTOR_SLOT_URL = "/mentor-slots";
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     private Mentor mentor;
     private String mentorToken;
@@ -69,30 +73,26 @@ class MentorSlotControllerTest {
         // Mentoring
         mentoring = mentoringFixture.createMentoring(mentor);
 
-        // 2025-10-01 ~ 2025-10-02 10:00 ~ 11:30 (30분 단위 MentorSlot)
-        LocalDateTime baseDateTime = LocalDateTime.of(2025, 10, 1, 10, 0);
-        mentorSlots = mentoringFixture.createMentorSlots(mentor, baseDateTime, 2, 3);
+        // 2일간 10:00 ~ 11:30 (30분 단위 MentorSlot)
+        LocalDateTime baseDateTime = LocalDateTime.of(
+            LocalDate.now().plusMonths(2),
+            LocalTime.of(10, 0, 0)
+        ).truncatedTo(ChronoUnit.SECONDS);
+        mentorSlots = mentoringFixture.createMentorSlots(mentor, baseDateTime, 2, 3, 30L);
     }
 
     // ===== 슬롯 목록 조회 =====
     @Test
     @DisplayName("멘토가 본인의 모든 슬롯 목록 조회 성공")
     void getMyMentorSlotsSuccess() throws Exception {
-        // 캘린더 기준 (월)
-        LocalDateTime startDate = LocalDateTime.of(2025, 8, 31, 0, 0);
-        LocalDateTime endDate = LocalDateTime.of(2025, 10, 5, 0, 0);
-
-        // 경계값
-        mentoringFixture.createMentorSlot(mentor, endDate.minusMinutes(1), endDate.plusMinutes(10));
-        mentoringFixture.createMentorSlot(mentor, startDate.minusMinutes(10), startDate);
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDateTime startDate = mentorSlots.getFirst().getStartDateTime();
+        LocalDateTime endDate = mentorSlots.getLast().getEndDateTime();
 
         ResultActions resultActions = mvc.perform(
                 get(MENTOR_SLOT_URL)
                     .cookie(new Cookie(TOKEN, mentorToken))
-                    .param("startDate", startDate.format(formatter))
-                    .param("endDate", endDate.format(formatter))
+                    .param("startDate", startDate.toLocalDate().format(DateTimeFormatter.ISO_DATE))
+                    .param("endDate", endDate.toLocalDate().plusDays(1).format(DateTimeFormatter.ISO_DATE))
             )
             .andDo(print());
 
@@ -103,21 +103,15 @@ class MentorSlotControllerTest {
             .andExpect(jsonPath("$.resultCode").value("200"))
             .andExpect(jsonPath("$.msg").value("나의 모든 일정 목록을 조회하였습니다."))
             .andExpect(jsonPath("$.data").isArray())
-            .andExpect(jsonPath("$.data.length()").value(8));
+            .andExpect(jsonPath("$.data.length()").value(mentorSlots.size()));
     }
 
     @Test
     @DisplayName("멘토의 예약 가능한 슬롯 목록 조회(멘티) 성공")
     void getAvailableMentorSlotsSuccess() throws Exception {
         // 캘린더 기준 (월)
-        LocalDateTime startDate = LocalDateTime.of(2025, 8, 31, 0, 0);
-        LocalDateTime endDate = LocalDateTime.of(2025, 10, 5, 0, 0);
-
-        // 경계값
-        mentoringFixture.createMentorSlot(mentor, endDate.minusMinutes(1), endDate.plusMinutes(10));
-        mentoringFixture.createMentorSlot(mentor, startDate.minusMinutes(10), startDate);
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDateTime startDate = mentorSlots.getFirst().getStartDateTime();;
+        LocalDateTime endDate = mentorSlots.getLast().getEndDateTime();
 
         Member menteeMember = memberFixture.createMenteeMember();
         String token  = authTokenService.genAccessToken(menteeMember);
@@ -125,8 +119,8 @@ class MentorSlotControllerTest {
         ResultActions resultActions = mvc.perform(
                 get(MENTOR_SLOT_URL + "/available/" + mentor.getId())
                     .cookie(new Cookie(TOKEN, token))
-                    .param("startDate", startDate.format(formatter))
-                    .param("endDate", endDate.format(formatter))
+                    .param("startDate", startDate.toLocalDate().format(DateTimeFormatter.ISO_DATE))
+                    .param("endDate", endDate.toLocalDate().plusDays(1).format(DateTimeFormatter.ISO_DATE))
             )
             .andDo(print());
 
@@ -137,7 +131,7 @@ class MentorSlotControllerTest {
             .andExpect(jsonPath("$.resultCode").value("200"))
             .andExpect(jsonPath("$.msg").value("멘토의 예약 가능 일정 목록을 조회하였습니다."))
             .andExpect(jsonPath("$.data").isArray())
-            .andExpect(jsonPath("$.data.length()").value(8));
+            .andExpect(jsonPath("$.data.length()").value(mentorSlots.size()));
     }
 
 
@@ -175,8 +169,13 @@ class MentorSlotControllerTest {
     @Test
     @DisplayName("멘토 슬롯 생성 성공")
     void createMentorSlotSuccess() throws Exception {
-        String startDateTime = "2025-09-30T15:00:00";
-        String endDateTime = "2025-09-30T16:00:00";
+        LocalDateTime baseDateTime = LocalDateTime.of(
+            LocalDate.now().plusDays(2),
+            LocalTime.of(10, 0, 0)
+        ).truncatedTo(ChronoUnit.SECONDS);
+
+        String startDateTime = baseDateTime.format(formatter);
+        String endDateTime = baseDateTime.plusHours(1).format(formatter);
 
         ResultActions resultActions = performCreateMentorSlot(mentor.getId(), mentorToken, startDateTime, endDateTime)
             .andExpect(status().isCreated())
@@ -202,7 +201,15 @@ class MentorSlotControllerTest {
         Member menteeMember = memberFixture.createMenteeMember();
         String token  = authTokenService.genAccessToken(menteeMember);
 
-        performCreateMentorSlot(mentor.getId(), token, "2025-09-30T15:00:00", "2025-09-30T16:00:00")
+        LocalDateTime baseDateTime = LocalDateTime.of(
+            LocalDate.now().plusDays(2),
+            LocalTime.of(10, 0, 0)
+        ).truncatedTo(ChronoUnit.SECONDS);
+
+        String startDateTime = baseDateTime.format(formatter);
+        String endDateTime = baseDateTime.plusHours(1).format(formatter);
+
+        performCreateMentorSlot(mentor.getId(), token, startDateTime, endDateTime)
             .andExpect(status().isForbidden())
             .andExpect(jsonPath("$.resultCode").value("403-1"))
             .andExpect(jsonPath("$.msg").value("접근 권한이 없습니다."));
@@ -211,7 +218,15 @@ class MentorSlotControllerTest {
     @Test
     @DisplayName("멘토 슬롯 생성 실패 - 종료 일시가 시작 일시보다 빠른 경우")
     void createMentorSlotFailInValidDate() throws Exception {
-        performCreateMentorSlot(mentor.getId(), mentorToken, "2025-09-30T20:00:00", "2025-09-30T16:00:00")
+        LocalDateTime baseDateTime = LocalDateTime.of(
+            LocalDate.now().plusDays(2),
+            LocalTime.of(10, 0, 0)
+        ).truncatedTo(ChronoUnit.SECONDS);
+
+        String startDateTime = baseDateTime.format(formatter);
+        String endDateTime = baseDateTime.minusHours(1).format(formatter);
+
+        performCreateMentorSlot(mentor.getId(), mentorToken, startDateTime, endDateTime)
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.resultCode").value("400-4"))
             .andExpect(jsonPath("$.msg").value("종료 일시는 시작 일시보다 이후여야 합니다."));
@@ -222,15 +237,22 @@ class MentorSlotControllerTest {
     @Test
     @DisplayName("멘토 슬롯 반복 생성 성공")
     void createMentorSlotRepetitionSuccess() throws Exception {
+        LocalDate startDate = LocalDate.now().plusWeeks(1);
+        LocalDate endDate = startDate.plusMonths(1);
+
+
         String req = """
         {
-            "repeatStartDate": "2025-11-01",
-            "repeatEndDate": "2025-11-30",
+            "repeatStartDate": "%s",
+            "repeatEndDate": "%s",
             "daysOfWeek": ["MONDAY", "WEDNESDAY", "FRIDAY"],
             "startTime": "10:00:00",
             "endTime": "11:00:00"
         }
-        """;
+        """.formatted(
+            startDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+            endDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+        );
 
         long beforeCount = mentorSlotRepository.countByMentorId(mentor.getId());
 
@@ -245,16 +267,19 @@ class MentorSlotControllerTest {
             .andExpect(jsonPath("$.resultCode").value("201"))
             .andExpect(jsonPath("$.msg").value("반복 일정을 등록했습니다."));
 
-        // 11월 월/수/금 = 13개
         long afterCount = mentorSlotRepository.countByMentorId(mentor.getId());
-        assertThat(afterCount - beforeCount).isEqualTo(12);
+
+        // 월/수/금
+        long expectedCount = countDaysOfWeek(startDate, endDate,
+            Set.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY));
+        assertThat(afterCount - beforeCount).isEqualTo(expectedCount);
 
         List<MentorSlot> createdSlots = mentorSlotRepository.findMySlots(
             mentor.getId(),
-            LocalDateTime.of(2025, 11, 1, 0, 0),
-            LocalDateTime.of(2025, 12, 1, 0, 0)
+            startDate.atStartOfDay(),
+            endDate.plusDays(1).atStartOfDay()
         );
-        assertThat(createdSlots).hasSize(12);
+        assertThat(createdSlots).hasSize((int) expectedCount);
 
         // 모든 슬롯이 월/수/금인지 검증
         Set<DayOfWeek> actualDaysOfWeek = createdSlots.stream()
@@ -282,7 +307,6 @@ class MentorSlotControllerTest {
 
         ResultActions resultActions = performUpdateMentorSlot(mentor.getId(), mentorToken, mentorSlot, updateEndDate);
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
         String expectedEndDate = updateEndDate.format(formatter);
 
         resultActions
@@ -370,5 +394,11 @@ class MentorSlotControllerTest {
             .andDo(print())
             .andExpect(handler().handlerType(MentorSlotController.class))
             .andExpect(handler().methodName("deleteMentorSlot"));
+    }
+
+    private long countDaysOfWeek(LocalDate start, LocalDate end, Set<DayOfWeek> daysOfWeek) {
+        return start.datesUntil(end.plusDays(1))
+            .filter(date -> daysOfWeek.contains(date.getDayOfWeek()))
+            .count();
     }
 }

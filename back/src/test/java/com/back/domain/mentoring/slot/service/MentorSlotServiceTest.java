@@ -34,7 +34,9 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -83,15 +85,16 @@ class MentorSlotServiceTest {
         @DisplayName("조회 성공")
         void getMyMentorSlots() {
             // given
-            LocalDateTime startDate = LocalDateTime.of(2025, 10, 1, 0, 0);
-            LocalDateTime endDate = LocalDateTime.of(2025, 10, 31, 23, 59);
+            LocalDate  base = LocalDate.now().plusMonths(1);
+            LocalDateTime startDate = base.atStartOfDay();
+            LocalDateTime endDate = base.withDayOfMonth(base.lengthOfMonth()).atTime(23, 59);
 
             MentorSlot slot2 = MentorSlotFixture.create(2L, mentor1,
-                LocalDateTime.of(2025, 10, 2, 10, 0),
-                LocalDateTime.of(2025, 10, 2, 12, 0));
+                base.withDayOfMonth(2).atTime(10, 0),
+                base.withDayOfMonth(2).atTime(11, 0));
             MentorSlot slot3 = MentorSlotFixture.create(3L, mentor1,
-                LocalDateTime.of(2025, 10, 3, 14, 0),
-                LocalDateTime.of(2025, 10, 3, 16, 0));
+                    base.withDayOfMonth(15).atTime(14, 0),
+                    base.withDayOfMonth(15).atTime(15, 0));
 
             List<MentorSlot> slots = List.of(mentorSlot1, slot2, slot3);
 
@@ -110,8 +113,9 @@ class MentorSlotServiceTest {
         @DisplayName("조회 결과 없을 시 빈 리스트 반환")
         void returnEmptyList() {
             // given
-            LocalDateTime startDate = LocalDateTime.of(2025, 11, 1, 0, 0);
-            LocalDateTime endDate = LocalDateTime.of(2025, 11, 30, 23, 59);
+            LocalDate  base = LocalDate.now().minusMonths(2);
+            LocalDateTime startDate = base.atStartOfDay();
+            LocalDateTime endDate = base.withDayOfMonth(base.lengthOfMonth()).atTime(23, 59);
 
             when(mentorSlotRepository.findMySlots(mentor1.getId(), startDate, endDate))
                 .thenReturn(List.of());
@@ -133,12 +137,13 @@ class MentorSlotServiceTest {
         @DisplayName("조회 성공")
         void getAvailableMentorSlots() {
             // given
-            LocalDateTime startDate = LocalDateTime.of(2025, 10, 1, 0, 0);
-            LocalDateTime endDate = LocalDateTime.of(2025, 10, 31, 23, 59);
+            LocalDate  base = LocalDate.now().plusMonths(1);
+            LocalDateTime startDate = base.atStartOfDay();
+            LocalDateTime endDate = base.withDayOfMonth(base.lengthOfMonth()).atTime(23, 59);
 
             MentorSlot slot2 = MentorSlotFixture.create(2L, mentor1,
-                LocalDateTime.of(2025, 10, 2, 10, 0),
-                LocalDateTime.of(2025, 10, 2, 12, 0));
+                base.withDayOfMonth(2).atTime(10, 0),
+                base.withDayOfMonth(2).atTime(11, 0));
 
             List<MentorSlot> availableSlots = List.of(mentorSlot1, slot2);
 
@@ -189,10 +194,15 @@ class MentorSlotServiceTest {
 
         @BeforeEach
         void setUp() {
+            LocalDateTime baseDateTime = LocalDateTime.of(
+                LocalDate.now().plusWeeks(1),
+                LocalTime.of(10, 0, 0)
+            ).truncatedTo(ChronoUnit.SECONDS);
+
             request = new MentorSlotRequest(
                 mentor1.getId(),
-                LocalDateTime.of(2025, 10, 5, 10, 0),
-                LocalDateTime.of(2025, 10, 5, 12, 0)
+                baseDateTime,
+                baseDateTime.plusHours(2)
             );
         }
 
@@ -249,10 +259,14 @@ class MentorSlotServiceTest {
         @DisplayName("반복 생성 성공")
         void createMentorSlotRepetition() {
             // given
+            LocalDate startDate = LocalDate.now().plusWeeks(1);
+            LocalDate endDate = startDate.plusMonths(1);
+            List<DayOfWeek> repeatDays = List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY);
+
             MentorSlotRepetitionRequest request = new MentorSlotRepetitionRequest(
-                LocalDate.of(2025, 11, 1),
-                LocalDate.of(2025, 11, 30),
-                List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
+                startDate,
+                endDate,
+                repeatDays,
                 LocalTime.of(10, 0),
                 LocalTime.of(11, 0)
             );
@@ -268,20 +282,19 @@ class MentorSlotServiceTest {
                 List<MentorSlot> slotList = new ArrayList<>();
                 slots.forEach(slotList::add);
 
-                // 개수 검증
-                if (slotList.size() != 12) {
-                    return false;
-                }
+                // 개수 검증: startDate ~ endDate 사이 repeatDays가 몇 번 나오는지 계산
+                long expectedCount = startDate.datesUntil(endDate.plusDays(1))
+                    .filter(d -> repeatDays.contains(d.getDayOfWeek()))
+                    .count();
+                if (slotList.size() != expectedCount) return false;
 
                 // 요일 검증
                 Set<DayOfWeek> daysOfWeek = slotList.stream()
                     .map(slot -> slot.getStartDateTime().getDayOfWeek())
                     .collect(Collectors.toSet());
-                if (!daysOfWeek.equals(Set.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY))) {
-                    return false;
-                }
+                if (!daysOfWeek.equals(new HashSet<>(repeatDays))) return false;
 
-                // 시간 검증
+                // 시간, 멘토 검증
                 return slotList.stream().allMatch(slot ->
                     slot.getStartDateTime().toLocalTime().equals(LocalTime.of(10, 0)) &&
                         slot.getEndDateTime().toLocalTime().equals(LocalTime.of(11, 0)) &&
@@ -294,9 +307,12 @@ class MentorSlotServiceTest {
         @DisplayName("반복 생성 중 겹치는 슬롯 있으면 예외")
         void throwExceptionWhenOverlapping() {
             // given
+            LocalDate startDate = LocalDate.now().plusWeeks(1);
+            LocalDate endDate = startDate.plusDays(6);
+
             MentorSlotRepetitionRequest request = new MentorSlotRepetitionRequest(
-                LocalDate.of(2025, 11, 1),
-                LocalDate.of(2025, 11, 7),
+                startDate,
+                endDate,
                 List.of(DayOfWeek.MONDAY),
                 LocalTime.of(10, 0),
                 LocalTime.of(11, 0)
@@ -320,10 +336,15 @@ class MentorSlotServiceTest {
 
         @BeforeEach
         void setUp() {
+            LocalDateTime baseDateTime = LocalDateTime.of(
+                LocalDate.now().plusDays(2),
+                LocalTime.of(10, 0, 0)
+            ).truncatedTo(ChronoUnit.SECONDS);
+
             request = new MentorSlotRequest(
                 mentor1.getId(),
-                LocalDateTime.of(2025, 10, 1, 14, 0),
-                LocalDateTime.of(2025, 10, 1, 15, 30)
+                baseDateTime,
+                baseDateTime.plusHours(1)
             );
         }
 

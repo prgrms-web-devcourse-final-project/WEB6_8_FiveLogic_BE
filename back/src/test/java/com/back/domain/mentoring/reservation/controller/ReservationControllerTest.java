@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -78,6 +79,8 @@ class ReservationControllerTest {
             .orElseThrow(() -> new ServiceException(ReservationErrorCode.NOT_FOUND_RESERVATION));
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        String expectedStart = mentorSlot.getStartDateTime().truncatedTo(ChronoUnit.SECONDS).format(formatter);
+        String expectedEnd = mentorSlot.getEndDateTime().truncatedTo(ChronoUnit.SECONDS).format(formatter);
 
         resultActions
             .andExpect(status().isCreated())
@@ -87,8 +90,8 @@ class ReservationControllerTest {
             .andExpect(jsonPath("$.data.reservation.status").value("PENDING"))
             .andExpect(jsonPath("$.data.reservation.preQuestion").value(reservation.getPreQuestion()))
             .andExpect(jsonPath("$.data.reservation.mentorSlotId").value(mentorSlot.getId()))
-            .andExpect(jsonPath("$.data.reservation.startDateTime").value(mentorSlot.getStartDateTime().format(formatter)))
-            .andExpect(jsonPath("$.data.reservation.endDateTime").value(mentorSlot.getEndDateTime().format(formatter)));
+            .andExpect(jsonPath("$.data.reservation.startDateTime").value(expectedStart))
+            .andExpect(jsonPath("$.data.reservation.endDateTime").value(expectedEnd));
     }
 
 

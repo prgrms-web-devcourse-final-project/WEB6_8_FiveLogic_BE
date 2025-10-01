@@ -309,8 +309,9 @@ class MentoringControllerTest {
     @DisplayName("멘토링 삭제 성공 - 멘토 슬롯이 있는 경우")
     void deleteMentoringSuccessExistsMentorSlot() throws Exception {
         Mentoring mentoring = mentoringFixture.createMentoring(mentor);
-        LocalDateTime baseDateTime = LocalDateTime.of(2025, 10, 1, 10, 0);
-        mentoringFixture.createMentorSlots(mentor, baseDateTime, 3, 2);
+
+        LocalDateTime baseDateTime = LocalDateTime.now().plusMonths(3);
+        mentoringFixture.createMentorSlots(mentor, baseDateTime, 3, 2, 30L);
 
         long preMentoringCnt = mentoringRepository.count();
         long preSlotCnt = mentorSlotRepository.count();
