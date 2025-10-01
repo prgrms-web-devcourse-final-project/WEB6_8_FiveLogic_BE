@@ -1,5 +1,6 @@
 package com.back.domain.mentoring.reservation.entity;
 
+import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
@@ -14,6 +15,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(
+    name = "reservation",
+    indexes = {
+        @Index(name = "idx_reservation_mentor", columnList = "mentor_id"),
+        @Index(name = "idx_reservation_mentee", columnList = "mentee_id")
+    }
+)
 @Getter
 @NoArgsConstructor
 public class Reservation extends BaseEntity {
@@ -86,15 +94,10 @@ public class Reservation extends BaseEntity {
         updateStatus(ReservationStatus.REJECTED);
     }
 
-    public void cancel(Mentor mentor) {
-        ensureMentor(mentor);
-        ensureCanCancel();
-        ensureNotPast();
-        updateStatus(ReservationStatus.CANCELED);
-    }
-
-    public void cancel(Mentee mentee) {
-        ensureMentee(mentee);
+    public void cancel(Member member) {
+        if (!mentor.isMember(member) && !mentee.isMember(member) ) {
+            throw new ServiceException(ReservationErrorCode.FORBIDDEN_NOT_PARTICIPANT);
+        }
         ensureCanCancel();
         ensureNotPast();
         updateStatus(ReservationStatus.CANCELED);
@@ -111,12 +114,6 @@ public class Reservation extends BaseEntity {
     private void ensureMentor(Mentor mentor) {
         if (!isMentor(mentor)) {
             throw new ServiceException(ReservationErrorCode.FORBIDDEN_NOT_MENTOR);
-        }
-    }
-
-    private void ensureMentee(Mentee mentee) {
-        if (!isMentee(mentee)) {
-            throw new ServiceException(ReservationErrorCode.FORBIDDEN_NOT_MENTEE);
         }
     }
 

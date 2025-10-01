@@ -1,10 +1,7 @@
 package com.back.domain.post.post.service;
 
 import com.back.domain.member.member.entity.Member;
-import com.back.domain.post.post.dto.PostAllResponse;
-import com.back.domain.post.post.dto.PostCreateRequest;
-import com.back.domain.post.post.dto.PostDto;
-import com.back.domain.post.post.dto.PostSingleResponse;
+import com.back.domain.post.post.dto.*;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.repository.PostRepository;
 import com.back.global.exception.ServiceException;
@@ -34,7 +31,7 @@ public class PostService {
 
     @Transactional
     public Post createPost(PostCreateRequest postCreateRequest, Member member) {
-        String postTypeStr = postCreateRequest.getPostType();
+        String postTypeStr = postCreateRequest.postType();
         Post.validPostType(postTypeStr);
         Post.PostType postType = Post.PostType.valueOf(postTypeStr);
 
@@ -43,19 +40,17 @@ public class PostService {
             throw new ServiceException("400", "실무 경험 공유 게시글은 멘토만 작성할 수 있습니다.");
         }
 
-//        if( postType == Post.PostType.PRACTICEPOST ) {
-//            if(member.getCareer() == null || member.getCareer().isEmpty()) {
-//                throw new ServiceException("400", "멘토는 경력을 입력해야 실무 경험 공유 게시글을 작성할 수 있습니다.");
-//            }
-//        }
-
         Post post = Post.builder()
-                .title(postCreateRequest.getTitle())
-                .content(postCreateRequest.getContent())
+                .title(postCreateRequest.title())
+                .content(postCreateRequest.content())
                 .member(member)
                 .postType(postType)
                 .build();
 
+
+        if(postType == Post.PostType.PRACTICEPOST) {
+            post.updateJob(postCreateRequest.job());
+        }
 
         // PostType이 QUESTIONPOST인 경우 isResolve를 false로 초기화
         if(postType == Post.PostType.QUESTIONPOST) {
@@ -66,6 +61,7 @@ public class PostService {
 
         return post;
     }
+
 
     @Transactional
     public void removePost(Long postId, Member member) {
@@ -80,16 +76,16 @@ public class PostService {
         Post post = findById(postId);
         if (!post.isAuthor(member)) throw new ServiceException("400", "수정 권한이 없습니다.");
 
-        if ( postCreateRequest.getTitle() == null || postCreateRequest.getTitle().isBlank()) {
+        if ( postCreateRequest.title() == null || postCreateRequest.title().isBlank()) {
             throw new ServiceException("400", "제목을 입력해주세요.");
         }
 
-        if ( postCreateRequest.getContent() == null || postCreateRequest.getContent().isBlank()) {
+        if ( postCreateRequest.content() == null || postCreateRequest.content().isBlank()) {
             throw new ServiceException("400", "내용을 입력해주세요.");
         }
 
-        post.updateTitle(postCreateRequest.getTitle());
-        post.updateContent(postCreateRequest.getContent());
+        post.updateTitle(postCreateRequest.title());
+        post.updateContent(postCreateRequest.content());
 
         postRepository.save(post);
     }
@@ -117,13 +113,13 @@ public class PostService {
     public PostSingleResponse makePostSingleResponse(Long postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
 
-        PostSingleResponse postSingleResponse = new PostSingleResponse(post);
+        PostSingleResponse postSingleResponse = PostSingleResponse.from(post);
         return postSingleResponse;
     }
 
     public List<PostAllResponse> getAllPostResponse() {
         return postRepository.findAllWithMember().stream()
-                .map(PostAllResponse::new)
+                .map(PostAllResponse::from)
                 .toList();
     }
 

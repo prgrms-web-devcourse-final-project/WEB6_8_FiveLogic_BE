@@ -10,8 +10,6 @@ import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
-
 @Component
 @RequiredArgsConstructor
 public class MemberStorage {
@@ -28,9 +26,6 @@ public class MemberStorage {
     public Mentor findMentorByMemberId(Long memberId) {
         return mentorRepository.findByMemberIdWithMember(memberId)
             .orElseThrow(() -> new ServiceException(MemberErrorCode.NOT_FOUND_MENTOR));
-    }
-    public Optional<Mentor> findMentorByMemberOptional(Member member) {
-        return mentorRepository.findByMemberIdWithMember(member.getId());
     }
 
     public Mentee findMenteeByMember(Member member) {
