@@ -73,6 +73,31 @@ class ReviewServiceTest {
     }
 
     @Nested
+    @DisplayName("멘토링 리뷰 조회")
+    class Describe_getReview {
+
+        @Test
+        @DisplayName("리뷰 조회")
+        void getReview() {
+            // given
+            Review review = ReviewFixture.create(1L, reservation, mentee);
+            when(reviewRepository.findById(review.getId()))
+                .thenReturn(Optional.of(review));
+
+            // when
+            ReviewResponse response = reviewService.getReview(review.getId());
+
+            // then
+            assertThat(response.reviewId()).isEqualTo(review.getId());
+            assertThat(response.rating()).isEqualTo(review.getRating());
+            assertThat(response.content()).isEqualTo(review.getContent());
+            assertThat(response.menteeId()).isEqualTo(mentee.getId());
+
+            verify(reviewRepository).findById(review.getId());
+        }
+    }
+
+    @Nested
     @DisplayName("멘토링 리뷰 생성")
     class Describe_createReview {
 

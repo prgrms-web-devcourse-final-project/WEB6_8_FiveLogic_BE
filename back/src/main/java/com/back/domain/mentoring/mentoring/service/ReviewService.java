@@ -20,6 +20,13 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final MentoringStorage mentoringStorage;
 
+    @Transactional(readOnly = true)
+    public ReviewResponse getReview(Long reviewId) {
+        Review review = findReview(reviewId);
+
+        return ReviewResponse.from(review);
+    }
+
     @Transactional
     public ReviewResponse createReview(Long reservationId, ReviewRequest reqDto, Mentee mentee) {
         Reservation reservation = mentoringStorage.findReservation(reservationId);

@@ -22,6 +22,20 @@ public class ReviewController {
     private final MemberStorage memberStorage;
     private final ReviewService reviewService;
 
+    @GetMapping("/reviews/{reviewId}")
+    @Operation(summary = "멘토링 리뷰 조회", description = "멘토링 리뷰를 조회합니다.")
+    public RsData<ReviewResponse> getReview(
+        @PathVariable Long reviewId
+    ) {
+        ReviewResponse resDto = reviewService.getReview(reviewId);
+
+        return new RsData<>(
+            "200",
+            "멘토링 리뷰를 조회하였습니다.",
+            resDto
+        );
+    }
+
     @PostMapping("/reservations/{reservationId}/reviews")
     @PreAuthorize("hasRole('MENTEE')")
     @Operation(summary = "멘토링 리뷰 작성", description = "멘토링 리뷰를 작성합니다.")
