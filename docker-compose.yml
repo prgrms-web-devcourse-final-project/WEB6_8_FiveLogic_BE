@@ -70,15 +70,13 @@ services:
       - app-network
 
   spring-boot:
-    # ✅ GHCR 이미지
-    image: ghcr.io/your-github-username/fivelogic:latest
+    image: ghcr.io/prgms-web-devcourse-final-project/fivelogic:latest
     container_name: spring-boot
     depends_on:
       - kafka
     ports:
       - "8080:8080"
     environment:
-      # ✅ 프로파일만! 나머지는 application-prod.yml에서
       - SPRING_PROFILES_ACTIVE=prod
     networks:
       - app-network
