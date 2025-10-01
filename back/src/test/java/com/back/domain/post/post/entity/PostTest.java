@@ -259,7 +259,7 @@ class PostTest {
             String authorName = post.getAuthorName();
 
             // then
-            assertThat(authorName).isEqualTo("Author Name");
+            assertThat(authorName).isEqualTo("Test Nickname");
         }
     }
 

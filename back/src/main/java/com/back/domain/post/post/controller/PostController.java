@@ -40,7 +40,7 @@ public class PostController {
         return new RsData<>("200", "게시글이 조회 되었습니다.", resDto);
     }
 
-    @Operation(summary = "게시글 생성")
+    @Operation(summary = "게시글 생성 ")
     @PostMapping
     public RsData<PostCreateResponse> createPost(
             @Valid @RequestBody PostCreateRequest postCreateRequest
@@ -93,28 +93,13 @@ public class PostController {
 
     @Operation(summary = "게시글 좋아요")
     @PostMapping("/{post_id}/liked")
-    public RsData<Void> likePost(@PathVariable Long post_id) {
+    public RsData<PostLikedResponse> likePost(@PathVariable Long post_id) {
         postLikeService.likePost(post_id);
 
-        return new RsData<>("200", "게시글 좋아요 성공", null);
-    }
-
-    @Operation(summary = "게시글 좋아요 (Show)")
-    @GetMapping("/{post_id}/liked")
-    public RsData<PostLikedResponse> getLike(@PathVariable Long post_id) {
         int likeCount = postLikeService.getLikeCount(post_id);
         PostLikedResponse postLikedResponse = new PostLikedResponse(likeCount);
 
-        return new RsData<>("200", "게시글 좋아요 조회 성공", postLikedResponse);
-    }
-
-    @Operation(summary = "게시글 싫어요 (Show)")
-    @GetMapping("/{post_id}/disliked")
-    public RsData<PostLikedResponse> getDisLike(@PathVariable Long post_id) {
-        int likeCount = postLikeService.getDisLikeCount(post_id);
-        PostLikedResponse postLikedResponse = new PostLikedResponse(likeCount);
-
-        return new RsData<>("200", "게시글 싫어요 조회 성공", postLikedResponse);
+        return new RsData<>("200", "게시글 좋아요 성공", postLikedResponse);
     }
 
     @Operation(summary = "게시글 싫어요")
@@ -122,12 +107,15 @@ public class PostController {
     public RsData<PostLikedResponse> disLikePost(@PathVariable Long post_id) {
         postLikeService.disLikePost(post_id);
 
-        return new RsData<>("200", "게시글 싫어요 성공", null);
+        int likeCount = postLikeService.getDisLikeCount(post_id);
+        PostLikedResponse postLikedResponse = new PostLikedResponse(likeCount);
+
+        return new RsData<>("200", "게시글 싫어요 성공", postLikedResponse);
     }
 
 
     @Operation(summary = "게시글 상세페이지")
-    @GetMapping("/Detail/{post_id}")
+    @GetMapping("/detail/{post_id}")
     public RsData<PostDetailResponse> getPostDetail(@PathVariable Long post_id) {
 
         PostDetailResponse response = postDetailFacade.getDetailWithViewIncrement(post_id);

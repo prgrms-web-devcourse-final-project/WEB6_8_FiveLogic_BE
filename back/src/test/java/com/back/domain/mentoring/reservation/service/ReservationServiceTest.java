@@ -6,6 +6,7 @@ import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.service.MentoringStorage;
 import com.back.domain.mentoring.reservation.constant.ReservationStatus;
+import com.back.domain.mentoring.reservation.dto.ReservationDto;
 import com.back.domain.mentoring.reservation.dto.request.ReservationRequest;
 import com.back.domain.mentoring.reservation.dto.response.ReservationResponse;
 import com.back.domain.mentoring.reservation.entity.Reservation;
@@ -29,6 +30,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
@@ -61,19 +66,97 @@ class ReservationServiceTest {
 
     @BeforeEach
     void setUp() {
-        Member mentorMember = MemberFixture.create("mentor@test.com", "Mentor", "pass123");
+        Member mentorMember = MemberFixture.create(1L, "mentor@test.com", "Mentor", "pass123", Member.Role.MENTOR);
         mentor = MentorFixture.create(1L, mentorMember);
 
-        Member menteeMember = MemberFixture.create("mentee@test.com", "Mentee", "pass123");
+        Member menteeMember = MemberFixture.create(2L, "mentee@test.com", "Mentee", "pass123", Member.Role.MENTEE);
         mentee = MenteeFixture.create(1L, menteeMember);
 
-        Member menteeMember2 = MemberFixture.create("mentee2@test.com", "Mentee2", "pass123");
+        Member menteeMember2 = MemberFixture.create(3L, "mentee2@test.com", "Mentee2", "pass123", Member.Role.MENTEE);
         mentee2 = MenteeFixture.create(2L, menteeMember2);
 
         mentoring = MentoringFixture.create(1L, mentor);
         mentorSlot = MentorSlotFixture.create(1L, mentor);
         mentorSlot2 = MentorSlotFixture.create(2L, mentor);
         reservation = ReservationFixture.create(1L, mentoring, mentee, mentorSlot2);
+    }
+
+    @Nested
+    @DisplayName("멘토링 예약 목록 조회")
+    class Describe_getReservations {
+
+        @Test
+        void getReservations() {
+            // given
+            int page = 1;
+            int size = 5;
+            Pageable pageable = PageRequest.of(page, size);
+
+            Page<Reservation> reservationPage = new PageImpl<>(
+                List.of(reservation),
+                pageable,
+                10
+            );
+
+            when(reservationRepository.findAllByMentorMember(mentor.getMember(), pageable))
+                .thenReturn(reservationPage);
+
+            // when
+            Page<ReservationDto> result = reservationService.getReservations(
+                mentor.getMember(),
+                page,
+                size
+            );
+
+            // then
+            assertThat(result.getNumber()).isEqualTo(1);
+            assertThat(result.getSize()).isEqualTo(5);
+            assertThat(result.getTotalElements()).isEqualTo(10);
+            assertThat(result.getTotalPages()).isEqualTo(2);
+            verify(reservationRepository).findAllByMentorMember(mentor.getMember(), pageable);
+        }
+    }
+
+    @Nested
+    @DisplayName("멘토링 예약 조회")
+    class Describe_getReservation {
+
+        @Test
+        void getReservation() {
+            // given
+            Long reservationId = reservation.getId();
+
+            when(reservationRepository.findByIdAndMember(reservationId, mentor.getMember()))
+                .thenReturn(Optional.of(reservation));
+
+            // when
+            ReservationResponse response = reservationService.getReservation(
+                mentor.getMember(),
+                reservationId
+            );
+
+            // then
+            assertThat(response).isNotNull();
+            assertThat(response.mentoring().mentoringId()).isEqualTo(mentoring.getId());
+            assertThat(response.mentee().menteeId()).isEqualTo(mentee.getId());
+            assertThat(response.mentor().mentorId()).isEqualTo(mentor.getId());
+            assertThat(response.reservation().mentorSlotId()).isEqualTo(mentorSlot2.getId());
+            verify(reservationRepository).findByIdAndMember(reservationId, mentor.getMember());
+        }
+
+        @Test
+        @DisplayName("권한이 없을 경우 예외")
+        void getReservation_notAccessible() {
+            // given
+            when(reservationRepository.findByIdAndMember(reservation.getId(), mentee2.getMember()))
+                .thenReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> reservationService.getReservation(mentee2.getMember(), reservation.getId()))
+                .isInstanceOf(ServiceException.class)
+                .hasFieldOrPropertyWithValue("resultCode",
+                    ReservationErrorCode.RESERVATION_NOT_ACCESSIBLE.getCode());
+        }
     }
 
     @Nested
@@ -339,7 +422,7 @@ class ReservationServiceTest {
                 .thenReturn(reservation);
 
             // when
-            ReservationResponse result = reservationService.cancelReservation(mentor, reservation.getId());
+            ReservationResponse result = reservationService.cancelReservation(mentor.getMember(), reservation.getId());
 
             // then
             assertThat(result.reservation().status()).isEqualTo(ReservationStatus.CANCELED);
@@ -353,7 +436,7 @@ class ReservationServiceTest {
                 .thenReturn(reservation);
 
             // when
-            ReservationResponse result = reservationService.cancelReservation(mentee, reservation.getId());
+            ReservationResponse result = reservationService.cancelReservation(mentee.getMember(), reservation.getId());
 
             // then
             assertThat(result.reservation().status()).isEqualTo(ReservationStatus.CANCELED);
@@ -376,7 +459,7 @@ class ReservationServiceTest {
                 .thenReturn(completedReservation);
 
             // when & then
-            assertThatThrownBy(() -> reservationService.cancelReservation(mentor, completedReservation.getId()))
+            assertThatThrownBy(() -> reservationService.cancelReservation(mentor.getMember(), completedReservation.getId()))
                 .isInstanceOf(ServiceException.class)
                 .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.CANNOT_CANCEL.getCode());
         }
@@ -391,9 +474,9 @@ class ReservationServiceTest {
                 .thenReturn(reservation);
 
             // when & then
-            assertThatThrownBy(() -> reservationService.cancelReservation(anotherMentor, reservation.getId()))
+            assertThatThrownBy(() -> reservationService.cancelReservation(anotherMentor.getMember(), reservation.getId()))
                 .isInstanceOf(ServiceException.class)
-                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.FORBIDDEN_NOT_MENTOR.getCode());
+                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.FORBIDDEN_NOT_PARTICIPANT.getCode());
         }
 
         @Test
@@ -404,9 +487,9 @@ class ReservationServiceTest {
                 .thenReturn(reservation);
 
             // when & then
-            assertThatThrownBy(() -> reservationService.cancelReservation(mentee2, reservation.getId()))
+            assertThatThrownBy(() -> reservationService.cancelReservation(mentee2.getMember(), reservation.getId()))
                 .isInstanceOf(ServiceException.class)
-                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.FORBIDDEN_NOT_MENTEE.getCode());
+                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.FORBIDDEN_NOT_PARTICIPANT.getCode());
         }
     }
 }

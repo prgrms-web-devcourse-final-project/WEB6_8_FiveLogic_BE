@@ -43,4 +43,8 @@ public class Mentor extends BaseEntity {
     public void delete() {
         this.isDeleted = true;
     }
+
+    public boolean isMember(Member member) {
+        return this.member.equals(member);
+    }
 }

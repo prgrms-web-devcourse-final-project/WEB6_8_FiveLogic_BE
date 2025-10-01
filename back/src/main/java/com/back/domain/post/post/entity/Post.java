@@ -42,7 +42,7 @@ public class Post extends BaseEntity {
     private int viewCount;
 
     private Boolean isMento;
-    private String career;
+    private String job;
 
     private Boolean isResolve;
 
@@ -74,7 +74,7 @@ public class Post extends BaseEntity {
     }
 
     public String getAuthorName() {
-        return member.getName();
+        return member.getNickname();
     }
 
 
@@ -106,5 +106,12 @@ public class Post extends BaseEntity {
 
     public void updateResolveStatus(Boolean isResolve) {
         this.isResolve = isResolve;
+    }
+
+    public void updateJob(String job) {
+        if (job == null || job.isBlank()) {
+            throw new ServiceException("400", "직업은 null이거나 공백일 수 없습니다.");
+        }
+        this.job = job;
     }
 }
