@@ -1,0 +1,219 @@
+name: Deploy to EC2
+
+env:
+  IMAGE_REPOSITORY: fivelogic
+  CONTAINER_NAME: spring-boot
+  EC2_INSTANCE_TAG_NAME: devcos-team10-main
+  DOCKER_NETWORK: app-network
+  BACKEND_DIR: back
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Java 21 설정
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: 테스트 실행
+        run: |
+          cd back
+          chmod +x gradlew
+          ./gradlew test
+
+      - name: 테스트 결과 업로드
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: back/build/reports/tests/test/
+
+  makeTagAndRelease:
+    needs: test
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/chore/107') && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.create_tag.outputs.new_tag }}
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Create Tag
+        id: create_tag
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.create_tag.outputs.new_tag }}
+          release_name: Release ${{ steps.create_tag.outputs.new_tag }}
+          body: ${{ steps.create_tag.outputs.changelog }}
+          draft: false
+          prerelease: false
+
+  buildImageAndPush:
+    name: 도커 이미지 빌드와 푸시
+    needs: makeTagAndRelease
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: .env 파일 생성
+        env:
+          DOT_ENV: ${{ secrets.DOT_ENV }}
+        run: |
+          mkdir -p "${{ env.BACKEND_DIR }}"
+          printf "%s" "${DOT_ENV}" > "${{ env.BACKEND_DIR }}/.env"
+
+      - name: Docker Buildx 설치
+        uses: docker/setup-buildx-action@v3
+
+      - name: 레지스트리 로그인
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: set lower case owner name
+        run: |
+          echo "OWNER_LC=${OWNER,,}" >> "${GITHUB_ENV}"
+        env:
+          OWNER: "${{ github.repository_owner }}"
+
+      - name: 빌드 앤 푸시
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.BACKEND_DIR }}
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            ghcr.io/${{ env.OWNER_LC }}/${{ env.IMAGE_REPOSITORY }}:${{ needs.makeTagAndRelease.outputs.tag_name }}
+            ghcr.io/${{ env.OWNER_LC }}/${{ env.IMAGE_REPOSITORY }}:latest
+
+  deploy:
+    name: 배포
+    needs: [makeTagAndRelease, buildImageAndPush]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: AWS 자격 구성
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: 인스턴스 ID 가져오기
+        run: |
+          INSTANCE_ID=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=${{ env.EC2_INSTANCE_TAG_NAME }}" "Name=instance-state-name,Values=running" \
+            --query "Reservations[].Instances[].InstanceId" --output text)
+          
+          if [[ -z "${INSTANCE_ID}" || "${INSTANCE_ID}" == "None" ]]; then
+            echo "❌ 실행 중인 EC2 인스턴스를 찾을 수 없습니다."
+            exit 1
+          fi
+          
+          echo "✅ EC2 인스턴스 발견: ${INSTANCE_ID}"
+          echo "INSTANCE_ID=${INSTANCE_ID}" >> "${GITHUB_ENV}"
+
+      - name: AWS SSM Send-Command로 배포
+        uses: peterkimzz/aws-ssm-send-command@master
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          instance-ids: ${{ env.INSTANCE_ID }}
+          working-directory: /home/ssm-user
+          comment: Deploy Spring Boot Application
+          command: |
+            set -Eeuo pipefail
+
+            LOG="/tmp/deploy-$(date +%Y%m%d_%H%M%S).log"
+            exec > >(awk '{ fflush(); print strftime("[%Y-%m-%d %H:%M:%S]"), $0 }' | tee -a "$LOG")
+            exec 2> >(awk '{ fflush(); print strftime("[%Y-%m-%d %H:%M:%S]"), $0 }' | tee -a "$LOG" >&2)
+
+            echo "🚀 배포 시작..."
+
+            source /etc/environment || true
+
+            OWNER_LC="${{ github.repository_owner }}"
+            OWNER_LC="${OWNER_LC,,}"
+            IMAGE_TAG='${{ needs.makeTagAndRelease.outputs.tag_name }}'
+            IMAGE_REPOSITORY='${{ env.IMAGE_REPOSITORY }}'
+            IMAGE="ghcr.io/${OWNER_LC}/${IMAGE_REPOSITORY}:${IMAGE_TAG}"
+            CONTAINER_NAME="${{ env.CONTAINER_NAME }}"
+
+            echo "📦 이미지: ${IMAGE}"
+            echo "📦 컨테이너: ${CONTAINER_NAME}"
+
+            cd /home/ssm-user/WEB6_8_FiveLogic_BE || exit 1
+
+            echo "📥 Docker 이미지 다운로드 중..."
+            docker pull $IMAGE
+
+            echo "🛑 기존 컨테이너 중지 중..."
+            docker-compose stop $CONTAINER_NAME || true
+            docker-compose rm -f $CONTAINER_NAME || true
+
+            sed -i "s|image:.*${IMAGE_REPOSITORY}.*|image: ${IMAGE}|g" docker-compose.yml
+
+            echo "🚀 새 컨테이너 시작 중..."
+            docker-compose up -d $CONTAINER_NAME
+
+            echo "🏥 헬스체크 중..."
+            for i in {1..30}; do
+              if docker exec $CONTAINER_NAME curl -f http://localhost:8080/health > /dev/null 2>&1; then
+                echo "✅ 서버 정상 구동!"
+                break
+              fi
+              echo "대기 중... ($i/30)"
+              sleep 2
+            done
+
+            echo "📊 컨테이너 상태:"
+            docker-compose ps $CONTAINER_NAME
+
+            echo "📋 최근 로그:"
+            docker-compose logs --tail=50 $CONTAINER_NAME
+
+            echo "🧹 오래된 이미지 정리 중..."
+            {
+              docker images --format '{{.Repository}}:{{.Tag}}' \
+                | grep -F "ghcr.io/${OWNER_LC}/${IMAGE_REPOSITORY}:" \
+                | grep -v -F ":${IMAGE_TAG}" \
+                | grep -v -F ":latest" \
+                | xargs -r docker rmi
+            } || true
+
+            echo "✅ 배포 완료!"
