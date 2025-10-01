@@ -144,8 +144,8 @@ class PostCommentServiceTest {
             PostComment comment = createComment(author, post, "삭제할 댓글");
             Long postId = 1L;
             Long commentId = 1L;
-            CommentDeleteRequest request = new CommentDeleteRequest();
-            request.setCommentId(commentId);
+            CommentDeleteRequest request = new CommentDeleteRequest(commentId);
+
 
             when(postRepository.existsById(postId)).thenReturn(true);
             when(postCommentRepository.findById(commentId)).thenReturn(Optional.of(comment));
@@ -167,8 +167,8 @@ class PostCommentServiceTest {
             PostComment comment = createComment(author, post, "삭제할 댓글");
             Long postId = 1L;
             Long commentId = 1L;
-            CommentDeleteRequest request = new CommentDeleteRequest();
-            request.setCommentId(commentId);
+            CommentDeleteRequest request = new CommentDeleteRequest(commentId);
+
 
             when(postRepository.existsById(postId)).thenReturn(true);
             when(postCommentRepository.findById(commentId)).thenReturn(Optional.of(comment));
@@ -188,8 +188,7 @@ class PostCommentServiceTest {
             Member member = MemberFixture.createDefault();
             Long postId = 1L;
             Long commentId = 999L;
-            CommentDeleteRequest request = new CommentDeleteRequest();
-            request.setCommentId(commentId);
+            CommentDeleteRequest request = new CommentDeleteRequest(commentId);
 
             when(postRepository.existsById(postId)).thenReturn(true);
             when(postCommentRepository.findById(commentId)).thenReturn(Optional.empty());

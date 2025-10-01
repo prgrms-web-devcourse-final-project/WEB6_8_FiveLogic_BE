@@ -55,7 +55,7 @@ public class PostCommentService {
     public void removePostComment(Long postId, CommentDeleteRequest commentDeleteRequest, Member member) {
         validatePostExists(postId);
 
-        PostComment postComment = getPostCommentById(commentDeleteRequest.getCommentId());
+        PostComment postComment = getPostCommentById(commentDeleteRequest.commentId());
         Member author = postComment.getMember();
 
 
