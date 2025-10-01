@@ -1,5 +1,6 @@
 package com.back.domain.mentoring.reservation.repository;
 
+import com.back.domain.member.member.entity.Member;
 import com.back.domain.mentoring.reservation.constant.ReservationStatus;
 import com.back.domain.mentoring.reservation.entity.Reservation;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,12 +18,12 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         SELECT r
         FROM Reservation r
         WHERE r.id = :reservationId
-        AND (r.mentee.member.id = :memberId
-            OR r.mentor.member.id = :memberId)
+        AND (r.mentee.member = :member
+            OR r.mentor.member = :member)
         """)
-    Optional<Reservation> findByIdAndMemberId(
+    Optional<Reservation> findByIdAndMember(
         @Param("reservationId") Long reservationId,
-        @Param("memberId") Long memberId
+        @Param("member") Member member
     );
 
     boolean existsByMentoringId(Long mentoringId);

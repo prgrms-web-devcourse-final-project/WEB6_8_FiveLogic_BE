@@ -30,7 +30,7 @@ public class ReservationService {
     private final MentoringStorage mentoringStorage;
 
     public ReservationResponse getReservation(Member member, Long reservationId) {
-        Reservation reservation = reservationRepository.findByIdAndMemberId(reservationId, member.getId())
+        Reservation reservation = reservationRepository.findByIdAndMember(reservationId, member)
             .orElseThrow(() -> new ServiceException(ReservationErrorCode.RESERVATION_NOT_ACCESSIBLE));
 
         return ReservationResponse.from(reservation);

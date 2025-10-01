@@ -87,9 +87,8 @@ class ReservationServiceTest {
         void getReservation() {
             // given
             Long reservationId = reservation.getId();
-            Long memberId = mentor.getMember().getId();
 
-            when(reservationRepository.findByIdAndMemberId(reservationId, memberId))
+            when(reservationRepository.findByIdAndMember(reservationId, mentor.getMember()))
                 .thenReturn(Optional.of(reservation));
 
             // when
@@ -104,14 +103,14 @@ class ReservationServiceTest {
             assertThat(response.mentee().menteeId()).isEqualTo(mentee.getId());
             assertThat(response.mentor().mentorId()).isEqualTo(mentor.getId());
             assertThat(response.reservation().mentorSlotId()).isEqualTo(mentorSlot2.getId());
-            verify(reservationRepository).findByIdAndMemberId(reservationId, memberId);
+            verify(reservationRepository).findByIdAndMember(reservationId, mentor.getMember());
         }
 
         @Test
         @DisplayName("권한이 없을 경우 예외")
         void getReservation_notAccessible() {
             // given
-            when(reservationRepository.findByIdAndMemberId(reservation.getId(), mentee2.getMember().getId()))
+            when(reservationRepository.findByIdAndMember(reservation.getId(), mentee2.getMember()))
                 .thenReturn(Optional.empty());
 
             // when & then
