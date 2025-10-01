@@ -56,4 +56,19 @@ public class ReviewController {
         );
     }
 
+    @DeleteMapping("/reviews/{reviewId}")
+    @PreAuthorize("hasRole('MENTEE')")
+    @Operation(summary = "멘토링 리뷰 삭제", description = "멘토링 리뷰를 삭제합니다.")
+    public RsData<ReviewResponse> deleteReview(
+        @PathVariable Long reviewId
+    ) {
+        Mentee mentee = memberStorage.findMenteeByMember(rq.getActor());
+        ReviewResponse resDto = reviewService.deleteReview(reviewId, mentee);
+
+        return new RsData<>(
+            "200",
+            "멘토링 리뷰가 삭제되었습니다.",
+            resDto
+        );
+    }
 }

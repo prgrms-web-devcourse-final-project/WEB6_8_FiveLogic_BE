@@ -215,4 +215,52 @@ class ReviewServiceTest {
                 .hasFieldOrPropertyWithValue("resultCode", ReviewErrorCode.FORBIDDEN_NOT_MENTEE.getCode());
         }
     }
+
+    @Nested
+    @DisplayName("멘토링 리뷰 삭제")
+    class Describe_deleteReview {
+
+        private Review review;
+
+        @BeforeEach
+        void setUp() {
+            review = ReviewFixture.create(1L, reservation, mentee);
+        }
+
+        @Test
+        @DisplayName("리뷰 삭제 성공")
+        void deleteReview() {
+            // given
+            when(reviewRepository.findById(review.getId()))
+                .thenReturn(Optional.of(review));
+            // 리뷰 삭제 후 평균 평점이 없을 경우
+            when(reviewRepository.findAverageRating(mentor))
+                .thenReturn(null);
+
+            // when
+            ReviewResponse response = reviewService.deleteReview(review.getId(), mentee);
+
+            // then
+            assertThat(response.reviewId()).isEqualTo(review.getId());
+            // 평균 평점이 0.0으로 업데이트 되는지 확인
+            assertThat(mentor.getRate()).isEqualTo(0.0);
+
+            verify(reviewRepository).findById(review.getId());
+            verify(reviewRepository).delete(review);
+            verify(reviewRepository).findAverageRating(mentor);
+        }
+
+        @Test
+        @DisplayName("리뷰 작성자가 아니면 예외")
+        void throwExceptionWhenNotReviewAuthor() {
+            // given
+            when(reviewRepository.findById(review.getId()))
+                .thenReturn(Optional.of(review));
+
+            // when & then
+            assertThatThrownBy(() -> reviewService.deleteReview(review.getId(), mentee2))
+                .isInstanceOf(ServiceException.class)
+                .hasFieldOrPropertyWithValue("resultCode", ReviewErrorCode.FORBIDDEN_NOT_MENTEE.getCode());
+        }
+    }
 }

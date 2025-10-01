@@ -54,6 +54,18 @@ public class ReviewService {
         return ReviewResponse.from(review);
     }
 
+    @Transactional
+    public ReviewResponse deleteReview(Long reviewId, Mentee mentee) {
+        Review review = findReview(reviewId);
+
+        validateMentee(mentee, review);
+
+        reviewRepository.delete(review);
+        updateMentorRating(review.getReservation().getMentor());
+
+        return ReviewResponse.from(review);
+    }
+
 
     // ===== 평점 업데이트 =====
 
