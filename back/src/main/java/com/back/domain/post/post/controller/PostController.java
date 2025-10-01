@@ -52,6 +52,18 @@ public class PostController {
         return new RsData<>("200", "게시글이 성공적으로 생성되었습니다.", postCreateResponse);
     }
 
+    @Operation(summary = "게시글 생성 - PracticePost")
+    @PostMapping("/practice")
+    public RsData<PostCreateResponse> createPracticePost(
+            @Valid @RequestBody PracticePostCreateRequest practicePostCreateRequest
+    ) {
+        Member member = rq.getActor();
+        Post post = postService.createPracticePost(practicePostCreateRequest, member);
+        PostCreateResponse postCreateResponse = PostCreateResponse.from(post);
+
+        return new RsData<>("200", "게시글이 성공적으로 생성되었습니다.", postCreateResponse);
+    }
+
     @Operation(summary = "게시글 다건 조회")
     @GetMapping("/all")
     public RsData<List<PostAllResponse>> getAllPost() {

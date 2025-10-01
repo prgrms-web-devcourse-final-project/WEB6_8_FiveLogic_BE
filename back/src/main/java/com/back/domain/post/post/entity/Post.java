@@ -107,4 +107,8 @@ public class Post extends BaseEntity {
     public void updateResolveStatus(Boolean isResolve) {
         this.isResolve = isResolve;
     }
+
+    public void updateCareer(String career) {
+        this.career = career;
+    }
 }

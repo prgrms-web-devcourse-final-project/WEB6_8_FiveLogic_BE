@@ -3,6 +3,7 @@ package com.back.domain.post.post.service;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.post.post.dto.PostCreateRequest;
 import com.back.domain.post.post.dto.PostDto;
+import com.back.domain.post.post.dto.PracticePostCreateRequest;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.repository.PostRepository;
 import com.back.fixture.MemberFixture;
@@ -86,10 +87,10 @@ class PostServiceTest {
         void createPost_practicePost_mentee_failure() {
             // given
             Member mentee = MemberFixture.create(1L, "mentee@test.com", "Mentee", "password", Member.Role.MENTEE);
-            PostCreateRequest request = new PostCreateRequest("PRACTICEPOST","실무경험","실무내용");
+            PracticePostCreateRequest request = new PracticePostCreateRequest("PRACTICEPOST","실무경험","실무내용","");
 
             // when & then
-            assertThatThrownBy(() -> postService.createPost(request, mentee))
+            assertThatThrownBy(() -> postService.createPracticePost(request, mentee))
                     .isInstanceOf(ServiceException.class)
                     .hasMessage("400 : 실무 경험 공유 게시글은 멘토만 작성할 수 있습니다.");
 

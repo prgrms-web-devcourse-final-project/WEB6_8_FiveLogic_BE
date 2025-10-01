@@ -1,10 +1,7 @@
 package com.back.domain.post.post.service;
 
 import com.back.domain.member.member.entity.Member;
-import com.back.domain.post.post.dto.PostAllResponse;
-import com.back.domain.post.post.dto.PostCreateRequest;
-import com.back.domain.post.post.dto.PostDto;
-import com.back.domain.post.post.dto.PostSingleResponse;
+import com.back.domain.post.post.dto.*;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.repository.PostRepository;
 import com.back.global.exception.ServiceException;
@@ -38,16 +35,7 @@ public class PostService {
         Post.validPostType(postTypeStr);
         Post.PostType postType = Post.PostType.valueOf(postTypeStr);
 
-        // PostType이 PracticePost인 경우 멘토인지 확인
-        if (postType == Post.PostType.PRACTICEPOST && member.getRole() != Member.Role.MENTOR) {
-            throw new ServiceException("400", "실무 경험 공유 게시글은 멘토만 작성할 수 있습니다.");
-        }
 
-//        if( postType == Post.PostType.PRACTICEPOST ) {
-//            if(member.getCareer() == null || member.getCareer().isEmpty()) {
-//                throw new ServiceException("400", "멘토는 경력을 입력해야 실무 경험 공유 게시글을 작성할 수 있습니다.");
-//            }
-//        }
 
         Post post = Post.builder()
                 .title(postCreateRequest.title())
@@ -66,6 +54,32 @@ public class PostService {
 
         return post;
     }
+
+    @Transactional
+    public Post createPracticePost(PracticePostCreateRequest practicePostCreateRequest, Member member) {
+        String postTypeStr = practicePostCreateRequest.postType();
+        Post.validPostType(postTypeStr);
+        Post.PostType postType = Post.PostType.valueOf(postTypeStr);
+
+        // PostType이 PracticePost인 경우 멘토인지 확인
+        if (postType == Post.PostType.PRACTICEPOST && member.getRole() != Member.Role.MENTOR) {
+            throw new ServiceException("400", "실무 경험 공유 게시글은 멘토만 작성할 수 있습니다.");
+        }
+
+        Post post = Post.builder()
+                .title(practicePostCreateRequest.title())
+                .content(practicePostCreateRequest.content())
+                .member(member)
+                .postType(postType)
+                .build();
+
+        post.updateCareer(practicePostCreateRequest.job());
+
+        postRepository.save(post);
+
+        return post;
+    }
+
 
     @Transactional
     public void removePost(Long postId, Member member) {
