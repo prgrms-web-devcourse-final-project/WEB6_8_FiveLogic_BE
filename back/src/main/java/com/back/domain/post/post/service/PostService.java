@@ -35,7 +35,10 @@ public class PostService {
         Post.validPostType(postTypeStr);
         Post.PostType postType = Post.PostType.valueOf(postTypeStr);
 
-
+        // PostType이 PracticePost인 경우 멘토인지 확인
+        if (postType == Post.PostType.PRACTICEPOST && member.getRole() != Member.Role.MENTOR) {
+            throw new ServiceException("400", "실무 경험 공유 게시글은 멘토만 작성할 수 있습니다.");
+        }
 
         Post post = Post.builder()
                 .title(postCreateRequest.title())
@@ -45,35 +48,14 @@ public class PostService {
                 .build();
 
 
+        if(postType == Post.PostType.PRACTICEPOST) {
+            post.updateJob(postCreateRequest.job());
+        }
+
         // PostType이 QUESTIONPOST인 경우 isResolve를 false로 초기화
         if(postType == Post.PostType.QUESTIONPOST) {
             post.updateResolveStatus(false);
         }
-
-        postRepository.save(post);
-
-        return post;
-    }
-
-    @Transactional
-    public Post createPracticePost(PracticePostCreateRequest practicePostCreateRequest, Member member) {
-        String postTypeStr = practicePostCreateRequest.postType();
-        Post.validPostType(postTypeStr);
-        Post.PostType postType = Post.PostType.valueOf(postTypeStr);
-
-        // PostType이 PracticePost인 경우 멘토인지 확인
-        if (postType == Post.PostType.PRACTICEPOST && member.getRole() != Member.Role.MENTOR) {
-            throw new ServiceException("400", "실무 경험 공유 게시글은 멘토만 작성할 수 있습니다.");
-        }
-
-        Post post = Post.builder()
-                .title(practicePostCreateRequest.title())
-                .content(practicePostCreateRequest.content())
-                .member(member)
-                .postType(postType)
-                .build();
-
-        post.updateJob(practicePostCreateRequest.job());
 
         postRepository.save(post);
 

@@ -109,6 +109,9 @@ public class Post extends BaseEntity {
     }
 
     public void updateJob(String job) {
+        if (job == null || job.isBlank()) {
+            throw new ServiceException("400", "직업은 null이거나 공백일 수 없습니다.");
+        }
         this.job = job;
     }
 }
