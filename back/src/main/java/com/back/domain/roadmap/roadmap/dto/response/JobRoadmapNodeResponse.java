@@ -17,9 +17,22 @@ public record JobRoadmapNodeResponse(
     boolean isLinkedToTask,
     Double weight,       // 이 노드의 가중치 (JobRoadmapNodeStat에서)
 
+    // 멘토 커버리지 통계
+    Integer mentorCount,          // 이 노드를 선택한 멘토 수
+    Integer totalMentorCount,     // 해당 직업의 전체 멘토 수
+    Double mentorCoverageRatio,   // mentorCount / totalMentorCount (0.0 ~ 1.0)
+
+    // UI 강조 표시용 (동적 계산)
+    Boolean isEssential,          // 필수 노드 여부 (50% 이상)
+    String essentialLevel,        // "CORE" (80%+) | "COMMON" (50%+) | "OPTIONAL" (<50%)
+
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     List<JobRoadmapNodeResponse> children
 ) {
+
+    // 필수 경로 판정 기준 (상수)
+    private static final double ESSENTIAL_THRESHOLD = 0.5;  // 50%
+    private static final double CORE_THRESHOLD = 0.8;       // 80%
 
     // 정적 팩토리 메서드 - RoadmapNode로부터 Response DTO 생성 (자식 노드 정보 포함)
     public static JobRoadmapNodeResponse from(RoadmapNode node, List<JobRoadmapNodeResponse> children) {
@@ -38,6 +51,11 @@ public record JobRoadmapNodeResponse(
             node.getLevel(),
             node.getTask() != null,
             null, // weight는 서비스에서 별도로 설정
+            null, // mentorCount는 서비스에서 별도로 설정
+            null, // totalMentorCount는 서비스에서 별도로 설정
+            null, // mentorCoverageRatio는 서비스에서 별도로 설정
+            null, // isEssential은 서비스에서 별도로 설정
+            null, // essentialLevel은 서비스에서 별도로 설정
             children != null ? children : List.of()
         );
     }
@@ -46,7 +64,33 @@ public record JobRoadmapNodeResponse(
     public JobRoadmapNodeResponse withWeight(Double weight) {
         return new JobRoadmapNodeResponse(
             this.id, this.parentId, this.childIds, this.taskId, this.taskName, this.description,
-            this.stepOrder, this.level, this.isLinkedToTask, weight, this.children
+            this.stepOrder, this.level, this.isLinkedToTask, weight,
+            this.mentorCount, this.totalMentorCount, this.mentorCoverageRatio,
+            this.isEssential, this.essentialLevel,
+            this.children
         );
+    }
+
+    // 통계 정보 설정 헬퍼 메서드 (JobRoadmapNodeStat으로부터 통계 추가)
+    public JobRoadmapNodeResponse withStats(Integer mentorCount, Integer totalMentorCount, Double mentorCoverageRatio) {
+        // 동적 계산: isEssential, essentialLevel
+        Boolean isEssential = mentorCoverageRatio != null && mentorCoverageRatio >= ESSENTIAL_THRESHOLD;
+        String essentialLevel = calculateEssentialLevel(mentorCoverageRatio);
+
+        return new JobRoadmapNodeResponse(
+            this.id, this.parentId, this.childIds, this.taskId, this.taskName, this.description,
+            this.stepOrder, this.level, this.isLinkedToTask, this.weight,
+            mentorCount, totalMentorCount, mentorCoverageRatio,
+            isEssential, essentialLevel,
+            this.children
+        );
+    }
+
+    // 필수 경로 레벨 계산 (동적)
+    private static String calculateEssentialLevel(Double ratio) {
+        if (ratio == null) return "UNKNOWN";
+        if (ratio >= CORE_THRESHOLD) return "CORE";      // 80%+ : 핵심 필수
+        if (ratio >= ESSENTIAL_THRESHOLD) return "COMMON"; // 50%+ : 일반 필수
+        return "OPTIONAL";                                // 50%- : 선택
     }
 }

@@ -33,7 +33,7 @@ public class JobRoadmapIntegrationService {
     private final JobRoadmapNodeStatRepository jobRoadmapNodeStatRepository;
 
     private final double BRANCH_THRESHOLD = 0.25;
-    private final int MAX_DEPTH = 20;
+    private final int MAX_DEPTH = 10;
     private final int MAX_CHILDREN = 4;
 
     // 부모 우선순위 점수 가중치
@@ -454,6 +454,8 @@ public class JobRoadmapIntegrationService {
             weight = Math.max(0.0, Math.min(1.0, weight));
 
             stat.setWeight(weight);
+            stat.setTotalMentorCount(totalMentorCount);
+            stat.setMentorCoverageRatio(mentorCoverageScore); // 0.0 ~ 1.0
             stat.setOutgoingTransitions(outgoing);
             stat.setIncomingTransitions(incoming);
 

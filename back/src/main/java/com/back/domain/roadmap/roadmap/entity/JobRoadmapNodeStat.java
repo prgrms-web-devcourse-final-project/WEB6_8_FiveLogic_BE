@@ -28,6 +28,12 @@ public class JobRoadmapNodeStat extends BaseEntity {
     @Column(name = "mentor_count")
     private Integer mentorCount; // 몇 명의 멘토 로드맵에 등장했는지 (unique mentor count)
 
+    @Column(name = "total_mentor_count")
+    private Integer totalMentorCount; // 해당 직업의 전체 멘토 수
+
+    @Column(name = "mentor_coverage_ratio")
+    private Double mentorCoverageRatio; // mentorCount / totalMentorCount (0.0 ~ 1.0)
+
     @Column(name = "outgoing_transitions")
     private Integer outgoingTransitions; // 이 노드에서 다른 노드로 이동한 총 전이수
 
@@ -65,6 +71,14 @@ public class JobRoadmapNodeStat extends BaseEntity {
 
     public void setMentorCount(Integer mentorCount) {
         this.mentorCount = mentorCount;
+    }
+
+    public void setTotalMentorCount(Integer totalMentorCount) {
+        this.totalMentorCount = totalMentorCount;
+    }
+
+    public void setMentorCoverageRatio(Double mentorCoverageRatio) {
+        this.mentorCoverageRatio = mentorCoverageRatio;
     }
 
     public void setOutgoingTransitions(Integer outgoingTransitions) {
