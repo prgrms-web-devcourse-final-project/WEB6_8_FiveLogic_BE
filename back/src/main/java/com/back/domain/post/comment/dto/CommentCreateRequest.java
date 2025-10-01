@@ -2,6 +2,7 @@ package com.back.domain.post.comment.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
+
 public record CommentCreateRequest(
         String role,
 
