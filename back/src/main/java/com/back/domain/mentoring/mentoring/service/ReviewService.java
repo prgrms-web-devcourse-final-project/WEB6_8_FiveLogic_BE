@@ -10,6 +10,9 @@ import com.back.domain.mentoring.mentoring.repository.ReviewRepository;
 import com.back.domain.mentoring.reservation.entity.Reservation;
 import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +22,14 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final MentoringStorage mentoringStorage;
+
+    @Transactional(readOnly = true)
+    public Page<ReviewResponse> getReviews(Long mentoringId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        return reviewRepository.findAllByMentoringId(mentoringId, pageable)
+            .map(ReviewResponse::from);
+    }
 
     @Transactional(readOnly = true)
     public ReviewResponse getReview(Long reviewId) {
@@ -83,6 +94,7 @@ public class ReviewService {
 
 
     // ===== 헬퍼 메서드 =====
+
     private Review findReview(Long reviewId) {
         return reviewRepository.findById(reviewId)
             .orElseThrow(() -> new ServiceException(ReviewErrorCode.REVIEW_NOT_FOUND));

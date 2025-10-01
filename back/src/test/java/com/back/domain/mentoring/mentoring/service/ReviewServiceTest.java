@@ -73,6 +73,25 @@ class ReviewServiceTest {
     }
 
     @Nested
+    @DisplayName("멘토링 리뷰 목록 조회")
+    class Describe_getReviews {
+
+        @Test
+        @DisplayName("멘토링 리뷰 목록 조회")
+        void getReviews() {
+            // given
+            when(reviewRepository.findAllByMentoringId(any(), any()))
+                .thenReturn(org.springframework.data.domain.Page.empty());
+
+            // when
+            reviewService.getReviews(1L, 0, 10);
+
+            // then
+            verify(reviewRepository).findAllByMentoringId(any(), any());
+        }
+    }
+
+    @Nested
     @DisplayName("멘토링 리뷰 조회")
     class Describe_getReview {
 

@@ -3,6 +3,7 @@ package com.back.domain.mentoring.mentoring.controller;
 import com.back.domain.member.member.service.MemberStorage;
 import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.mentoring.mentoring.dto.request.ReviewRequest;
+import com.back.domain.mentoring.mentoring.dto.response.ReviewPagingResponse;
 import com.back.domain.mentoring.mentoring.dto.response.ReviewResponse;
 import com.back.domain.mentoring.mentoring.service.ReviewService;
 import com.back.global.rq.Rq;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +23,23 @@ public class ReviewController {
     private final Rq rq;
     private final MemberStorage memberStorage;
     private final ReviewService reviewService;
+
+    @GetMapping("/mentorings/{mentoringId}/reviews")
+    @Operation(summary = "멘토링 리뷰 조회", description = "멘토링 리뷰 목록을 조회합니다.")
+    public RsData<ReviewPagingResponse> getReviews(
+        @PathVariable Long mentoringId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<ReviewResponse> reviewPage = reviewService.getReviews(mentoringId, page, size);
+        ReviewPagingResponse resDto = ReviewPagingResponse.from(reviewPage);
+
+        return new RsData<>(
+            "200",
+            "멘토링 리뷰 목록을 조회하였습니다.",
+            resDto
+        );
+    }
 
     @GetMapping("/reviews/{reviewId}")
     @Operation(summary = "멘토링 리뷰 조회", description = "멘토링 리뷰를 조회합니다.")
@@ -73,16 +92,15 @@ public class ReviewController {
     @DeleteMapping("/reviews/{reviewId}")
     @PreAuthorize("hasRole('MENTEE')")
     @Operation(summary = "멘토링 리뷰 삭제", description = "멘토링 리뷰를 삭제합니다.")
-    public RsData<ReviewResponse> deleteReview(
+    public RsData<Void> deleteReview(
         @PathVariable Long reviewId
     ) {
         Mentee mentee = memberStorage.findMenteeByMember(rq.getActor());
-        ReviewResponse resDto = reviewService.deleteReview(reviewId, mentee);
+        reviewService.deleteReview(reviewId, mentee);
 
         return new RsData<>(
             "200",
-            "멘토링 리뷰가 삭제되었습니다.",
-            resDto
+            "멘토링 리뷰가 삭제되었습니다."
         );
     }
 }
