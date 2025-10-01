@@ -40,6 +40,10 @@ public class Mentor extends BaseEntity {
         this.careerYears = careerYears;
     }
 
+    public void updateRating(Double averageRating) {
+        this.rate = averageRating;
+    }
+
     public void delete() {
         this.isDeleted = true;
     }
