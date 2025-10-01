@@ -6,6 +6,7 @@ import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.service.MentoringStorage;
 import com.back.domain.mentoring.reservation.constant.ReservationStatus;
+import com.back.domain.mentoring.reservation.dto.ReservationDto;
 import com.back.domain.mentoring.reservation.dto.request.ReservationRequest;
 import com.back.domain.mentoring.reservation.dto.response.ReservationResponse;
 import com.back.domain.mentoring.reservation.entity.Reservation;
@@ -16,6 +17,9 @@ import com.back.domain.mentoring.slot.service.DateTimeValidator;
 import com.back.global.exception.ServiceException;
 import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +32,19 @@ public class ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final MentoringStorage mentoringStorage;
+
+    public Page<ReservationDto> getReservations(Member member, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Reservation> reservations;
+
+        if (member.getRole() == Member.Role.MENTOR) {
+            reservations = reservationRepository.findAllByMentorMember(member, pageable);
+        } else {
+            reservations = reservationRepository.findAllByMenteeMember(member, pageable);
+        }
+        return reservations.map(ReservationDto::from);
+    }
 
     public ReservationResponse getReservation(Member member, Long reservationId) {
         Reservation reservation = reservationRepository.findByIdAndMember(reservationId, member)

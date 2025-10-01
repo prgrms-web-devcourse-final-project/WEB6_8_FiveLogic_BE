@@ -15,6 +15,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(
+    name = "reservation",
+    indexes = {
+        @Index(name = "idx_reservation_mentor", columnList = "mentor_id"),
+        @Index(name = "idx_reservation_mentee", columnList = "mentee_id")
+    }
+)
 @Getter
 @NoArgsConstructor
 public class Reservation extends BaseEntity {

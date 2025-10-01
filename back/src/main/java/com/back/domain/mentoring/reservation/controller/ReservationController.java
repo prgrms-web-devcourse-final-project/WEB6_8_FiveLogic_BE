@@ -4,7 +4,9 @@ import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberStorage;
 import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentor.entity.Mentor;
+import com.back.domain.mentoring.reservation.dto.ReservationDto;
 import com.back.domain.mentoring.reservation.dto.request.ReservationRequest;
+import com.back.domain.mentoring.reservation.dto.response.ReservationPagingResponse;
 import com.back.domain.mentoring.reservation.dto.response.ReservationResponse;
 import com.back.domain.mentoring.reservation.service.ReservationService;
 import com.back.global.rq.Rq;
@@ -13,6 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +28,24 @@ public class ReservationController {
     private final Rq rq;
     private final ReservationService reservationService;
     private final MemberStorage memberStorage;
+
+    @GetMapping
+    @Operation(summary = "나의 예약 목록 조회", description = "본인의 예약 목록을 조회합니다. 로그인 후 조회할 수 있습니다.")
+    public RsData<ReservationPagingResponse> getReservations(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        Member member = rq.getActor();
+        Page<ReservationDto> reservationPage = reservationService.getReservations(member, page, size);
+        ReservationPagingResponse resDto = ReservationPagingResponse.from(reservationPage);
+
+        return new RsData<>(
+            "200",
+            "예약 목록을 조회하였습니다.",
+            resDto
+        );
+    }
+
 
     @GetMapping("/{reservationId}")
     @Operation(summary = "예약 조회", description = "특정 예약을 조회합니다. 로그인 후 예약 조회할 수 있습니다.")
@@ -48,7 +69,6 @@ public class ReservationController {
         @RequestBody @Valid ReservationRequest reqDto
     ) {
         Mentee mentee = memberStorage.findMenteeByMember(rq.getActor());
-
         ReservationResponse resDto = reservationService.createReservation(mentee, reqDto);
 
         return new RsData<>(
@@ -65,7 +85,6 @@ public class ReservationController {
         @PathVariable Long reservationId
     ) {
         Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
-
         ReservationResponse resDto = reservationService.approveReservation(mentor, reservationId);
 
         return new RsData<>(
@@ -82,7 +101,6 @@ public class ReservationController {
         @PathVariable Long reservationId
     ) {
         Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
-
         ReservationResponse resDto = reservationService.rejectReservation(mentor, reservationId);
 
         return new RsData<>(
@@ -98,7 +116,6 @@ public class ReservationController {
         @PathVariable Long reservationId
     ) {
         Member member = rq.getActor();
-
         ReservationResponse resDto = reservationService.cancelReservation(member, reservationId);
 
         return new RsData<>(
