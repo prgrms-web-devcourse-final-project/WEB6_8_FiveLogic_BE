@@ -137,4 +137,19 @@ public class PostCommentService {
 
         post.updateResolveStatus(true);
     }
+
+    @Transactional
+    public  CommentAllResponse getAdoptedComment(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+
+        if (post.getPostType() != Post.PostType.QUESTIONPOST) {
+            throw new ServiceException("400", "질문 게시글만 채택된 댓글을 가질 수 있습니다.");
+        }
+
+        PostComment postComment = postCommentRepository.findByPostAndIsAdoptedTrue(post)
+                .orElseThrow(() -> new ServiceException("400", "채택된 댓글이 없습니다."));
+
+        return CommentAllResponse.from(postComment);
+    }
 }
