@@ -6,8 +6,8 @@ FROM gradle:8.5-jdk21 AS builder
 WORKDIR /app
 
 # Gradle 설정 파일 먼저 복사 (캐시 최적화)
-COPY build.gradle .
-COPY settings.gradle .
+COPY build.gradle.kts .
+COPY settings.gradle.kts .
 
 # Gradle wrapper 복사
 COPY gradle gradle
