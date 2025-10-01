@@ -36,20 +36,19 @@ public class ChatMessage extends BaseEntity {
     private LocalDateTime timestamp;
 
     @Builder(access = lombok.AccessLevel.PRIVATE)
-    private ChatMessage(MentoringSession mentoringSession, Member sender, SenderRole senderRole, String content, MessageType type, LocalDateTime timestamp) {
+    private ChatMessage(MentoringSession mentoringSession, Member sender, String content, MessageType type, LocalDateTime timestamp) {
         this.mentoringSession = mentoringSession;
         this.sender = sender;
-        this.senderRole = senderRole;
+        this.senderRole = mentoringSession.getMentoring().getMentor().equals(sender) ? SenderRole.MENTOR : SenderRole.MENTEE;
         this.content = content;
         this.type = type;
         this.timestamp = timestamp;
     }
 
-    public static ChatMessage create(MentoringSession mentoringSession, Member sender, SenderRole senderRole, String content, MessageType type) {
+    public static ChatMessage create(MentoringSession mentoringSession, Member sender, String content, MessageType type) {
         return ChatMessage.builder()
                 .mentoringSession(mentoringSession)
                 .sender(sender)
-                .senderRole(senderRole)
                 .content(content)
                 .type(type)
                 .timestamp(LocalDateTime.now())
