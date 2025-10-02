@@ -11,6 +11,7 @@ on:
   push:
     branches:
       - main
+      - feat/139
   workflow_dispatch:
 
 permissions:
