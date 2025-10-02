@@ -78,7 +78,7 @@ class JobRoadmapControllerTest {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(javaTask)
                 .taskName(javaTask.getName())
-                .description("Java 프로그래밍 언어")
+                .learningAdvice("Java 프로그래밍 언어")
                 .stepOrder(1)
                 .level(0)
                 .build();
@@ -88,7 +88,7 @@ class JobRoadmapControllerTest {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(springTask)
                 .taskName(springTask.getName())
-                .description("Spring Boot 프레임워크")
+                .learningAdvice("Spring Boot 프레임워크")
                 .stepOrder(1)
                 .level(1)
                 .build();
@@ -109,7 +109,7 @@ class JobRoadmapControllerTest {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(reactTask)
                 .taskName(reactTask.getName())
-                .description("React 라이브러리")
+                .learningAdvice("React 라이브러리")
                 .stepOrder(1)
                 .level(0)
                 .build();
@@ -273,7 +273,7 @@ class JobRoadmapControllerTest {
                 .andExpect(jsonPath("$.data.nodes[0].id").isNumber())
                 .andExpect(jsonPath("$.data.nodes[0].taskId").isNumber())
                 .andExpect(jsonPath("$.data.nodes[0].taskName").isString())
-                .andExpect(jsonPath("$.data.nodes[0].description").isString())
+                .andExpect(jsonPath("$.data.nodes[0].learningAdvice").isString())
                 .andExpect(jsonPath("$.data.nodes[0].stepOrder").isNumber())
                 .andExpect(jsonPath("$.data.nodes[0].level").isNumber())
                 .andExpect(jsonPath("$.data.nodes[0].isLinkedToTask").isBoolean())

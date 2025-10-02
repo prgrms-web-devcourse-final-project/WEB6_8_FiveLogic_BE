@@ -3,7 +3,9 @@ package com.back.fixture.mentoring;
 import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
+import com.back.domain.mentoring.mentoring.entity.Tag;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
+import com.back.domain.mentoring.mentoring.repository.TagRepository;
 import com.back.domain.mentoring.reservation.entity.Reservation;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
@@ -15,6 +17,8 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Component
@@ -22,18 +26,22 @@ public class MentoringTestFixture {
     @Autowired private MentoringRepository mentoringRepository;
     @Autowired private MentorSlotRepository mentorSlotRepository;
     @Autowired private ReservationRepository reservationRepository;
+    @Autowired private TagRepository tagRepository;
 
     private int counter = 0;
+    List<String> DEFAULT_TAG_NAMES = List.of("Spring", "Java");
 
     // ===== Mentoring =====
 
-    public Mentoring createMentoring(Mentor mentor, String title, String bio, List<String> tags) {
+    public Mentoring createMentoring(Mentor mentor, String title, String bio, List<String> tagNames) {
+        List<Tag> tags = getOrCreateTags(tagNames);
+
         Mentoring mentoring = Mentoring.builder()
             .mentor(mentor)
             .title(title)
             .bio(bio)
-            .tags(tags)
             .build();
+        mentoring.updateTags(tags);
         return mentoringRepository.save(mentoring);
     }
 
@@ -42,21 +50,53 @@ public class MentoringTestFixture {
             mentor,
             "테스트 멘토링 " + (++counter),
             "테스트 설명",
-            List.of("Spring", "Java")
+            DEFAULT_TAG_NAMES
         );
     }
 
     public List<Mentoring> createMentorings(Mentor mentor, int count) {
+        List<Tag> tags = getOrCreateTags(DEFAULT_TAG_NAMES);
+
         List<Mentoring> mentorings = IntStream.range(0, count)
-            .mapToObj(i -> Mentoring.builder()
-                .mentor(mentor)
-                .title("테스트 멘토링 " + (++counter))
-                .bio("테스트 설명")
-                .tags(List.of("Spring", "Java"))
-                .build())
+            .mapToObj(i -> {
+                Mentoring mentoring = Mentoring.builder()
+                    .mentor(mentor)
+                    .title("테스트 멘토링 " + (++counter))
+                    .bio("테스트 설명")
+                    .build();
+                mentoring.updateTags(tags);
+                return mentoring;
+            })
             .toList();
 
         return mentoringRepository.saveAll(mentorings);
+    }
+
+    private List<Tag> getOrCreateTags(List<String> tagNames) {
+        if (tagNames == null || tagNames.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 기존 태그 조회
+        List<Tag> existingTags = tagRepository.findByNameIn(tagNames);
+
+        Set<String> existingTagNames = existingTags.stream()
+            .map(Tag::getName)
+            .collect(Collectors.toSet());
+
+        // 신규 태그만 생성
+        List<Tag> newTags = tagNames.stream()
+            .filter(name -> !existingTagNames.contains(name))
+            .map(name -> Tag.builder().name(name).build())
+            .collect(Collectors.toList());
+
+        if (!newTags.isEmpty()) {
+            tagRepository.saveAll(newTags);
+        }
+
+        List<Tag> allTags = new ArrayList<>(existingTags);
+        allTags.addAll(newTags);
+        return allTags;
     }
 
 

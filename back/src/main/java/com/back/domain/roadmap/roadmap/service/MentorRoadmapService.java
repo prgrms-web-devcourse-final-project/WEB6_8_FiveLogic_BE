@@ -256,9 +256,22 @@ public class MentorRoadmapService {
             Task task = nodeRequest.taskId() != null ? tasksMap.get(nodeRequest.taskId()) : null;
             String taskName = (task != null) ? task.getName() : nodeRequest.taskName();
 
+            // estimatedHours 자동 계산 (hoursPerDay * weeks * 7)
+            Integer estimatedHours = null;
+            if (nodeRequest.hoursPerDay() != null && nodeRequest.weeks() != null) {
+                estimatedHours = nodeRequest.hoursPerDay() * nodeRequest.weeks() * 7;
+            }
+
             RoadmapNode node = RoadmapNode.builder()
                     .taskName(taskName)
-                    .description(nodeRequest.description())
+                    .learningAdvice(nodeRequest.learningAdvice())
+                    .recommendedResources(nodeRequest.recommendedResources())
+                    .learningGoals(nodeRequest.learningGoals())
+                    .difficulty(nodeRequest.difficulty())
+                    .importance(nodeRequest.importance())
+                    .hoursPerDay(nodeRequest.hoursPerDay())
+                    .weeks(nodeRequest.weeks())
+                    .estimatedHours(estimatedHours)
                     .task(task)
                     .stepOrder(nodeRequest.stepOrder())
                     .roadmapId(roadmapId)

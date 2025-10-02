@@ -13,18 +13,22 @@ import com.back.domain.roadmap.roadmap.entity.JobRoadmap;
 import com.back.domain.roadmap.roadmap.entity.RoadmapNode;
 import com.back.domain.roadmap.roadmap.repository.JobRoadmapRepository;
 import com.back.domain.roadmap.roadmap.repository.MentorRoadmapRepository;
+import com.back.domain.roadmap.roadmap.service.JobRoadmapIntegrationService;
 import com.back.domain.roadmap.roadmap.service.MentorRoadmapService;
 import com.back.domain.roadmap.task.entity.Task;
 import com.back.domain.roadmap.task.repository.TaskRepository;
 import com.back.domain.roadmap.task.service.TaskService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 @Transactional
@@ -38,6 +42,7 @@ public class RoadmapInitData {
     private final MentorRoadmapService mentorRoadmapService;
     private final MentorRoadmapRepository mentorRoadmapRepository;
     private final JobRoadmapRepository jobRoadmapRepository;
+    private final JobRoadmapIntegrationService jobRoadmapIntegrationService;
 
     @Bean
     ApplicationRunner baseInitDataApplicationRunner2() {
@@ -50,6 +55,10 @@ public class RoadmapInitData {
         initTaskData();           // 보강된 Task 목록
         //initSampleMentorRoadmaps(); // 활성화: 다양한 멘토 로드맵 생성
         //initSampleJobRoadmap();   // 직업 로드맵 조회 API 테스트용 샘플 데이터
+
+        // 통합 로직 테스트
+        //initTestMentorRoadmaps();    // 테스트용 멘토 로드맵 10개 생성
+        //testJobRoadmapIntegration(); // 통합 로직 실행 및 트리 구조 출력
     }
 
     // --- Job 초기화 ---
@@ -521,15 +530,27 @@ public class RoadmapInitData {
 
     /**
      * Task가 DB에 없으면 자동 생성하도록 안전장치 추가.
-     * 프로젝트 제안은 description에 구체적으로 적음 (Task로 만들지 않음).
+     * 통합 로직 테스트를 위해 모든 필드에 실제 값을 제공.
      */
-    private RoadmapNodeRequest createNodeRequest(String taskName, int level, int stepOrder, String description) {
+    private RoadmapNodeRequest createNodeRequest(
+            String taskName,
+            int level,
+            int stepOrder,
+            String learningAdvice
+
+    ) {
         Task task = taskRepository.findByNameIgnoreCase(taskName)
                 .orElseGet(() -> taskService.create(taskName)); // 누락 시 자동 생성
         return new RoadmapNodeRequest(
                 task != null ? task.getId() : null,
                 taskName,
-                description,
+                learningAdvice,
+                null,  // recommendedResources
+                null,  // learningGoals
+                null,  // difficulty
+                null,  // importance
+                null,  // hoursPerDay
+                null,  // weeks
                 stepOrder
         );
     }
@@ -573,7 +594,7 @@ public class RoadmapInitData {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(programmingFundamentals)
                 .taskName("Programming Fundamentals")
-                .description("프로그래밍의 기초 개념: 변수, 조건문, 반복문, 함수 등을 이해하고 활용할 수 있습니다.")
+                .learningAdvice("프로그래밍의 기초 개념: 변수, 조건문, 반복문, 함수 등을 이해하고 활용할 수 있습니다.")
                 .stepOrder(1)
                 .level(0)
                 .build();
@@ -584,7 +605,7 @@ public class RoadmapInitData {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(git)
                 .taskName("Git")
-                .description("버전 관리 시스템으로 코드 히스토리 관리 및 협업을 위한 필수 도구입니다.")
+                .learningAdvice("버전 관리 시스템으로 코드 히스토리 관리 및 협업을 위한 필수 도구입니다.")
                 .stepOrder(2)
                 .level(0)
                 .build();
@@ -595,7 +616,7 @@ public class RoadmapInitData {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(java)
                 .taskName("Java")
-                .description("객체지향 프로그래밍 언어로 백엔드 개발의 기초가 되는 언어입니다.")
+                .learningAdvice("객체지향 프로그래밍 언어로 백엔드 개발의 기초가 되는 언어입니다.")
                 .stepOrder(1)
                 .level(1)
                 .build();
@@ -605,7 +626,7 @@ public class RoadmapInitData {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(springBoot)
                 .taskName("Spring Boot")
-                .description("Java 기반의 웹 애플리케이션 프레임워크로 REST API 개발에 필수입니다.")
+                .learningAdvice("Java 기반의 웹 애플리케이션 프레임워크로 REST API 개발에 필수입니다.")
                 .stepOrder(2)
                 .level(1)
                 .build();
@@ -616,7 +637,7 @@ public class RoadmapInitData {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(mysql)
                 .taskName("MySQL")
-                .description("관계형 데이터베이스로 데이터 저장 및 관리를 위한 기본 기술입니다.")
+                .learningAdvice("관계형 데이터베이스로 데이터 저장 및 관리를 위한 기본 기술입니다.")
                 .stepOrder(1)
                 .level(2)
                 .build();
@@ -626,7 +647,7 @@ public class RoadmapInitData {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(jpa)
                 .taskName("JPA")
-                .description("Java 진영의 ORM 기술로 객체와 관계형 데이터베이스를 매핑합니다.")
+                .learningAdvice("Java 진영의 ORM 기술로 객체와 관계형 데이터베이스를 매핑합니다.")
                 .stepOrder(2)
                 .level(2)
                 .build();
@@ -637,7 +658,7 @@ public class RoadmapInitData {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(docker)
                 .taskName("Docker")
-                .description("컨테이너 기술로 애플리케이션 배포 및 환경 관리를 간소화합니다.")
+                .learningAdvice("컨테이너 기술로 애플리케이션 배포 및 환경 관리를 간소화합니다.")
                 .stepOrder(1)
                 .level(2)
                 .build();
@@ -647,7 +668,7 @@ public class RoadmapInitData {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(aws)
                 .taskName("AWS")
-                .description("클라우드 서비스로 애플리케이션을 확장 가능하게 배포하고 운영합니다.")
+                .learningAdvice("클라우드 서비스로 애플리케이션을 확장 가능하게 배포하고 운영합니다.")
                 .stepOrder(2)
                 .level(2)
                 .build();
@@ -668,5 +689,367 @@ public class RoadmapInitData {
 
         jobRoadmapRepository.save(jobRoadmap);
         jobRoadmapRepository.save(frontendRoadmap); // 빈 로드맵 저장
+    }
+
+    // --- 통합 로직 테스트용 멘토 로드맵 10개 생성 ---
+    public void initTestMentorRoadmaps() {
+        if (mentorRoadmapRepository.count() > 0) {
+            log.info("멘토 로드맵이 이미 존재합니다. 테스트 로드맵 생성을 건너뜁니다.");
+            return;
+        }
+
+        Job backendJob = jobRepository.findByName("백엔드 개발자")
+                .orElseThrow(() -> new RuntimeException("백엔드 개발자 직업을 찾을 수 없습니다."));
+
+        log.info("=== 통합 테스트용 멘토 로드맵 10개 생성 시작 ===");
+
+        // Java 경로 5개
+        createTestJavaRoadmap1(backendJob);
+        createTestJavaRoadmap2(backendJob);
+        createTestJavaRoadmap3(backendJob);
+        createTestJavaRoadmap4(backendJob);
+        createTestJavaRoadmap5(backendJob);
+
+        // JavaScript 경로 3개
+        createTestJavaScriptRoadmap1(backendJob);
+        createTestJavaScriptRoadmap2(backendJob);
+        createTestJavaScriptRoadmap3(backendJob);
+
+        // Python 경로 2개
+        createTestPythonRoadmap1(backendJob);
+        createTestPythonRoadmap2(backendJob);
+
+        log.info("=== 통합 테스트용 멘토 로드맵 10개 생성 완료 ===");
+    }
+
+    // Java 경로 로드맵들
+    private void createTestJavaRoadmap1(Job backendJob) {
+        Member member = memberService.joinMentor("test.java1@test.com", "자바멘토1", "javamentor1", "1234", "백엔드 개발자", 3);
+        Mentor mentor = updateMentorJob(member, backendJob);
+
+        List<RoadmapNodeRequest> nodes = List.of(
+                createNodeRequest("Programming Fundamentals", 0, 1, "프로그래밍 기초"),
+                createNodeRequest("Git", 0, 2, "버전 관리"),
+                createNodeRequest("HTTP", 0, 3, "HTTP 프로토콜"),
+                createNodeRequest("Java", 0, 4, "자바 언어 기초"),
+                createNodeRequest("Spring", 0, 5, "스프링 프레임워크"),
+                createNodeRequest("Spring Boot", 0, 6, "스프링 부트"),
+                createNodeRequest("MySQL", 0, 7, "MySQL 데이터베이스"),
+                createNodeRequest("JPA", 0, 8, "JPA ORM"),
+                createNodeRequest("Docker", 0, 9, "도커 컨테이너"),
+                createNodeRequest("AWS", 0, 10, "AWS 클라우드")
+        );
+
+        MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
+                "테스트 자바 로드맵 1",
+                "Java -> Spring -> Spring Boot -> MySQL -> JPA -> Docker -> AWS",
+                nodes
+        );
+
+        mentorRoadmapService.create(mentor.getId(), request);
+        log.info("자바 로드맵 1 생성 완료");
+    }
+
+    private void createTestJavaRoadmap2(Job backendJob) {
+        Member member = memberService.joinMentor("test.java2@test.com", "자바멘토2", "javamentor2", "1234", "백엔드 개발자", 4);
+        Mentor mentor = updateMentorJob(member, backendJob);
+
+        List<RoadmapNodeRequest> nodes = List.of(
+                createNodeRequest("Programming Fundamentals", 0, 1, "프로그래밍 기초"),
+                createNodeRequest("Git", 0, 2, "버전 관리"),
+                createNodeRequest("HTTP", 0, 3, "HTTP 프로토콜"),
+                createNodeRequest("Java", 0, 4, "자바 언어 기초"),
+                createNodeRequest("Spring", 0, 5, "스프링 프레임워크"),
+                createNodeRequest("Spring Boot", 0, 6, "스프링 부트"),
+                createNodeRequest("PostgreSQL", 0, 7, "PostgreSQL 데이터베이스"),
+                createNodeRequest("Redis", 0, 8, "Redis 캐싱"),
+                createNodeRequest("Kubernetes", 0, 9, "쿠버네티스"),
+                createNodeRequest("Jenkins", 0, 10, "젠킨스 CI/CD")
+        );
+
+        MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
+                "테스트 자바 로드맵 2",
+                "Java -> Spring -> Spring Boot -> PostgreSQL -> Redis -> Kubernetes -> Jenkins",
+                nodes
+        );
+
+        mentorRoadmapService.create(mentor.getId(), request);
+        log.info("자바 로드맵 2 생성 완료");
+    }
+
+    private void createTestJavaRoadmap3(Job backendJob) {
+        Member member = memberService.joinMentor("test.java3@test.com", "자바멘토3", "javamentor3", "1234", "백엔드 개발자", 5);
+        Mentor mentor = updateMentorJob(member, backendJob);
+
+        List<RoadmapNodeRequest> nodes = List.of(
+                createNodeRequest("Programming Fundamentals", 0, 1, "프로그래밍 기초"),
+                createNodeRequest("Git", 0, 2, "버전 관리"),
+                createNodeRequest("HTTP", 0, 3, "HTTP 프로토콜"),
+                createNodeRequest("Java", 0, 4, "자바 언어 기초"),
+                createNodeRequest("Spring", 0, 5, "스프링 프레임워크"),
+                createNodeRequest("Spring Boot", 0, 6, "스프링 부트"),
+                createNodeRequest("MySQL", 0, 7, "MySQL 데이터베이스"),
+                createNodeRequest("Docker", 0, 8, "도커 컨테이너"),
+                createNodeRequest("Monitoring", 0, 9, "모니터링"),
+                createNodeRequest("Logging", 0, 10, "로깅")
+        );
+
+        MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
+                "테스트 자바 로드맵 3",
+                "Java -> Spring -> Spring Boot -> MySQL -> Docker -> Monitoring -> Logging",
+                nodes
+        );
+
+        mentorRoadmapService.create(mentor.getId(), request);
+        log.info("자바 로드맵 3 생성 완료");
+    }
+
+    private void createTestJavaRoadmap4(Job backendJob) {
+        Member member = memberService.joinMentor("test.java4@test.com", "자바멘토4", "javamentor4", "1234", "백엔드 개발자", 6);
+        Mentor mentor = updateMentorJob(member, backendJob);
+
+        List<RoadmapNodeRequest> nodes = List.of(
+                createNodeRequest("Programming Fundamentals", 0, 1, "프로그래밍 기초"),
+                createNodeRequest("Git", 0, 2, "버전 관리"),
+                createNodeRequest("HTTP", 0, 3, "HTTP 프로토콜"),
+                createNodeRequest("Java", 0, 4, "자바 언어 기초"),
+                createNodeRequest("Spring", 0, 5, "스프링 프레임워크"),
+                createNodeRequest("Spring Boot", 0, 6, "스프링 부트"),
+                createNodeRequest("PostgreSQL", 0, 7, "PostgreSQL 데이터베이스"),
+                createNodeRequest("JPA", 0, 8, "JPA ORM"),
+                createNodeRequest("Spring Security", 0, 9, "스프링 시큐리티"),
+                createNodeRequest("Testing", 0, 10, "테스팅")
+        );
+
+        MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
+                "테스트 자바 로드맵 4",
+                "Java -> Spring -> Spring Boot -> PostgreSQL -> JPA -> Spring Security -> Testing",
+                nodes
+        );
+
+        mentorRoadmapService.create(mentor.getId(), request);
+        log.info("자바 로드맵 4 생성 완료");
+    }
+
+    private void createTestJavaRoadmap5(Job backendJob) {
+        Member member = memberService.joinMentor("test.java5@test.com", "자바멘토5", "javamentor5", "1234", "백엔드 개발자", 4);
+        Mentor mentor = updateMentorJob(member, backendJob);
+
+        List<RoadmapNodeRequest> nodes = List.of(
+                createNodeRequest("Programming Fundamentals", 0, 1, "프로그래밍 기초"),
+                createNodeRequest("Git", 0, 2, "버전 관리"),
+                createNodeRequest("HTTP", 0, 3, "HTTP 프로토콜"),
+                createNodeRequest("Java", 0, 4, "자바 언어 기초"),
+                createNodeRequest("Spring", 0, 5, "스프링 프레임워크"),
+                createNodeRequest("Spring Boot", 0, 6, "스프링 부트"),
+                createNodeRequest("MySQL", 0, 7, "MySQL 데이터베이스"),
+                createNodeRequest("Redis", 0, 8, "Redis 캐싱"),
+                createNodeRequest("Docker", 0, 9, "도커 컨테이너"),
+                createNodeRequest("CI/CD", 0, 10, "CI/CD 파이프라인")
+        );
+
+        MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
+                "테스트 자바 로드맵 5",
+                "Java -> Spring -> Spring Boot -> MySQL -> Redis -> Docker -> CI/CD",
+                nodes
+        );
+
+        mentorRoadmapService.create(mentor.getId(), request);
+        log.info("자바 로드맵 5 생성 완료");
+    }
+
+    // JavaScript 경로 로드맵들
+    private void createTestJavaScriptRoadmap1(Job backendJob) {
+        Member member = memberService.joinMentor("test.js1@test.com", "JS멘토1", "jsmentor1", "1234", "백엔드 개발자", 3);
+        Mentor mentor = updateMentorJob(member, backendJob);
+
+        List<RoadmapNodeRequest> nodes = List.of(
+                createNodeRequest("Programming Fundamentals", 0, 1, "프로그래밍 기초"),
+                createNodeRequest("Git", 0, 2, "버전 관리"),
+                createNodeRequest("HTTP", 0, 3, "HTTP 프로토콜"),
+                createNodeRequest("JavaScript", 0, 4, "자바스크립트 언어"),
+                createNodeRequest("Node.js", 0, 5, "Node.js 런타임"),
+                createNodeRequest("Express.js", 0, 6, "Express.js 프레임워크"),
+                createNodeRequest("MongoDB", 0, 7, "MongoDB 데이터베이스"),
+                createNodeRequest("Docker", 0, 8, "도커 컨테이너"),
+                createNodeRequest("AWS", 0, 9, "AWS 클라우드"),
+                createNodeRequest("Nginx", 0, 10, "Nginx 웹서버")
+        );
+
+        MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
+                "테스트 JS 로드맵 1",
+                "JavaScript -> Node.js -> Express -> MongoDB -> Docker -> AWS -> Nginx",
+                nodes
+        );
+
+        mentorRoadmapService.create(mentor.getId(), request);
+        log.info("JavaScript 로드맵 1 생성 완료");
+    }
+
+    private void createTestJavaScriptRoadmap2(Job backendJob) {
+        Member member = memberService.joinMentor("test.js2@test.com", "JS멘토2", "jsmentor2", "1234", "백엔드 개발자", 4);
+        Mentor mentor = updateMentorJob(member, backendJob);
+
+        List<RoadmapNodeRequest> nodes = List.of(
+                createNodeRequest("Programming Fundamentals", 0, 1, "프로그래밍 기초"),
+                createNodeRequest("Git", 0, 2, "버전 관리"),
+                createNodeRequest("HTTP", 0, 3, "HTTP 프로토콜"),
+                createNodeRequest("JavaScript", 0, 4, "자바스크립트 언어"),
+                createNodeRequest("Node.js", 0, 5, "Node.js 런타임"),
+                createNodeRequest("Express.js", 0, 6, "Express.js 프레임워크"),
+                createNodeRequest("MongoDB", 0, 7, "MongoDB 데이터베이스"),
+                createNodeRequest("Redis", 0, 8, "Redis 캐싱"),
+                createNodeRequest("Docker", 0, 9, "도커 컨테이너"),
+                createNodeRequest("Kubernetes", 0, 10, "쿠버네티스")
+        );
+
+        MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
+                "테스트 JS 로드맵 2",
+                "JavaScript -> Node.js -> Express -> MongoDB -> Redis -> Docker -> Kubernetes",
+                nodes
+        );
+
+        mentorRoadmapService.create(mentor.getId(), request);
+        log.info("JavaScript 로드맵 2 생성 완료");
+    }
+
+    private void createTestJavaScriptRoadmap3(Job backendJob) {
+        Member member = memberService.joinMentor("test.js3@test.com", "JS멘토3", "jsmentor3", "1234", "백엔드 개발자", 2);
+        Mentor mentor = updateMentorJob(member, backendJob);
+
+        List<RoadmapNodeRequest> nodes = List.of(
+                createNodeRequest("Programming Fundamentals", 0, 1, "프로그래밍 기초"),
+                createNodeRequest("Git", 0, 2, "버전 관리"),
+                createNodeRequest("HTTP", 0, 3, "HTTP 프로토콜"),
+                createNodeRequest("JavaScript", 0, 4, "자바스크립트 언어"),
+                createNodeRequest("Node.js", 0, 5, "Node.js 런타임"),
+                createNodeRequest("Express.js", 0, 6, "Express.js 프레임워크"),
+                createNodeRequest("PostgreSQL", 0, 7, "PostgreSQL 데이터베이스"),
+                createNodeRequest("Testing", 0, 8, "테스팅"),
+                createNodeRequest("Monitoring", 0, 9, "모니터링"),
+                createNodeRequest("Logging", 0, 10, "로깅")
+        );
+
+        MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
+                "테스트 JS 로드맵 3",
+                "JavaScript -> Node.js -> Express -> PostgreSQL -> Testing -> Monitoring -> Logging",
+                nodes
+        );
+
+        mentorRoadmapService.create(mentor.getId(), request);
+        log.info("JavaScript 로드맵 3 생성 완료");
+    }
+
+    // Python 경로 로드맵들
+    private void createTestPythonRoadmap1(Job backendJob) {
+        Member member = memberService.joinMentor("test.py1@test.com", "파이썬멘토1", "pymentor1", "1234", "백엔드 개발자", 3);
+        Mentor mentor = updateMentorJob(member, backendJob);
+
+        List<RoadmapNodeRequest> nodes = List.of(
+                createNodeRequest("Programming Fundamentals", 0, 1, "프로그래밍 기초"),
+                createNodeRequest("Git", 0, 2, "버전 관리"),
+                createNodeRequest("HTTP", 0, 3, "HTTP 프로토콜"),
+                createNodeRequest("Python", 0, 4, "파이썬 언어"),
+                createNodeRequest("Django", 0, 5, "Django 프레임워크"),
+                createNodeRequest("PostgreSQL", 0, 6, "PostgreSQL 데이터베이스"),
+                createNodeRequest("Redis", 0, 7, "Redis 캐싱"),
+                createNodeRequest("Docker", 0, 8, "도커 컨테이너"),
+                createNodeRequest("AWS", 0, 9, "AWS 클라우드"),
+                createNodeRequest("Monitoring", 0, 10, "모니터링")
+        );
+
+        MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
+                "테스트 파이썬 로드맵 1",
+                "Python -> Django -> PostgreSQL -> Redis -> Docker -> AWS -> Monitoring",
+                nodes
+        );
+
+        mentorRoadmapService.create(mentor.getId(), request);
+        log.info("Python 로드맵 1 생성 완료");
+    }
+
+    private void createTestPythonRoadmap2(Job backendJob) {
+        Member member = memberService.joinMentor("test.py2@test.com", "파이썬멘토2", "pymentor2", "1234", "백엔드 개발자", 4);
+        Mentor mentor = updateMentorJob(member, backendJob);
+
+        List<RoadmapNodeRequest> nodes = List.of(
+                createNodeRequest("Programming Fundamentals", 0, 1, "프로그래밍 기초"),
+                createNodeRequest("Git", 0, 2, "버전 관리"),
+                createNodeRequest("HTTP", 0, 3, "HTTP 프로토콜"),
+                createNodeRequest("Python", 0, 4, "파이썬 언어"),
+                createNodeRequest("Django", 0, 5, "Django 프레임워크"),
+                createNodeRequest("MySQL", 0, 6, "MySQL 데이터베이스"),
+                createNodeRequest("Docker", 0, 7, "도커 컨테이너"),
+                createNodeRequest("Kubernetes", 0, 8, "쿠버네티스"),
+                createNodeRequest("Jenkins", 0, 9, "젠킨스 CI/CD"),
+                createNodeRequest("Logging", 0, 10, "로깅")
+        );
+
+        MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
+                "테스트 파이썬 로드맵 2",
+                "Python -> Django -> MySQL -> Docker -> Kubernetes -> Jenkins -> Logging",
+                nodes
+        );
+
+        mentorRoadmapService.create(mentor.getId(), request);
+        log.info("Python 로드맵 2 생성 완료");
+    }
+
+    // --- 통합 로직 테스트 및 트리 구조 출력 ---
+    public void testJobRoadmapIntegration() {
+        Job backendJob = jobRepository.findByName("백엔드 개발자")
+                .orElseThrow(() -> new RuntimeException("백엔드 개발자 직업을 찾을 수 없습니다."));
+
+        log.info("\n\n=== 직업 로드맵 통합 시작 ===");
+        JobRoadmap integratedRoadmap = jobRoadmapIntegrationService.integrateJobRoadmap(backendJob.getId());
+        log.info("=== 직업 로드맵 통합 완료 ===\n");
+
+        log.info("\n\n=== 통합된 직업 로드맵 트리 구조 출력 ===");
+        printJobRoadmapTree(integratedRoadmap);
+        log.info("=== 트리 구조 출력 완료 ===\n\n");
+    }
+
+    // --- 트리 구조 출력 헬퍼 메서드 ---
+    private void printJobRoadmapTree(JobRoadmap jobRoadmap) {
+        log.info("직업 로드맵 ID: {}", jobRoadmap.getId());
+        log.info("직업: {}", jobRoadmap.getJob().getName());
+        log.info("총 노드 수: {}", jobRoadmap.getNodes().size());
+        log.info("\n트리 구조:");
+
+        // 루트 노드들 찾기 (parent가 null인 노드들)
+        List<RoadmapNode> rootNodes = jobRoadmap.getNodes().stream()
+                .filter(node -> node.getParent() == null)
+                .sorted(Comparator.comparingInt(RoadmapNode::getStepOrder))
+                .toList();
+
+        log.info("루트 노드 수: {}", rootNodes.size());
+
+        for (RoadmapNode rootNode : rootNodes) {
+            printNodeRecursive(rootNode, "", true);
+        }
+    }
+
+    private void printNodeRecursive(RoadmapNode node, String prefix, boolean isLast) {
+        // 현재 노드 출력
+        String connector = isLast ? "└── " : "├── ";
+        String nodeInfo = String.format("%s (level=%d, stepOrder=%d, id=%d)",
+                node.getTaskName(),
+                node.getLevel(),
+                node.getStepOrder(),
+                node.getId());
+
+        log.info("{}{}{}", prefix, connector, nodeInfo);
+
+        // 자식 노드들 정렬 (stepOrder 기준)
+        List<RoadmapNode> children = node.getChildren().stream()
+                .sorted(Comparator.comparingInt(RoadmapNode::getStepOrder))
+                .toList();
+
+        // 자식 노드들 재귀 출력
+        String childPrefix = prefix + (isLast ? "    " : "│   ");
+        for (int i = 0; i < children.size(); i++) {
+            boolean isLastChild = (i == children.size() - 1);
+            printNodeRecursive(children.get(i), childPrefix, isLastChild);
+        }
     }
 }

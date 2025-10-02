@@ -22,4 +22,8 @@ public enum ReservationStatus {
     public boolean canComplete() {
         return this == APPROVED;
     }
+
+    public boolean canReview() {
+        return this == COMPLETED;
+    }
 }
