@@ -7,6 +7,8 @@ import com.back.domain.mentoring.mentoring.entity.QMentoring;
 import com.back.domain.mentoring.mentoring.entity.QMentoringTag;
 import com.back.domain.mentoring.mentoring.entity.QTag;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,38 +34,45 @@ public class MentoringRepositoryImpl implements MentoringRepositoryCustom {
 
         // 제목, 멘토 닉네임, 태그 검색 조건
         if (keyword != null && !keyword.isBlank()) {
-            builder.and(
-                mentoring.title.containsIgnoreCase(keyword)
-                    .or(mentor.member.nickname.containsIgnoreCase(keyword))
-                    .or(tag.name.containsIgnoreCase(keyword))
-            );
+            // 제목, 멘토 닉네임 검색 조건
+            BooleanExpression titleOrNickName = mentoring.title.containsIgnoreCase(keyword)
+                .or(mentor.member.nickname.containsIgnoreCase(keyword));
+
+            // 태그 검색 조건 (EXISTS 서브쿼리)
+            BooleanExpression tagSearch = JPAExpressions
+                .selectOne()
+                .from(mentoringTag)
+                .join(mentoringTag.tag, tag)
+                .where(
+                    mentoringTag.mentoring.eq(mentoring)
+                    .and(tag.name.containsIgnoreCase(keyword))
+                )
+                .exists();
+
+            builder.and(titleOrNickName).or(tagSearch);
         }
 
         // 조건에 맞는 모든 데이터 조회
         List<Mentoring> content = queryFactory
             .selectFrom(mentoring)
-            .distinct()
             .leftJoin(mentoring.mentor, mentor).fetchJoin()
             .leftJoin(mentor.member, member).fetchJoin()
-            .leftJoin(mentoring.mentoringTags, mentoringTag)
-            .leftJoin(mentoringTag.tag, tag)
             .where(builder)
             .orderBy(mentoring.id.desc())
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize())
             .fetch();
 
-        long total = getTotal(mentoring, mentoringTag, tag, builder);
+        long total = getTotal(mentoring, mentor, builder);
 
         return new PageImpl<>(content, pageable, total);
     }
 
-    private long getTotal(QMentoring mentoring, QMentoringTag mentoringTag, QTag tag, BooleanBuilder builder) {
+    private long getTotal(QMentoring mentoring, QMentor mentor, BooleanBuilder builder) {
         Long totalCount = queryFactory
-            .select(mentoring.countDistinct())
+            .select(mentoring.count())
             .from(mentoring)
-            .leftJoin(mentoring.mentoringTags, mentoringTag)
-            .leftJoin(mentoringTag.tag, tag)
+            .leftJoin(mentoring.mentor, mentor)
             .where(builder)
             .fetchOne();
         return totalCount != null ? totalCount : 0L;
