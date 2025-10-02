@@ -51,7 +51,7 @@ public class Review extends BaseEntity {
     }
 
     public boolean isMentee(Mentee mentee) {
-        return mentee.equals(this.mentee);
+        return mentee.getId().equals(this.mentee.getId());
     }
 
 
