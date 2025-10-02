@@ -57,6 +57,8 @@ public class MentoringRepositoryImpl implements MentoringRepositoryCustom {
             .selectFrom(mentoring)
             .leftJoin(mentoring.mentor, mentor).fetchJoin()
             .leftJoin(mentor.member, member).fetchJoin()
+            .leftJoin(mentoring.mentoringTags, mentoringTag).fetchJoin()
+            .leftJoin(mentoringTag.tag, tag).fetchJoin()
             .where(builder)
             .orderBy(mentoring.id.desc())
             .offset(pageable.getOffset())
