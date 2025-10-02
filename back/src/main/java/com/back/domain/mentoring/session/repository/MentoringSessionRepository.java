@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface MentoringSessionRepository extends JpaRepository<MentoringSession, Integer> {
+public interface MentoringSessionRepository extends JpaRepository<MentoringSession, Long> {
 }
