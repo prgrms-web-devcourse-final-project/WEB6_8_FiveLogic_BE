@@ -33,7 +33,7 @@ logging:
     com.back: INFO
 custom:
   site:
-    cookieDomain: ""
+    cookieDomain: "api.jobmate.info"  # 도메인으로 변경
     frontUrl: "http://localhost:3000"  # 프론트엔드 도메인으로 변경
     backUrl: "https://api.jobmate.info"  # HTTPS로 변경
   cookie:
