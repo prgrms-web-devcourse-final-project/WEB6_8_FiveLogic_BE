@@ -39,5 +39,5 @@ custom:
   cookie:
     httpOnly: true
     secure: true  # HTTPS에서는 true로 변경
-    sameSite: "Lax"
+    sameSite: "None" # 임시로 None로 변경
     maxAge: "#{60*60*24}"
