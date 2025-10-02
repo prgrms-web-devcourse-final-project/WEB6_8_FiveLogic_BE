@@ -1,5 +1,6 @@
 package com.back.domain.roadmap.roadmap.repository;
 
+import com.back.domain.job.job.entity.Job;
 import com.back.domain.roadmap.roadmap.entity.JobRoadmap;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,4 +36,5 @@ public interface JobRoadmapRepository extends JpaRepository<JobRoadmap, Long> {
             ORDER BY n.level, n.stepOrder""")
     Optional<JobRoadmap> findByIdWithJobAndNodes(@Param("id") Long id);
 
+    Optional<JobRoadmap> findByJob(Job job);
 }
