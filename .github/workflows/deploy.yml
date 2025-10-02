@@ -11,6 +11,7 @@ on:
   push:
     branches:
       - main
+      - feat/139
   workflow_dispatch:
 
 permissions:
@@ -51,7 +52,7 @@ jobs:
 
   makeTagAndRelease:
     needs: test
-    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/chore/107') && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/139') && github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
       tag_name: ${{ steps.create_tag.outputs.new_tag }}
