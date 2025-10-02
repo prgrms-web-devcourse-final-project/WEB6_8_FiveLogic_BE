@@ -33,7 +33,7 @@ logging:
     com.back: INFO
 custom:
   site:
-    cookieDomain: ".jobmate.info"  # 도메인 설정
+    cookieDomain: ""
     frontUrl: "https://jobmate.info"
     backUrl: "https://api.jobmate.info"  # HTTPS로 변경
   cookie:
