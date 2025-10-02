@@ -4,14 +4,14 @@ import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.member.mentor.repository.MentorRepository;
 import com.back.domain.roadmap.roadmap.dto.request.MentorRoadmapSaveRequest;
 import com.back.domain.roadmap.roadmap.dto.request.RoadmapNodeRequest;
-import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapSaveResponse;
 import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapResponse;
+import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapSaveResponse;
 import com.back.domain.roadmap.roadmap.entity.MentorRoadmap;
 import com.back.domain.roadmap.roadmap.entity.RoadmapNode;
 import com.back.domain.roadmap.roadmap.repository.MentorRoadmapRepository;
 import com.back.domain.roadmap.roadmap.repository.RoadmapNodeRepository;
 import com.back.domain.roadmap.task.entity.Task;
-import com.back.domain.roadmap.task.repository.TaskRepository;
+import com.back.domain.roadmap.task.service.TaskService;
 import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,8 +28,8 @@ import java.util.stream.Collectors;
 public class MentorRoadmapService {
     private final MentorRoadmapRepository mentorRoadmapRepository;
     private final RoadmapNodeRepository roadmapNodeRepository;
-    private final TaskRepository taskRepository;
     private final MentorRepository mentorRepository;
+    private final TaskService taskService;
 
     // 멘토 로드맵 생성
     @Transactional
@@ -47,6 +45,9 @@ public class MentorRoadmapService {
 
         // 공통 검증(노드 개수, stepOrder 연속성)
         validateRequest(request);
+
+        // taskId가 null인 자유입력 Task를 자동으로 pending alias로 등록
+        registerPendingAliasesForFreeInputTasks(request.nodes());
 
         // MentorRoadmap 생성 및 저장 (로드맵 ID 확보)
         MentorRoadmap mentorRoadmap = new MentorRoadmap(mentor, request.title(), request.description());
@@ -106,6 +107,9 @@ public class MentorRoadmapService {
         // 공통 검증
         validateRequest(request);
 
+        // taskId가 null인 자유입력 Task를 자동으로 pending alias로 등록
+        registerPendingAliasesForFreeInputTasks(request.nodes());
+
         // 로드맵 기본 정보 수정
         mentorRoadmap.updateTitle(request.title());
         mentorRoadmap.updateDescription(request.description());
@@ -157,6 +161,16 @@ public class MentorRoadmapService {
         mentorRoadmapRepository.delete(mentorRoadmap);
 
         log.info("멘토 로드맵 삭제 완료 - 멘토 ID: {}, 로드맵 ID: {}", mentorId, roadmapId);
+    }
+
+    // taskId가 null인 자유입력 Task를 자동으로 pending alias로 등록
+    private void registerPendingAliasesForFreeInputTasks(List<RoadmapNodeRequest> nodes) {
+        for (RoadmapNodeRequest node : nodes) {
+            if (node.taskId() == null && node.taskName() != null) {
+                // TaskService를 통해 pending alias 자동 등록 (이미 존재하면 무시)
+                taskService.createPendingAliasIfNotExists(node.taskName());
+            }
+        }
     }
 
     // 로드맵 요청 공통 유효성 검증
@@ -218,26 +232,8 @@ public class MentorRoadmapService {
                 .distinct()
                 .toList();
 
-        if (taskIds.isEmpty()) {
-            return Map.of(); // 빈 맵 반환
-        }
-
-        // 일괄 조회로 존재하는 Task들 확인
-        List<Task> existingTasks = taskRepository.findAllById(taskIds);
-        Map<Long, Task> existingTaskMap = existingTasks.stream()
-                .collect(Collectors.toMap(Task::getId, Function.identity()));
-
-        // 존재하지 않는 TaskId 확인
-        List<Long> missingTaskIds = taskIds.stream()
-                .filter(taskId -> !existingTaskMap.containsKey(taskId))
-                .toList();
-
-        if (!missingTaskIds.isEmpty()) {
-            throw new ServiceException("404",
-                    String.format("존재하지 않는 Task ID: %s", missingTaskIds));
-        }
-
-        return existingTaskMap;
+        // TaskService에 위임하여 검증 및 조회
+        return taskService.validateAndGetTasks(taskIds);
     }
 
 
