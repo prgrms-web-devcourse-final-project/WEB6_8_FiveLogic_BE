@@ -38,6 +38,6 @@ custom:
     backUrl: "https://api.jobmate.info"  # HTTPS로 변경
   cookie:
     httpOnly: true
-    secure: false  # HTTPS에서는 true로 변경
+    secure: true  # HTTPS에서는 true로 변경
     sameSite: "None" #임시
     maxAge: "#{60*60*24}"
