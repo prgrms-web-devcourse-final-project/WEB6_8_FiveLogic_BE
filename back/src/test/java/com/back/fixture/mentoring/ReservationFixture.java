@@ -49,4 +49,12 @@ public class ReservationFixture {
         MentorSlot mentorSlot = MentorSlotFixture.create(mentor);
         return create(mentoring, mentee, mentorSlot);
     }
+
+    public static Reservation createWithMentor(Mentor mentor) {
+        Member menteeMember = MemberFixture.createDefault();
+        Mentee mentee = MenteeFixture.create(menteeMember);
+        Mentoring mentoring = MentoringFixture.create(mentor);
+        MentorSlot mentorSlot = MentorSlotFixture.create(mentor);
+        return create(mentoring, mentee, mentorSlot);
+    }
 }
