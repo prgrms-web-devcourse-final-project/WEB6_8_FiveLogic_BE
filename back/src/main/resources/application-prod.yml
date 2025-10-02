@@ -34,7 +34,7 @@ logging:
 custom:
   site:
     cookieDomain: ".jobmate.info"  # 도메인 설정
-    frontUrl: "https://jobmate.info"
+    frontUrl: "http://localhost:3000"
     backUrl: "https://api.jobmate.info"  # HTTPS로 변경
   cookie:
     httpOnly: true
