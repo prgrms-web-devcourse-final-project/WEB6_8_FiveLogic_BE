@@ -530,15 +530,27 @@ public class RoadmapInitData {
 
     /**
      * Task가 DB에 없으면 자동 생성하도록 안전장치 추가.
-     * 프로젝트 제안은 description에 구체적으로 적음 (Task로 만들지 않음).
+     * 통합 로직 테스트를 위해 모든 필드에 실제 값을 제공.
      */
-    private RoadmapNodeRequest createNodeRequest(String taskName, int level, int stepOrder, String description) {
+    private RoadmapNodeRequest createNodeRequest(
+            String taskName,
+            int level,
+            int stepOrder,
+            String learningAdvice
+
+    ) {
         Task task = taskRepository.findByNameIgnoreCase(taskName)
                 .orElseGet(() -> taskService.create(taskName)); // 누락 시 자동 생성
         return new RoadmapNodeRequest(
                 task != null ? task.getId() : null,
                 taskName,
-                description,
+                learningAdvice,
+                null,  // recommendedResources
+                null,  // learningGoals
+                null,  // difficulty
+                null,  // importance
+                null,  // hoursPerDay
+                null,  // weeks
                 stepOrder
         );
     }
@@ -582,7 +594,7 @@ public class RoadmapInitData {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(programmingFundamentals)
                 .taskName("Programming Fundamentals")
-                .description("프로그래밍의 기초 개념: 변수, 조건문, 반복문, 함수 등을 이해하고 활용할 수 있습니다.")
+                .learningAdvice("프로그래밍의 기초 개념: 변수, 조건문, 반복문, 함수 등을 이해하고 활용할 수 있습니다.")
                 .stepOrder(1)
                 .level(0)
                 .build();
@@ -593,7 +605,7 @@ public class RoadmapInitData {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(git)
                 .taskName("Git")
-                .description("버전 관리 시스템으로 코드 히스토리 관리 및 협업을 위한 필수 도구입니다.")
+                .learningAdvice("버전 관리 시스템으로 코드 히스토리 관리 및 협업을 위한 필수 도구입니다.")
                 .stepOrder(2)
                 .level(0)
                 .build();
@@ -604,7 +616,7 @@ public class RoadmapInitData {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(java)
                 .taskName("Java")
-                .description("객체지향 프로그래밍 언어로 백엔드 개발의 기초가 되는 언어입니다.")
+                .learningAdvice("객체지향 프로그래밍 언어로 백엔드 개발의 기초가 되는 언어입니다.")
                 .stepOrder(1)
                 .level(1)
                 .build();
@@ -614,7 +626,7 @@ public class RoadmapInitData {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(springBoot)
                 .taskName("Spring Boot")
-                .description("Java 기반의 웹 애플리케이션 프레임워크로 REST API 개발에 필수입니다.")
+                .learningAdvice("Java 기반의 웹 애플리케이션 프레임워크로 REST API 개발에 필수입니다.")
                 .stepOrder(2)
                 .level(1)
                 .build();
@@ -625,7 +637,7 @@ public class RoadmapInitData {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(mysql)
                 .taskName("MySQL")
-                .description("관계형 데이터베이스로 데이터 저장 및 관리를 위한 기본 기술입니다.")
+                .learningAdvice("관계형 데이터베이스로 데이터 저장 및 관리를 위한 기본 기술입니다.")
                 .stepOrder(1)
                 .level(2)
                 .build();
@@ -635,7 +647,7 @@ public class RoadmapInitData {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(jpa)
                 .taskName("JPA")
-                .description("Java 진영의 ORM 기술로 객체와 관계형 데이터베이스를 매핑합니다.")
+                .learningAdvice("Java 진영의 ORM 기술로 객체와 관계형 데이터베이스를 매핑합니다.")
                 .stepOrder(2)
                 .level(2)
                 .build();
@@ -646,7 +658,7 @@ public class RoadmapInitData {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(docker)
                 .taskName("Docker")
-                .description("컨테이너 기술로 애플리케이션 배포 및 환경 관리를 간소화합니다.")
+                .learningAdvice("컨테이너 기술로 애플리케이션 배포 및 환경 관리를 간소화합니다.")
                 .stepOrder(1)
                 .level(2)
                 .build();
@@ -656,7 +668,7 @@ public class RoadmapInitData {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(aws)
                 .taskName("AWS")
-                .description("클라우드 서비스로 애플리케이션을 확장 가능하게 배포하고 운영합니다.")
+                .learningAdvice("클라우드 서비스로 애플리케이션을 확장 가능하게 배포하고 운영합니다.")
                 .stepOrder(2)
                 .level(2)
                 .build();

@@ -75,7 +75,12 @@ public class JobRoadmapIntegrationService {
         Map<String, Integer> rootCount = new HashMap<>();
         Map<String, Set<Long>> mentorAppearSet = new HashMap<>(); // unique mentors per key
         Map<String, List<Integer>> positions = new HashMap<>(); // to compute average position
-        Map<String, List<String>> descs = new HashMap<>();
+        Map<String, List<String>> learningAdvices = new HashMap<>();
+        Map<String, List<String>> recommendedResourcesList = new HashMap<>();
+        Map<String, List<String>> learningGoalsList = new HashMap<>();
+        Map<String, List<Integer>> difficulties = new HashMap<>();
+        Map<String, List<Integer>> importances = new HashMap<>();
+        Map<String, List<Integer>> estimatedHoursList = new HashMap<>();
 
         // 집계 루프(모든 멘토 로드맵의 모든 노드 순회하며 필요한 통계 자료 수집)
         for (MentorRoadmap mr : mentorRoadmaps) {
@@ -109,9 +114,34 @@ public class JobRoadmapIntegrationService {
                 // metorAppearSet: 고유 멘토 수
                 mentorAppearSet.computeIfAbsent(k, kk -> new HashSet<>()).add(mentorId);
 
-                // descs: description 모으기
-                if (rn.getDescription() != null && !rn.getDescription().isBlank()) {
-                    descs.computeIfAbsent(k, kk -> new ArrayList<>()).add(rn.getDescription());
+                // learningAdvice 모으기
+                if (rn.getLearningAdvice() != null && !rn.getLearningAdvice().isBlank()) {
+                    learningAdvices.computeIfAbsent(k, kk -> new ArrayList<>()).add(rn.getLearningAdvice());
+                }
+
+                // recommendedResources 모으기
+                if (rn.getRecommendedResources() != null && !rn.getRecommendedResources().isBlank()) {
+                    recommendedResourcesList.computeIfAbsent(k, kk -> new ArrayList<>()).add(rn.getRecommendedResources());
+                }
+
+                // learningGoals 모으기
+                if (rn.getLearningGoals() != null && !rn.getLearningGoals().isBlank()) {
+                    learningGoalsList.computeIfAbsent(k, kk -> new ArrayList<>()).add(rn.getLearningGoals());
+                }
+
+                // difficulty 모으기
+                if (rn.getDifficulty() != null) {
+                    difficulties.computeIfAbsent(k, kk -> new ArrayList<>()).add(rn.getDifficulty());
+                }
+
+                // importance 모으기
+                if (rn.getImportance() != null) {
+                    importances.computeIfAbsent(k, kk -> new ArrayList<>()).add(rn.getImportance());
+                }
+
+                // estimatedHours 모으기
+                if (rn.getEstimatedHours() != null) {
+                    estimatedHoursList.computeIfAbsent(k, kk -> new ArrayList<>()).add(rn.getEstimatedHours());
                 }
 
                 // transitions: 다음 노드로의 이동 기록 (A->B가 몇 번 나왔는지)
@@ -154,16 +184,28 @@ public class JobRoadmapIntegrationService {
         Map<String, RoadmapNode> keyToNode = new HashMap<>();
         for (Map.Entry<String, AggregatedNode> e : agg.entrySet()) {
             AggregatedNode a = e.getValue();
+            String key = e.getKey();
+
+            // 숫자 필드 평균 계산
+            Double avgDifficulty = calculateAverage(difficulties.get(key));
+            Double avgImportance = calculateAverage(importances.get(key));
+            Integer avgEstimatedHours = calculateIntegerAverage(estimatedHoursList.get(key));
+
             RoadmapNode node = RoadmapNode.builder()
                     .taskName(a.displayName)
-                    .description(mergeTopDescriptions(descs.get(e.getKey())))
+                    .learningAdvice(mergeTopDescriptions(learningAdvices.get(key)))
+                    .recommendedResources(mergeTopDescriptions(recommendedResourcesList.get(key)))
+                    .learningGoals(mergeTopDescriptions(learningGoalsList.get(key)))
+                    .difficulty(avgDifficulty != null ? avgDifficulty.intValue() : null)
+                    .importance(avgImportance != null ? avgImportance.intValue() : null)
+                    .estimatedHours(avgEstimatedHours)
                     .task(a.task != null ? taskMap.get(a.task.getId()) : null)
                     .stepOrder(0) // assign later
                     .level(0)     // assign later via addChild/setLevel
                     .roadmapId(0L)
                     .roadmapType(RoadmapType.JOB)
                     .build();
-            keyToNode.put(e.getKey(), node);
+            keyToNode.put(key, node);
         }
 
         // Transition 빈도 기반 자식 선택 + 부모 우선순위 계산
@@ -251,7 +293,6 @@ public class JobRoadmapIntegrationService {
             AggregatedNode a = agg.get(rootKey);
             RoadmapNode rootNode = RoadmapNode.builder()
                     .taskName(a != null ? a.displayName : "root")
-                    .description(mergeTopDescriptions(descs.get(rootKey)))
                     .task(a != null ? a.task : null)
                     .stepOrder(0)
                     .level(0)
@@ -572,6 +613,25 @@ public class JobRoadmapIntegrationService {
             if (set.size() >= 3) break;
         }
         return String.join("\n\n", set);
+    }
+
+    // Integer 리스트의 평균을 Double로 반환
+    private Double calculateAverage(List<Integer> list) {
+        if (list == null || list.isEmpty()) return null;
+        return list.stream()
+                .mapToInt(Integer::intValue)
+                .average()
+                .orElse(0.0);
+    }
+
+    // Integer 리스트의 평균을 반올림하여 Integer로 반환
+    private Integer calculateIntegerAverage(List<Integer> list) {
+        if (list == null || list.isEmpty()) return null;
+        double avg = list.stream()
+                .mapToInt(Integer::intValue)
+                .average()
+                .orElse(0.0);
+        return (int) Math.round(avg);
     }
 
     // RoadmapNode를 고유한 키로 변환
