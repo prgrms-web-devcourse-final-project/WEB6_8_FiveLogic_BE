@@ -192,9 +192,11 @@ class MentoringControllerTest {
             // Mentoring 정보 검증
             .andExpect(jsonPath("$.data.mentoring.mentoringId").value(mentoring.getId()))
             .andExpect(jsonPath("$.data.mentoring.title").value(mentoring.getTitle()))
-            .andExpect(jsonPath("$.data.mentoring.tags").value(mentoring.getTags()))
             .andExpect(jsonPath("$.data.mentoring.bio").value(mentoring.getBio()))
             .andExpect(jsonPath("$.data.mentoring.thumb").value(mentoring.getThumb()))
+            .andExpect(jsonPath("$.data.mentoring.tags").isArray())
+            .andExpect(jsonPath("$.data.mentoring.tags[0]").value("Spring"))
+            .andExpect(jsonPath("$.data.mentoring.tags[1]").value("Java"))
 
             // Mentor 정보 검증
             .andExpect(jsonPath("$.data.mentor.mentorId").value(mentorOfMentoring.getId()))

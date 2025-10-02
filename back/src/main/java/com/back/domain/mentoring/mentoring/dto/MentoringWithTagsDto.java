@@ -21,7 +21,7 @@ public record MentoringWithTagsDto(
         return new MentoringWithTagsDto(
             mentoring.getId(),
             mentoring.getTitle(),
-            mentoring.getTags(),
+            mentoring.getTagNames(),
             mentoring.getMentor().getId(),
             mentoring.getMentor().getMember().getNickname()
         );

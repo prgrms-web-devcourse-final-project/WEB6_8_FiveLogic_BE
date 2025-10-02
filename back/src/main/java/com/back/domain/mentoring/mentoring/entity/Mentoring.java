@@ -1,7 +1,6 @@
 package com.back.domain.mentoring.mentoring.entity;
 
 import com.back.domain.member.mentor.entity.Mentor;
-import com.back.global.converter.StringListConverter;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -25,30 +24,45 @@ public class Mentoring extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String bio;
 
-    @Convert(converter = StringListConverter.class)
-    @Column(columnDefinition = "JSON")
-    private List<String> tags;
+    @OneToMany(mappedBy = "mentoring", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MentoringTag> mentoringTags = new ArrayList<>();
 
     @Column(length = 255)
     private String thumb;
 
     @Builder
-    public Mentoring(Mentor mentor, String title, String bio, List<String> tags, String thumb) {
+    public Mentoring(Mentor mentor, String title, String bio, String thumb) {
         this.mentor = mentor;
         this.title = title;
         this.bio = bio;
-        this.tags = tags != null ? tags : new ArrayList<>();
         this.thumb = thumb;
     }
 
-    public void update(String title, String bio, List<String> tags, String thumb) {
+    public void update(String title, String bio, List<Tag> tags, String thumb) {
         this.title = title;
         this.bio = bio;
-        this.tags = tags != null ? tags : new ArrayList<>();
         this.thumb = thumb;
+
+        updateTags(tags);
+    }
+
+    public void updateTags(List<Tag> tags) {
+        this.mentoringTags.clear();
+
+        if (tags != null) {
+            tags.forEach(tag ->
+                this.mentoringTags.add(new MentoringTag(this, tag))
+            );
+        }
     }
 
     public boolean isOwner(Mentor mentor) {
         return this.mentor.equals(mentor);
+    }
+
+    public List<String> getTagNames() {
+        return mentoringTags.stream()
+            .map(mentoringTag -> mentoringTag.getTag().getName())
+            .toList();
     }
 }
