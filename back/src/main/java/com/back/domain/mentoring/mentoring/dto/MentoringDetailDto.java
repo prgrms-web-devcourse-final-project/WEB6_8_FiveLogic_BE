@@ -26,7 +26,7 @@ public record MentoringDetailDto(
         return new MentoringDetailDto(
             mentoring.getId(),
             mentoring.getTitle(),
-            mentoring.getTags(),
+            mentoring.getTagNames(),
             mentoring.getBio(),
             mentoring.getThumb(),
             mentoring.getCreateDate(),

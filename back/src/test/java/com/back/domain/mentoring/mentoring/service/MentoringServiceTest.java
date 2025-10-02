@@ -6,11 +6,14 @@ import com.back.domain.mentoring.mentoring.dto.MentoringWithTagsDto;
 import com.back.domain.mentoring.mentoring.dto.request.MentoringRequest;
 import com.back.domain.mentoring.mentoring.dto.response.MentoringResponse;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
+import com.back.domain.mentoring.mentoring.entity.Tag;
 import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
+import com.back.domain.mentoring.mentoring.repository.TagRepository;
 import com.back.fixture.MemberFixture;
 import com.back.fixture.MentorFixture;
 import com.back.fixture.mentoring.MentoringFixture;
+import com.back.fixture.mentoring.TagFixture;
 import com.back.global.exception.ServiceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,6 +43,9 @@ class MentoringServiceTest {
 
     @Mock
     private MentoringRepository mentoringRepository;
+
+    @Mock
+    private TagRepository tagRepository;
 
     @Mock
     private MentoringStorage mentoringStorage;
@@ -166,6 +172,10 @@ class MentoringServiceTest {
         @Test
         @DisplayName("생성 성공")
         void createMentoring() {
+            List<Tag> tags = TagFixture.createDefaultTags();
+
+            when(tagRepository.findByNameIn(request.tags()))
+                .thenReturn(tags);
             when(mentoringRepository.existsByMentorId(mentor1.getId()))
                 .thenReturn(false);
 
@@ -179,6 +189,7 @@ class MentoringServiceTest {
             assertThat(result.mentoring().tags()).isEqualTo(request.tags());
             assertThat(result.mentoring().thumb()).isEqualTo(request.thumb());
             verify(mentoringRepository).existsByMentorId(mentor1.getId());
+            verify(tagRepository).findByNameIn(request.tags());
             verify(mentoringRepository).save(any(Mentoring.class));
         }
 
@@ -207,7 +218,10 @@ class MentoringServiceTest {
         void updateMentoring() {
             // given
             Long mentoringId = 1L;
+            List<Tag> tags = TagFixture.createDefaultTags();
 
+            when(tagRepository.findByNameIn(request.tags()))
+                .thenReturn(tags);
             when(mentoringStorage.findMentoring(mentoringId))
                 .thenReturn(mentoring1);
 
@@ -220,7 +234,9 @@ class MentoringServiceTest {
             assertThat(result.mentoring().bio()).isEqualTo(request.bio());
             assertThat(result.mentoring().tags()).isEqualTo(request.tags());
             assertThat(result.mentoring().thumb()).isEqualTo(request.thumb());
+
             verify(mentoringStorage).findMentoring(mentoringId);
+            verify(tagRepository).findByNameIn(request.tags());
         }
 
         @Test
