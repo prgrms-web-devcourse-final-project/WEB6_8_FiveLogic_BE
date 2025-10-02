@@ -24,6 +24,16 @@ public class ReservationFixture {
         return builder().build();
     }
 
+    public static Reservation create(Long id, Mentoring mentoring, Mentee mentee, MentorSlot mentorSlot, String preQuestion) {
+        return builder()
+                .withId(id)
+                .withMentoring(mentoring)
+                .withMentee(mentee)
+                .withMentorSlot(mentorSlot)
+                .withPreQuestion(preQuestion)
+                .build();
+    }
+
     public Reservation build() {
         Mentor mentor = Mentor.builder()
                 .member(MemberFixture.createDefault())
