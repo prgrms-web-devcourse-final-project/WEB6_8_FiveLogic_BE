@@ -12,6 +12,8 @@ import com.back.domain.mentoring.reservation.dto.response.ReservationResponse;
 import com.back.domain.mentoring.reservation.entity.Reservation;
 import com.back.domain.mentoring.reservation.error.ReservationErrorCode;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
+import com.back.domain.mentoring.session.entity.MentoringSession;
+import com.back.domain.mentoring.session.service.MentoringSessionService;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.domain.mentoring.slot.service.DateTimeValidator;
 import com.back.global.exception.ServiceException;
@@ -32,6 +34,7 @@ public class ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final MentoringStorage mentoringStorage;
+    private final MentoringSessionService mentoringSessionService;
 
     @Transactional(readOnly = true)
     public Page<ReservationDto> getReservations(Member member, int page, int size) {
@@ -89,7 +92,8 @@ public class ReservationService {
 
             reservation.approve(mentor);
 
-            // 세션
+            // 예약이 승인되면 세션을 생성한다.
+            MentoringSession mentoringSession = mentoringSessionService.create(reservation);
 
             return ReservationResponse.from(reservation);
         } catch (OptimisticLockException e) {
@@ -108,6 +112,9 @@ public class ReservationService {
     public ReservationResponse cancelReservation(Member member, Long reservationId) {
         Reservation reservation = mentoringStorage.findReservation(reservationId);
         reservation.cancel(member);
+
+        // 예약이 취소되면 세션을 제거한다.
+        mentoringSessionService.deleteByReservation(reservation);
         return ReservationResponse.from(reservation);
     }
 
