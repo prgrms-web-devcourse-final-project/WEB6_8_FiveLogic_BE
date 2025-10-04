@@ -11,7 +11,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     boolean existsByReservationId(Long reservationId);
 
     @Query("""
-        SELECT AVG(r.rating)
+        SELECT ROUND(AVG(r.rating), 1)
         FROM Review r
         INNER JOIN r.reservation res
         WHERE res.mentor.id = :mentorId
@@ -21,7 +21,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     );
 
     @Query("""
-        SELECT AVG(r.rating)
+        SELECT ROUND(AVG(r.rating), 1)
         FROM Review r
         INNER JOIN r.reservation res
         WHERE res.mentoring.id = :mentoringId
