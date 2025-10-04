@@ -30,6 +30,9 @@ public class Mentoring extends BaseEntity {
     @Column(length = 255)
     private String thumb;
 
+    @Column
+    private double rating = 0.0;
+
     @Builder
     public Mentoring(Mentor mentor, String title, String bio, String thumb) {
         this.mentor = mentor;
@@ -54,6 +57,10 @@ public class Mentoring extends BaseEntity {
                 this.mentoringTags.add(new MentoringTag(this, tag))
             );
         }
+    }
+
+    public void updateRating(double averageRating) {
+        this.rating = averageRating;
     }
 
     public boolean isOwner(Mentor mentor) {

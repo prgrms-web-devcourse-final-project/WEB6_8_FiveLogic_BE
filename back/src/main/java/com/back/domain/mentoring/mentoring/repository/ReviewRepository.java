@@ -1,6 +1,5 @@
 package com.back.domain.mentoring.mentoring.repository;
 
-import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Review;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,16 +8,26 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
-    boolean existsByReservationId(Long id);
+    boolean existsByReservationId(Long reservationId);
 
     @Query("""
         SELECT AVG(r.rating)
         FROM Review r
         INNER JOIN r.reservation res
-        WHERE res.mentor = :mentor
+        WHERE res.mentor.id = :mentorId
         """)
-    Double findAverageRating(
-        @Param("mentor") Mentor mentor
+    Double calculateMentorAverageRating(
+        @Param("mentorId") Long mentorId
+    );
+
+    @Query("""
+        SELECT AVG(r.rating)
+        FROM Review r
+        INNER JOIN r.reservation res
+        WHERE res.mentoring.id = :mentoringId
+        """)
+    Double calculateMentoringAverageRating(
+        @Param("mentoringId") Long mentoringId
     );
 
     @Query("""
