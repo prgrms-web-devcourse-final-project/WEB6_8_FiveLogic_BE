@@ -31,4 +31,7 @@ public class MentoringSessionService {
     public void deleteByReservation(Reservation reservation) {
         mentoringSessionRepository.deleteByReservation(reservation);
     }
+    public MentoringSession save(MentoringSession mentoringSession) {
+        return mentoringSessionRepository.save(mentoringSession);
+    }
 }
