@@ -171,8 +171,8 @@ class MentorSlotServiceTest {
 
             when(mentoringStorage.findMentorSlot(slotId))
                 .thenReturn(mentorSlot1);
-            when(mentoringStorage.findMentoringByMentor(mentor1))
-                .thenReturn(mentoring1);
+            when(mentoringStorage.findMentoringsByMentorId(mentor1.getId()))
+                .thenReturn(List.of(mentoring1));
 
             // when
             MentorSlotResponse result = mentorSlotService.getMentorSlot(slotId);
@@ -182,7 +182,7 @@ class MentorSlotServiceTest {
             assertThat(result.mentorSlot().mentorSlotId()).isEqualTo(slotId);
             assertThat(result.mentor().mentorId()).isEqualTo(mentor1.getId());
             verify(mentoringStorage).findMentorSlot(slotId);
-            verify(mentoringStorage).findMentoringByMentor(mentor1);
+            verify(mentoringStorage).findMentoringsByMentorId(mentor1.getId());
         }
     }
 
@@ -210,8 +210,8 @@ class MentorSlotServiceTest {
         @DisplayName("생성 성공")
         void createMentorSlot() {
             // given
-            when(mentoringStorage.findMentoringByMentor(mentor1))
-                .thenReturn(mentoring1);
+            when(mentoringStorage.findMentoringsByMentorId(mentor1.getId()))
+                .thenReturn(List.of(mentoring1));
             when(mentorSlotRepository.existsOverlappingSlot(
                 mentor1.getId(), request.startDateTime(), request.endDateTime()))
                 .thenReturn(false);
@@ -222,13 +222,13 @@ class MentorSlotServiceTest {
             // then
             assertThat(result).isNotNull();
             assertThat(result.mentor().mentorId()).isEqualTo(mentor1.getId());
-            assertThat(result.mentoring().mentoringId()).isEqualTo(mentoring1.getId());
-            assertThat(result.mentoring().title()).isEqualTo(mentoring1.getTitle());
+            assertThat(result.mentorings().getFirst().mentoringId()).isEqualTo(mentoring1.getId());
+            assertThat(result.mentorings().getFirst().title()).isEqualTo(mentoring1.getTitle());
             assertThat(result.mentorSlot().startDateTime()).isEqualTo(request.startDateTime());
             assertThat(result.mentorSlot().endDateTime()).isEqualTo(request.endDateTime());
             assertThat(result.mentorSlot().mentorSlotStatus()).isEqualTo(MentorSlotStatus.AVAILABLE);
 
-            verify(mentoringStorage).findMentoringByMentor(mentor1);
+            verify(mentoringStorage).findMentoringsByMentorId(mentor1.getId());
             verify(mentorSlotRepository).existsOverlappingSlot(mentor1.getId(), request.startDateTime(), request.endDateTime());
             verify(mentorSlotRepository).save(any(MentorSlot.class));
         }
@@ -237,8 +237,8 @@ class MentorSlotServiceTest {
         @DisplayName("기존 슬롯과 시간 겹치면 예외")
         void throwExceptionWhenOverlapping() {
             // given
-            when(mentoringStorage.findMentoringByMentor(mentor1))
-                .thenReturn(mentoring1);
+            when(mentoringStorage.findMentoringsByMentorId(mentor1.getId()))
+                .thenReturn(List.of(mentoring1));
             when(mentorSlotRepository.existsOverlappingSlot(
                 mentor1.getId(), request.startDateTime(), request.endDateTime()))
                 .thenReturn(true);
@@ -354,12 +354,12 @@ class MentorSlotServiceTest {
             // given
             Long slotId = 1L;
 
-            when(mentoringStorage.findMentoringByMentor(mentor1))
-                .thenReturn(mentoring1);
             when(mentoringStorage.findMentorSlot(slotId))
                 .thenReturn(mentorSlot1);
             when(mentorSlotRepository.existsOverlappingExcept(mentor1.getId(), slotId, request.startDateTime(), request.endDateTime()))
                 .thenReturn(false);
+            when(mentoringStorage.findMentoringsByMentorId(mentor1.getId()))
+                .thenReturn(List.of(mentoring1));
 
             // when
             MentorSlotResponse result = mentorSlotService.updateMentorSlot(slotId, request, mentor1);
@@ -368,8 +368,8 @@ class MentorSlotServiceTest {
             assertThat(result).isNotNull();
             assertThat(result.mentorSlot().mentorSlotId()).isEqualTo(slotId);
             assertThat(result.mentor().mentorId()).isEqualTo(mentor1.getId());
-            assertThat(result.mentoring().mentoringId()).isEqualTo(mentoring1.getId());
-            assertThat(result.mentoring().title()).isEqualTo(mentoring1.getTitle());
+            assertThat(result.mentorings().getFirst().mentoringId()).isEqualTo(mentoring1.getId());
+            assertThat(result.mentorings().getFirst().title()).isEqualTo(mentoring1.getTitle());
             assertThat(result.mentorSlot().startDateTime()).isEqualTo(request.startDateTime());
             assertThat(result.mentorSlot().endDateTime()).isEqualTo(request.endDateTime());
             assertThat(result.mentorSlot().mentorSlotStatus()).isEqualTo(MentorSlotStatus.AVAILABLE);
@@ -385,8 +385,6 @@ class MentorSlotServiceTest {
             // given
             Long slotId = 1L;
 
-            when(mentoringStorage.findMentoringByMentor(mentor2))
-                .thenReturn(mentoring1);
             when(mentoringStorage.findMentorSlot(slotId))
                 .thenReturn(mentorSlot1);
 
@@ -404,8 +402,6 @@ class MentorSlotServiceTest {
             Reservation reservation = ReservationFixture.create(1L, mentoring1, mentee1, mentorSlot1);
             mentorSlot1.setReservation(reservation);
 
-            when(mentoringStorage.findMentoringByMentor(mentor1))
-                .thenReturn(mentoring1);
             when(mentoringStorage.findMentorSlot(slotId))
                 .thenReturn(mentorSlot1);
 
@@ -421,8 +417,6 @@ class MentorSlotServiceTest {
             // given
             Long slotId = 1L;
 
-            when(mentoringStorage.findMentoringByMentor(mentor1))
-                .thenReturn(mentoring1);
             when(mentoringStorage.findMentorSlot(slotId))
                 .thenReturn(mentorSlot1);
             when(mentorSlotRepository.existsOverlappingExcept(

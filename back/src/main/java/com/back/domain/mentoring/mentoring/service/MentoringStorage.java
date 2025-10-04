@@ -1,6 +1,5 @@
 package com.back.domain.mentoring.mentoring.service;
 
-import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
@@ -34,11 +33,6 @@ public class MentoringStorage {
     public Mentoring findMentoring(Long mentoringId) {
         return mentoringRepository.findById(mentoringId)
             .orElseThrow(() -> new ServiceException(MentoringErrorCode.NOT_FOUND_MENTORING));
-    }
-
-    // TODO : 멘토:멘토링 1:N으로 변경 시 삭제 예정
-    public Mentoring findMentoringByMentor(Mentor mentor) {
-        return findMentoringsByMentorId(mentor.getId()).getFirst();
     }
 
     public List<Mentoring> findMentoringsByMentorId(Long mentorId) {
