@@ -149,7 +149,6 @@ public class MentoringTestFixture {
             .mentorSlot(slot)
             .preQuestion(preQuestion)
             .build();
-        slot.setReservation(reservation);
         return reservationRepository.save(reservation);
     }
 

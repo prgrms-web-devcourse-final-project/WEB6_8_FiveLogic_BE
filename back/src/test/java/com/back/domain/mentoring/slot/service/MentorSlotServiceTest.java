@@ -400,7 +400,6 @@ class MentorSlotServiceTest {
             // given
             Long slotId = 1L;
             Reservation reservation = ReservationFixture.create(1L, mentoring1, mentee1, mentorSlot1);
-            mentorSlot1.setReservation(reservation);
 
             when(mentoringStorage.findMentorSlot(slotId))
                 .thenReturn(mentorSlot1);

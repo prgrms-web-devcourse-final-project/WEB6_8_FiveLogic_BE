@@ -12,6 +12,7 @@ import com.back.domain.mentoring.reservation.dto.response.ReservationResponse;
 import com.back.domain.mentoring.reservation.entity.Reservation;
 import com.back.domain.mentoring.reservation.error.ReservationErrorCode;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
+import com.back.domain.mentoring.slot.constant.MentorSlotStatus;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.domain.mentoring.slot.service.DateTimeValidator;
 import com.back.global.exception.ServiceException;
@@ -70,11 +71,9 @@ public class ReservationService {
                 .mentorSlot(mentorSlot)
                 .preQuestion(reqDto.preQuestion())
                 .build();
-
-            mentorSlot.setReservation(reservation);
-            // flush 필요...?
-
             reservationRepository.save(reservation);
+
+            mentorSlot.updateStatus(MentorSlotStatus.PENDING);
 
             return ReservationResponse.from(reservation);
         } catch (OptimisticLockException e) {
@@ -88,6 +87,7 @@ public class ReservationService {
             Reservation reservation = mentoringStorage.findReservation(reservationId);
 
             reservation.approve(mentor);
+            reservation.getMentorSlot().updateStatus(MentorSlotStatus.APPROVED);
 
             // 세션
 
@@ -101,6 +101,8 @@ public class ReservationService {
     public ReservationResponse rejectReservation(Mentor mentor, Long reservationId) {
         Reservation reservation = mentoringStorage.findReservation(reservationId);
         reservation.reject(mentor);
+        reservation.getMentorSlot().updateStatus(MentorSlotStatus.AVAILABLE);
+
         return ReservationResponse.from(reservation);
     }
 
@@ -108,6 +110,8 @@ public class ReservationService {
     public ReservationResponse cancelReservation(Member member, Long reservationId) {
         Reservation reservation = mentoringStorage.findReservation(reservationId);
         reservation.cancel(member);
+        reservation.getMentorSlot().updateStatus(MentorSlotStatus.AVAILABLE);
+
         return ReservationResponse.from(reservation);
     }
 

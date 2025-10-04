@@ -37,7 +37,7 @@ public class Reservation extends BaseEntity {
     @JoinColumn(name = "mentee_id", nullable = false)
     private Mentee mentee;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mentor_slot_id", nullable = false)
     private MentorSlot mentorSlot;
 
@@ -63,13 +63,6 @@ public class Reservation extends BaseEntity {
 
     private void updateStatus(ReservationStatus status) {
         this.status = status;
-
-        // 양방향 동기화
-        if (status == ReservationStatus.CANCELED || status == ReservationStatus.REJECTED) {
-            mentorSlot.removeReservation();
-        } else {
-            mentorSlot.updateStatus();
-        }
     }
 
     public boolean isMentor(Mentor mentor) {
