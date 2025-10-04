@@ -132,7 +132,7 @@ class ReviewServiceTest {
                 .thenReturn(false);
             when(reviewRepository.save(any(Review.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-            when(reviewRepository.findAverageRating(mentor))
+            when(reviewRepository.calculateMentorAverageRating(mentor.getId()))
                 .thenReturn(3.5);
 
             // when
@@ -144,7 +144,7 @@ class ReviewServiceTest {
             assertThat(response.menteeId()).isEqualTo(mentee.getId());
 
             verify(reviewRepository).save(any(Review.class));
-            verify(reviewRepository).findAverageRating(mentor);
+            verify(reviewRepository).calculateMentorAverageRating(mentor.getId());
             assertThat(mentor.getRate()).isEqualTo(3.5);
         }
 
@@ -213,7 +213,7 @@ class ReviewServiceTest {
 
             when(reviewRepository.findById(review.getId()))
                 .thenReturn(Optional.of(review));
-            when(reviewRepository.findAverageRating(mentor))
+            when(reviewRepository.calculateMentorAverageRating(mentor.getId()))
                 .thenReturn(4.0);
 
             // when
@@ -226,7 +226,7 @@ class ReviewServiceTest {
             assertThat(mentor.getRate()).isEqualTo(4.0);
 
             verify(reviewRepository).findById(review.getId());
-            verify(reviewRepository).findAverageRating(mentor);
+            verify(reviewRepository).calculateMentorAverageRating(mentor.getId());
         }
 
         @Test
@@ -278,20 +278,18 @@ class ReviewServiceTest {
             when(reviewRepository.findById(review.getId()))
                 .thenReturn(Optional.of(review));
             // 리뷰 삭제 후 평균 평점이 없을 경우
-            when(reviewRepository.findAverageRating(mentor))
+            when(reviewRepository.calculateMentorAverageRating(mentor.getId()))
                 .thenReturn(null);
 
             // when
-            ReviewResponse response = reviewService.deleteReview(review.getId(), mentee);
+            reviewService.deleteReview(review.getId(), mentee);
 
             // then
-            assertThat(response.reviewId()).isEqualTo(review.getId());
             // 평균 평점이 0.0으로 업데이트 되는지 확인
             assertThat(mentor.getRate()).isEqualTo(0.0);
-
             verify(reviewRepository).findById(review.getId());
             verify(reviewRepository).delete(review);
-            verify(reviewRepository).findAverageRating(mentor);
+            verify(reviewRepository).calculateMentorAverageRating(mentor.getId());
         }
 
         @Test

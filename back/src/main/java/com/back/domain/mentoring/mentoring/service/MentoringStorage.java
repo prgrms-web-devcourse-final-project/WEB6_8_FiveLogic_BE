@@ -1,6 +1,5 @@
 package com.back.domain.mentoring.mentoring.service;
 
-import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
@@ -36,11 +35,6 @@ public class MentoringStorage {
             .orElseThrow(() -> new ServiceException(MentoringErrorCode.NOT_FOUND_MENTORING));
     }
 
-    // TODO : 멘토:멘토링 1:N으로 변경 시 삭제 예정
-    public Mentoring findMentoringByMentor(Mentor mentor) {
-        return findMentoringsByMentorId(mentor.getId()).getFirst();
-    }
-
     public List<Mentoring> findMentoringsByMentorId(Long mentorId) {
         List<Mentoring> mentorings = mentoringRepository.findByMentorId(mentorId);
         if (mentorings.isEmpty()) {
@@ -72,12 +66,5 @@ public class MentoringStorage {
 
     public boolean hasReservationForMentorSlot(Long slotId) {
         return reservationRepository.existsByMentorSlotId(slotId);
-    }
-
-
-    // ===== 데이터 조작 메서드 =====
-
-    public void deleteMentorSlotsData(Long mentorId) {
-        mentorSlotRepository.deleteAllByMentorId(mentorId);
     }
 }

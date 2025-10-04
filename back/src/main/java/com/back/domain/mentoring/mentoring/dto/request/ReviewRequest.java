@@ -11,7 +11,7 @@ public record ReviewRequest(
     Double rating,
 
     @Size(max = 1000)
-    @Schema(description = "리뷰 내용")
+    @Schema(description = "리뷰 내용", example = "review content")
     String content
 ) {
 }
