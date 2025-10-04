@@ -49,7 +49,7 @@ public class MentoringSessionTest {
         reservation.approve(mentor);
         MentoringSession mentoringSession = MentoringSession.create(reservation);
 
-        mentoringSession.openSession();
+        mentoringSession.openSession(mentor);
         assertThat(mentoringSession.getStatus()).isEqualTo(MentoringSessionStatus.OPEN);
     }
 
@@ -62,7 +62,7 @@ public class MentoringSessionTest {
         reservation.approve(mentor);
         MentoringSession mentoringSession = MentoringSession.create(reservation);
 
-        mentoringSession.closeSession();
+        mentoringSession.closeSession(mentor);
         assertThat(mentoringSession.getStatus()).isEqualTo(MentoringSessionStatus.CLOSED);
     }
 

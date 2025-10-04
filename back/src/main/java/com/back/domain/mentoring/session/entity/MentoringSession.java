@@ -1,5 +1,6 @@
 package com.back.domain.mentoring.session.entity;
 
+import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.reservation.constant.ReservationStatus;
 import com.back.domain.mentoring.reservation.entity.Reservation;
@@ -58,11 +59,17 @@ public class MentoringSession extends BaseEntity {
         return this;
     }
 
-    public MentoringSession openSession() {
+    public MentoringSession openSession(Mentor mentor) {
+        if (!mentoring.isOwner(mentor)) {
+            throw new IllegalArgumentException("Only the mentor who owns the mentoring can open the session.");
+        }
         return updateStatus(MentoringSessionStatus.OPEN);
     }
 
-    public MentoringSession closeSession() {
+    public MentoringSession closeSession(Mentor mentor) {
+        if (!mentoring.isOwner(mentor)) {
+            throw new IllegalArgumentException("Only the mentor who owns the mentoring can open the session.");
+        }
         return updateStatus(MentoringSessionStatus.CLOSED);
     }
 }
