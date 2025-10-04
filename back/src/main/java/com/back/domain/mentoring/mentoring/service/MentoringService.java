@@ -51,10 +51,7 @@ public class MentoringService {
 
     @Transactional
     public MentoringResponse createMentoring(MentoringRequest reqDto, Mentor mentor) {
-        // 멘토당 멘토링 1개 제한 체크 (추후 1:N 변경 시 제거 필요)
-        if (mentoringRepository.existsByMentorId(mentor.getId())) {
-            throw new ServiceException(MentoringErrorCode.ALREADY_EXISTS_MENTORING);
-        }
+        validateMentoringTitle(mentor.getId(), reqDto.title());
 
         Mentoring mentoring = Mentoring.builder()
             .mentor(mentor)
@@ -79,6 +76,7 @@ public class MentoringService {
         Mentoring mentoring = mentoringStorage.findMentoring(mentoringId);
 
         validateOwner(mentoring, mentor);
+        validateMentoringTitleForUpdate(mentor.getId(), reqDto.title(), mentoringId);
 
         List<Tag> tags = getOrCreateTags(reqDto.tags());
 
@@ -99,11 +97,6 @@ public class MentoringService {
         // 예약 이력이 있을 시 삭제 불가
         if (mentoringStorage.hasReservationsForMentoring(mentoring.getId())) {
             throw new ServiceException(MentoringErrorCode.CANNOT_DELETE_MENTORING);
-        }
-
-        // 멘토 슬롯 있을 시 일괄 삭제 (추후 1:N 변경 시 제거 필요)
-        if (mentoringStorage.hasMentorSlotsForMentor(mentor.getId())) {
-            mentoringStorage.deleteMentorSlotsData(mentor.getId());
         }
         mentoringRepository.delete(mentoring);
     }
@@ -151,6 +144,18 @@ public class MentoringService {
     private void validateOwner(Mentoring mentoring, Mentor mentor) {
         if (!mentoring.isOwner(mentor)) {
             throw new ServiceException(MentoringErrorCode.FORBIDDEN_NOT_OWNER);
+        }
+    }
+
+    private void validateMentoringTitle(Long mentorId, String title) {
+        if (mentoringRepository.existsByMentorIdAndTitle(mentorId, title)) {
+            throw new ServiceException(MentoringErrorCode.ALREADY_EXISTS_MENTORING);
+        }
+    }
+
+    private void validateMentoringTitleForUpdate(Long mentorId, String title, Long mentoringId) {
+        if (mentoringRepository.existsByMentorIdAndTitleAndIdNot(mentorId, title, mentoringId)) {
+            throw new ServiceException(MentoringErrorCode.ALREADY_EXISTS_MENTORING);
         }
     }
 }
