@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface MentoringSessionRepository extends JpaRepository<MentoringSession, Long> {
     Optional<MentoringSession> findByMentoring(Mentoring mentoring);
     void deleteByReservation(Reservation reservation);
+    Optional<MentoringSession> findBySessionUrl(String mentoringSessionUUid);
 }

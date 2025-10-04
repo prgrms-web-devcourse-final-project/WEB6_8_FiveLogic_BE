@@ -5,8 +5,6 @@ import com.back.domain.mentoring.session.entity.SenderRole;
 
 public record ChatMessageRequest(
         MessageType type,
-        String content,
-        Long senderId,
-        SenderRole senderRole
+        String content
 ) {
 }
