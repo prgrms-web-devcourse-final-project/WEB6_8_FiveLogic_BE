@@ -97,6 +97,12 @@ public class RoadmapNode extends BaseEntity {
     }
 
 
+    // ========== 도메인 메서드 (Public) ==========
+
+    /**
+     * 자식 노드를 추가하고 부모-자식 관계를 설정합니다.
+     * 자식의 level은 부모 level + 1로 자동 설정됩니다.
+     */
     public void addChild(RoadmapNode child) {
         if (child == null) {
             throw new IllegalArgumentException("자식 노드는 null일 수 없습니다.");
@@ -106,34 +112,54 @@ public class RoadmapNode extends BaseEntity {
         }
         this.children.add(child);
         child.setParent(this);
-        child.setLevel(this.level + 1); // 부모 level + 1로 자동 설정
+        child.setLevel(this.level + 1);
     }
 
-    public void setParent(RoadmapNode parent) {
-        this.parent = parent;
-    }
-
-    public void setLevel(int level) {
-        this.level = level;
-    }
-
-    public void setStepOrder(int stepOrder) {
-        this.stepOrder = stepOrder;
-    }
-
-    public void setRoadmapId(Long roadmapId) {
+    /**
+     * 이 노드를 특정 로드맵에 할당합니다.
+     * JobRoadmap 또는 MentorRoadmap 저장 후 ID를 받은 시점에 호출됩니다.
+     *
+     * @param roadmapId 로드맵 ID
+     * @param roadmapType 로드맵 타입 (JOB 또는 MENTOR)
+     */
+    public void assignToRoadmap(Long roadmapId, RoadmapType roadmapType) {
+        if (roadmapId == null) {
+            throw new IllegalArgumentException("roadmapId는 null일 수 없습니다.");
+        }
+        if (roadmapType == null) {
+            throw new IllegalArgumentException("roadmapType은 null일 수 없습니다.");
+        }
         this.roadmapId = roadmapId;
-    }
-
-    public void setRoadmapType(RoadmapType roadmapType) {
         this.roadmapType = roadmapType;
     }
 
-    public void setTask(Task task) {
-        this.task = task;
+    /**
+     * 이 노드를 루트 노드로 초기화합니다.
+     * level=0, stepOrder=1로 설정됩니다.
+     * 직업 로드맵 통합 알고리즘에서 메인 루트 설정 시 사용됩니다.
+     */
+    public void initializeAsRoot() {
+        this.level = 0;
+        this.stepOrder = 1;
     }
 
-    public void setTaskName(String taskName) {
-        this.taskName = taskName;
+    /**
+     * 형제 노드들 사이에서의 순서를 할당합니다.
+     * BFS 트리 구성 시 부모의 자식들 중 몇 번째인지 설정하는 데 사용됩니다.
+     *
+     * @param order 형제 노드 중 순서 (1부터 시작)
+     */
+    public void assignOrderInSiblings(int order) {
+        this.stepOrder = order;
+    }
+
+    // ========== Package-private 메서드 (같은 패키지에서만 접근) ==========
+
+    void setParent(RoadmapNode parent) {
+        this.parent = parent;
+    }
+
+    void setLevel(int level) {
+        this.level = level;
     }
 }
