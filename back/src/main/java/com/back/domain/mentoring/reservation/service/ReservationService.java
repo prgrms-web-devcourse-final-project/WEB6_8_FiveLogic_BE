@@ -62,8 +62,9 @@ public class ReservationService {
             Mentoring mentoring = mentoringStorage.findMentoring(reqDto.mentoringId());
             MentorSlot mentorSlot = mentoringStorage.findMentorSlot(reqDto.mentorSlotId());
 
-            validateMentorSlotStatus(mentorSlot, mentee);
             DateTimeValidator.validateStartTimeNotInPast(mentorSlot.getStartDateTime());
+            validateMentorSlotStatus(mentorSlot, mentee);
+            validateOverlappingTimeForMentee(mentee, mentorSlot);
 
             Reservation reservation = Reservation.builder()
                 .mentoring(mentoring)
@@ -129,6 +130,15 @@ public class ReservationService {
                 throw new ServiceException(ReservationErrorCode.ALREADY_RESERVED_SLOT);
             }
             throw new ServiceException(ReservationErrorCode.NOT_AVAILABLE_SLOT);
+        }
+    }
+
+    private void validateOverlappingTimeForMentee(Mentee mentee, MentorSlot mentorSlot) {
+        boolean isOverlapping = reservationRepository
+            .existsOverlappingTimeForMentee(mentee.getId(), mentorSlot.getStartDateTime(), mentorSlot.getEndDateTime());
+
+        if (isOverlapping) {
+            throw new ServiceException(ReservationErrorCode.OVERLAPPING_TIME);
         }
     }
 }

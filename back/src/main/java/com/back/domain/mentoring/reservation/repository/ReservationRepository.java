@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,4 +59,21 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
      * - 취소/거절된 예약도 히스토리로 보존
      */
     boolean existsByMentorSlotId(Long slotId);
+
+    @Query("""
+        SELECT CASE WHEN COUNT(r) > 0
+            THEN TRUE
+            ELSE FALSE
+            END
+        FROM Reservation r
+        WHERE r.mentee.id = :menteeId
+        AND r.status NOT IN ('REJECTED', 'CANCELED')
+        AND r.mentorSlot.startDateTime < :end
+        AND r.mentorSlot.endDateTime > :start
+        """)
+    boolean existsOverlappingTimeForMentee(
+        @Param("menteeId") Long menteeId,
+        @Param("start") LocalDateTime start,
+        @Param("end") LocalDateTime end
+    );
 }

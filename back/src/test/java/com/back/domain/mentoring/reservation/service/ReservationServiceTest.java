@@ -267,9 +267,6 @@ class ReservationServiceTest {
                 .thenReturn(mentoring);
             when(mentoringStorage.findMentorSlot(pastRequest.mentorSlotId()))
                 .thenReturn(pastSlot);
-            when(reservationRepository.findByMentorSlotIdAndStatusIn(pastSlot.getId(),
-                List.of(ReservationStatus.PENDING, ReservationStatus.APPROVED, ReservationStatus.COMPLETED)))
-                .thenReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> reservationService.createReservation(mentee, pastRequest))
