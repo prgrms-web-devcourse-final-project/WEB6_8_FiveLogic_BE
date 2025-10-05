@@ -12,6 +12,7 @@ import com.back.domain.mentoring.reservation.dto.response.ReservationResponse;
 import com.back.domain.mentoring.reservation.entity.Reservation;
 import com.back.domain.mentoring.reservation.error.ReservationErrorCode;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
+import com.back.domain.mentoring.slot.constant.MentorSlotStatus;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.domain.mentoring.slot.service.DateTimeValidator;
 import com.back.global.exception.ServiceException;
@@ -40,7 +41,7 @@ public class ReservationService {
         Page<Reservation> reservations;
 
         if (member.getRole() == Member.Role.MENTOR) {
-            reservations = reservationRepository.findAllByMentorMember(member, pageable);
+            reservations = reservationRepository.findAllByMentorMember(member.getId(), pageable);
         } else {
             reservations = reservationRepository.findAllByMenteeMember(member, pageable);
         }
@@ -49,7 +50,7 @@ public class ReservationService {
 
     @Transactional(readOnly = true)
     public ReservationResponse getReservation(Member member, Long reservationId) {
-        Reservation reservation = reservationRepository.findByIdAndMember(reservationId, member)
+        Reservation reservation = reservationRepository.findByIdAndMember(reservationId, member.getId())
             .orElseThrow(() -> new ServiceException(ReservationErrorCode.RESERVATION_NOT_ACCESSIBLE));
 
         return ReservationResponse.from(reservation);
@@ -61,8 +62,9 @@ public class ReservationService {
             Mentoring mentoring = mentoringStorage.findMentoring(reqDto.mentoringId());
             MentorSlot mentorSlot = mentoringStorage.findMentorSlot(reqDto.mentorSlotId());
 
-            validateMentorSlotStatus(mentorSlot, mentee);
             DateTimeValidator.validateStartTimeNotInPast(mentorSlot.getStartDateTime());
+            validateMentorSlotStatus(mentorSlot, mentee);
+            validateOverlappingTimeForMentee(mentee, mentorSlot);
 
             Reservation reservation = Reservation.builder()
                 .mentoring(mentoring)
@@ -70,11 +72,9 @@ public class ReservationService {
                 .mentorSlot(mentorSlot)
                 .preQuestion(reqDto.preQuestion())
                 .build();
-
-            mentorSlot.setReservation(reservation);
-            // flush 필요...?
-
             reservationRepository.save(reservation);
+
+            mentorSlot.updateStatus(MentorSlotStatus.PENDING);
 
             return ReservationResponse.from(reservation);
         } catch (OptimisticLockException e) {
@@ -88,6 +88,7 @@ public class ReservationService {
             Reservation reservation = mentoringStorage.findReservation(reservationId);
 
             reservation.approve(mentor);
+            reservation.getMentorSlot().updateStatus(MentorSlotStatus.APPROVED);
 
             // 세션
 
@@ -101,6 +102,8 @@ public class ReservationService {
     public ReservationResponse rejectReservation(Mentor mentor, Long reservationId) {
         Reservation reservation = mentoringStorage.findReservation(reservationId);
         reservation.reject(mentor);
+        reservation.getMentorSlot().updateStatus(MentorSlotStatus.AVAILABLE);
+
         return ReservationResponse.from(reservation);
     }
 
@@ -108,6 +111,8 @@ public class ReservationService {
     public ReservationResponse cancelReservation(Member member, Long reservationId) {
         Reservation reservation = mentoringStorage.findReservation(reservationId);
         reservation.cancel(member);
+        reservation.getMentorSlot().updateStatus(MentorSlotStatus.AVAILABLE);
+
         return ReservationResponse.from(reservation);
     }
 
@@ -125,6 +130,15 @@ public class ReservationService {
                 throw new ServiceException(ReservationErrorCode.ALREADY_RESERVED_SLOT);
             }
             throw new ServiceException(ReservationErrorCode.NOT_AVAILABLE_SLOT);
+        }
+    }
+
+    private void validateOverlappingTimeForMentee(Mentee mentee, MentorSlot mentorSlot) {
+        boolean isOverlapping = reservationRepository
+            .existsOverlappingTimeForMentee(mentee.getId(), mentorSlot.getStartDateTime(), mentorSlot.getEndDateTime());
+
+        if (isOverlapping) {
+            throw new ServiceException(ReservationErrorCode.OVERLAPPING_TIME);
         }
     }
 }

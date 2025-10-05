@@ -33,22 +33,14 @@ public class MentorSlotService {
     public List<MentorSlotDto> getMyMentorSlots(Mentor mentor, LocalDateTime startDate, LocalDateTime endDate) {
         DateTimeValidator.validateTime(startDate, endDate);
 
-        List<MentorSlot> availableSlots = mentorSlotRepository.findMySlots(mentor.getId(), startDate, endDate);
-
-        return availableSlots.stream()
-            .map(MentorSlotDto::from)
-            .toList();
+        return mentorSlotRepository.findMySlots(mentor.getId(), startDate, endDate);
     }
 
     @Transactional(readOnly = true)
     public List<MentorSlotDto> getAvailableMentorSlots(Long mentorId, LocalDateTime startDate, LocalDateTime endDate) {
         DateTimeValidator.validateTime(startDate, endDate);
 
-        List<MentorSlot> availableSlots = mentorSlotRepository.findAvailableSlots(mentorId, startDate, endDate);
-
-        return availableSlots.stream()
-            .map(MentorSlotDto::from)
-            .toList();
+        return mentorSlotRepository.findAvailableSlots(mentorId, startDate, endDate);
     }
 
     @Transactional(readOnly = true)
