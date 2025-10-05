@@ -41,7 +41,7 @@ public class ReservationService {
         Page<Reservation> reservations;
 
         if (member.getRole() == Member.Role.MENTOR) {
-            reservations = reservationRepository.findAllByMentorMember(member, pageable);
+            reservations = reservationRepository.findAllByMentorMember(member.getId(), pageable);
         } else {
             reservations = reservationRepository.findAllByMenteeMember(member, pageable);
         }
@@ -50,7 +50,7 @@ public class ReservationService {
 
     @Transactional(readOnly = true)
     public ReservationResponse getReservation(Member member, Long reservationId) {
-        Reservation reservation = reservationRepository.findByIdAndMember(reservationId, member)
+        Reservation reservation = reservationRepository.findByIdAndMember(reservationId, member.getId())
             .orElseThrow(() -> new ServiceException(ReservationErrorCode.RESERVATION_NOT_ACCESSIBLE));
 
         return ReservationResponse.from(reservation);

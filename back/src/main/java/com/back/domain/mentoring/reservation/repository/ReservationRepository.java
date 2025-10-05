@@ -20,22 +20,22 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         SELECT r
         FROM Reservation r
         WHERE r.id = :reservationId
-        AND (r.mentee.member = :member
-            OR r.mentor.member = :member)
+        AND (r.mentee.member.id = :memberId
+            OR r.mentor.member.id = :memberId)
         """)
     Optional<Reservation> findByIdAndMember(
         @Param("reservationId") Long reservationId,
-        @Param("member") Member member
+        @Param("memberId") Long memberId
     );
 
     @Query("""
         SELECT r
         FROM Reservation r
-        WHERE r.mentor.member = :member
+        WHERE r.mentor.member.id = :memberId
         ORDER BY r.mentorSlot.startDateTime DESC
         """)
     Page<Reservation> findAllByMentorMember(
-        @Param("member") Member member,
+        @Param("memberId") Long memberId,
         Pageable pageable
     );
 
