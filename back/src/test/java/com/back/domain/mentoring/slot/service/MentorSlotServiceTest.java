@@ -89,14 +89,29 @@ class MentorSlotServiceTest {
             LocalDateTime startDate = base.atStartOfDay();
             LocalDateTime endDate = base.withDayOfMonth(base.lengthOfMonth()).atTime(23, 59);
 
-            MentorSlot slot2 = MentorSlotFixture.create(2L, mentor1,
+            MentorSlotDto slotDto1 = new MentorSlotDto(
+                1L, mentor1.getId(),
+                mentorSlot1.getStartDateTime(),
+                mentorSlot1.getEndDateTime(),
+                MentorSlotStatus.AVAILABLE,
+                null
+            );
+            MentorSlotDto slotDto2 = new MentorSlotDto(
+                2L, mentor1.getId(),
                 base.withDayOfMonth(2).atTime(10, 0),
-                base.withDayOfMonth(2).atTime(11, 0));
-            MentorSlot slot3 = MentorSlotFixture.create(3L, mentor1,
-                    base.withDayOfMonth(15).atTime(14, 0),
-                    base.withDayOfMonth(15).atTime(15, 0));
+                base.withDayOfMonth(2).atTime(11, 0),
+                MentorSlotStatus.AVAILABLE,
+                null
+            );
+            MentorSlotDto slotDto3 = new MentorSlotDto(
+                3L, mentor1.getId(),
+                base.withDayOfMonth(15).atTime(14, 0),
+                base.withDayOfMonth(15).atTime(15, 0),
+                MentorSlotStatus.AVAILABLE,
+                null
+            );
 
-            List<MentorSlot> slots = List.of(mentorSlot1, slot2, slot3);
+            List<MentorSlotDto> slots = List.of(slotDto1, slotDto2, slotDto3);
 
             when(mentorSlotRepository.findMySlots(mentor1.getId(), startDate, endDate))
                 .thenReturn(slots);
@@ -141,11 +156,22 @@ class MentorSlotServiceTest {
             LocalDateTime startDate = base.atStartOfDay();
             LocalDateTime endDate = base.withDayOfMonth(base.lengthOfMonth()).atTime(23, 59);
 
-            MentorSlot slot2 = MentorSlotFixture.create(2L, mentor1,
+            MentorSlotDto slotDto1 = new MentorSlotDto(
+                1L, mentor1.getId(),
+                mentorSlot1.getStartDateTime(),
+                mentorSlot1.getEndDateTime(),
+                MentorSlotStatus.AVAILABLE,
+                null
+            );
+            MentorSlotDto slotDto2 = new MentorSlotDto(
+                2L, mentor1.getId(),
                 base.withDayOfMonth(2).atTime(10, 0),
-                base.withDayOfMonth(2).atTime(11, 0));
+                base.withDayOfMonth(2).atTime(11, 0),
+                MentorSlotStatus.AVAILABLE,
+                null
+            );
 
-            List<MentorSlot> availableSlots = List.of(mentorSlot1, slot2);
+            List<MentorSlotDto> availableSlots = List.of(slotDto1, slotDto2);
 
             when(mentorSlotRepository.findAvailableSlots(mentor1.getId(), startDate, endDate))
                 .thenReturn(availableSlots);

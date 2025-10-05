@@ -1,7 +1,6 @@
 package com.back.domain.mentoring.slot.dto.response;
 
 import com.back.domain.mentoring.slot.constant.MentorSlotStatus;
-import com.back.domain.mentoring.slot.entity.MentorSlot;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -16,15 +15,8 @@ public record MentorSlotDto(
     @Schema(description = "종료 일시")
     LocalDateTime endDateTime,
     @Schema(description = "멘토 슬롯 상태")
-    MentorSlotStatus mentorSlotStatus
+    MentorSlotStatus mentorSlotStatus,
+    @Schema(description = "활성화된 예약 ID")
+    Long reservationId
 ) {
-    public static MentorSlotDto from(MentorSlot mentorSlot) {
-        return new MentorSlotDto(
-            mentorSlot.getId(),
-            mentorSlot.getMentor().getId(),
-            mentorSlot.getStartDateTime(),
-            mentorSlot.getEndDateTime(),
-            mentorSlot.getStatus()
-        );
-    }
 }

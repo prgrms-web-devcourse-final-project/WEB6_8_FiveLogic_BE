@@ -1,5 +1,6 @@
 package com.back.domain.mentoring.slot.repository;
 
+import com.back.domain.mentoring.slot.dto.response.MentorSlotDto;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,21 +18,38 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
     void deleteAllByMentorId(Long mentorId);
 
     @Query("""
-        SELECT ms
+        SELECT new com.back.domain.mentoring.slot.dto.response.MentorSlotDto(
+            ms.id,
+            ms.mentor.id,
+            ms.startDateTime,
+            ms.endDateTime,
+            ms.status,
+            r.id
+        )
         FROM MentorSlot ms
+        LEFT JOIN Reservation r
+            ON ms.id = r.mentorSlot.id
+            AND r.status IN ('PENDING', 'APPROVED', 'COMPLETED')
         WHERE ms.mentor.id = :mentorId
         AND ms.startDateTime < :end
         AND ms.endDateTime >= :start
         ORDER BY ms.startDateTime ASC
         """)
-    List<MentorSlot> findMySlots(
+    List<MentorSlotDto> findMySlots(
         @Param("mentorId") Long mentorId,
         @Param("start") LocalDateTime start,
         @Param("end") LocalDateTime end
     );
 
     @Query("""
-        SELECT ms
+        SELECT new com.back.domain.mentoring.slot.dto.response.MentorSlotDto(
+                ms.id,
+                ms.mentor.id,
+                ms.startDateTime,
+                ms.endDateTime,
+                ms.status,
+                NULL
+        )
         FROM MentorSlot ms
         WHERE ms.mentor.id = :mentorId
         AND ms.status = 'AVAILABLE'
@@ -39,13 +57,12 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
         AND ms.endDateTime >= :start
         ORDER BY ms.startDateTime ASC
         """)
-    List<MentorSlot> findAvailableSlots(
+    List<MentorSlotDto> findAvailableSlots(
         @Param("mentorId") Long mentorId,
         @Param("start") LocalDateTime start,
         @Param("end") LocalDateTime end
     );
 
-    // TODO: 현재는 시간 겹침만 체크, 추후 1:N 구조 시 활성 예약 기준으로 변경
     @Query("""
         SELECT CASE WHEN COUNT(ms) > 0
                 THEN TRUE
