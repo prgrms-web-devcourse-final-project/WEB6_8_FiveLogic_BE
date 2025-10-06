@@ -53,7 +53,10 @@ public class SessionInitData {
 
             // 예약 생성
             ReservationRequest reservationRequest = new ReservationRequest(mentor.getId(), mentorSlotResponse.mentorSlot().mentorSlotId(), mentoringResponse.mentoring().mentoringId(), "Any pre-questions?");
-            reservationService.createReservation(mentee, reservationRequest);
+            var reservationResponse = reservationService.createReservation(mentee, reservationRequest);
+
+            // 예약 승인
+            reservationService.approveReservation(mentor, reservationResponse.reservation().reservationId());
         };
     }
 }
