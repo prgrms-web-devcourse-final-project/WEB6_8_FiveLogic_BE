@@ -67,6 +67,9 @@ dependencies {
 	implementation ("org.springframework.kafka:spring-kafka")
 
 	runtimeOnly("com.mysql:mysql-connector-j")
+
+	// Sentry
+	implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.19.1")
 }
 
 tasks.withType<Test> {
