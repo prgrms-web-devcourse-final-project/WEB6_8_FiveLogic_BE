@@ -36,7 +36,6 @@ public class JobRoadmapIntegrationServiceV2 {
     private final int MAX_DEPTH = 10;
     private final int MAX_CHILDREN = 4;
     private final int MAX_DEFERRED_RETRY = 3;
-    private final int MIN_MENTOR_COUNT_FOR_ORPHAN = 2; // 고아 노드 재통합을 위한 최소 멘토 언급 수
 
     // --- 품질 필터링 상수 ---
     private static final double MIN_STANDARDIZATION_RATE = 0.5; // 최소 표준화율 50%
@@ -318,70 +317,36 @@ public class JobRoadmapIntegrationServiceV2 {
         log.info("Deferred 재시도 완료: {}개 노드 연결", deferredProcessed);
 
         // =================================================================
-        // === 6. 고아 노드 재통합 (Orphan Node Re-integration) ===
-        // =================================================================
-        List<String> orphanKeys = keyToNode.keySet().stream()
-                .filter(k -> !visited.contains(k))
-                .toList();
-
-        int reintegratedCount = 0;
-        for (String orphanKey : orphanKeys) {
-            if (visited.contains(orphanKey)) continue;
-
-            // --- "가치 있는" 고아 노드 선별 ---
-            int mentorCount = mentorAppearSet.getOrDefault(orphanKey, Collections.emptySet()).size();
-            if (mentorCount < MIN_MENTOR_COUNT_FOR_ORPHAN) { 
-                continue; // 최소 멘토 언급 수를 만족하지 못하면 통합하지 않음
-            }
-
-            List<ParentCandidate> candidates = childToParentCandidates.get(orphanKey);
-            if (candidates == null || candidates.isEmpty()) continue;
-
-            // 트리에 이미 포함된 부모 후보 중 가장 점수가 높은 부모를 찾음
-            Optional<ParentCandidate> bestAttachableParent = candidates.stream()
-                    .filter(pc -> visited.contains(pc.parentKey))
-                    .max(Comparator.comparingDouble(ParentCandidate::getPriorityScore));
-
-            if (bestAttachableParent.isPresent()) {
-                String parentKey = bestAttachableParent.get().parentKey;
-                RoadmapNode parentNode = keyToNode.get(parentKey);
-                RoadmapNode orphanNode = keyToNode.get(orphanKey);
-
-                if (parentNode.getLevel() + 1 < MAX_DEPTH && parentNode.getChildren().size() < MAX_CHILDREN) {
-                    parentNode.addChild(orphanNode);
-                    orphanNode.assignOrderInSiblings(parentNode.getChildren().size());
-
-                    // 연결된 노드와 그 자손들을 visited에 추가
-                    Queue<RoadmapNode> orphanQueue = new ArrayDeque<>();
-                    orphanQueue.add(orphanNode);
-                    while(!orphanQueue.isEmpty()) {
-                        RoadmapNode n = orphanQueue.poll();
-                        String nKey = generateKey(n);
-                        if (visited.contains(nKey)) continue;
-                        
-                        visited.add(nKey);
-                        reintegratedCount++;
-                        
-                        // 자식들도 함께 방문처리 큐에 추가
-                        chosenChildren.getOrDefault(nKey, Collections.emptyList()).stream()
-                            .map(keyToNode::get)
-                            .filter(Objects::nonNull)
-                            .forEach(orphanQueue::add);
-                    }
-                }
-            }
-        }
-        log.info("고아 노드 재통합 완료: {}개 노드 추가 연결", reintegratedCount);
-
-
-        // =================================================================
-        // === 7. 최종 저장 (Finalization & Persistence) ===
+        // === 6. 메인 루트 설정 및 고아 노드 로그 기록 ===
         // =================================================================
         RoadmapNode mainRoot = keyToNode.get(rootKey);
         if (mainRoot != null) {
             mainRoot.initializeAsRoot();
         }
 
+        // 고아 노드(visited되지 않은 노드) 로그 기록
+        long orphanCount = keyToNode.values().stream()
+                .filter(n -> !visited.contains(generateKey(n)))
+                .count();
+
+        if (orphanCount > 0) {
+            log.info("=== 제외된 고아 노드 ===");
+            keyToNode.entrySet().stream()
+                    .filter(e -> !visited.contains(e.getKey()))
+                    .forEach(e -> {
+                        String key = e.getKey();
+                        AggregatedNode aggNode = agg.get(key);
+                        int count = aggNode != null ? aggNode.count : 0;
+                        int mentorCount = mentorAppearSet.getOrDefault(key, Collections.emptySet()).size();
+                        log.info("  - 키: {}, 이름: {}, 출현빈도: {}회, 멘토수: {}명",
+                                key, e.getValue().getTaskName(), count, mentorCount);
+                    });
+            log.info("총 {}개의 저빈도 노드가 메인 트리에서 제외되었습니다.", orphanCount);
+        }
+
+        // =================================================================
+        // === 7. 최종 저장 (Finalization & Persistence) ===
+        // =================================================================
         JobRoadmap jobRoadmap = jobRoadmapRepository.save(JobRoadmap.builder().job(job).build());
         Long roadmapId = jobRoadmap.getId();
 
