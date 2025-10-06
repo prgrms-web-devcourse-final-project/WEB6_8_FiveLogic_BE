@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +37,12 @@ public class JobRoadmapIntegrationServiceV2 {
     private final int MAX_CHILDREN = 4;
     private final int MAX_DEFERRED_RETRY = 3;
     private final int MIN_MENTOR_COUNT_FOR_ORPHAN = 2; // 고아 노드 재통합을 위한 최소 멘토 언급 수
+
+    // --- 품질 필터링 상수 ---
+    private static final double MIN_STANDARDIZATION_RATE = 0.5; // 최소 표준화율 50%
+    private static final double MIN_QUALITY_THRESHOLD = 0.4;    // 최소 품질 점수 40%
+    private static final double QUALITY_NODE_COUNT_WEIGHT = 0.3; // 품질 점수: 노드 개수 가중치
+    private static final double QUALITY_STANDARDIZATION_WEIGHT = 0.7; // 품질 점수: 표준화율 가중치
 
     // --- 부모 우선순위 점수(priorityScore) 가중치 ---
     private static final double W_TRANSITION_POPULARITY = 0.4; // 전체 멘토 대비 전이 빈도 (전체적인 인기)
@@ -63,13 +68,17 @@ public class JobRoadmapIntegrationServiceV2 {
 
         List<MentorRoadmap> qualityFiltered = mentorRoadmaps.stream()
                 .filter(mr -> mr.getNodes() != null && mr.getNodes().size() >= 3)
+                .filter(mr -> calculateStandardizationRate(mr) >= MIN_STANDARDIZATION_RATE)
+                .filter(mr -> calculateRoadmapQuality(mr) >= MIN_QUALITY_THRESHOLD)
                 .toList();
 
         if (qualityFiltered.isEmpty()) {
-            throw new ServiceException("404", "해당 직업에 대한 유효한 멘토 로드맵이 존재하지 않습니다. (최소 3개 노드 필요)");
+            throw new ServiceException("404", "해당 직업에 대한 유효한 멘토 로드맵이 존재하지 않습니다. " +
+                    "(최소 조건: 노드 3개 이상, 표준화율 " + (int)(MIN_STANDARDIZATION_RATE * 100) + "% 이상, 품질 점수 " + MIN_QUALITY_THRESHOLD + " 이상)");
         }
 
-        log.info("멘토 로드맵 필터링: 전체 {}개 → 유효 {}개", mentorRoadmaps.size(), qualityFiltered.size());
+        log.info("멘토 로드맵 품질 필터링: 전체 {}개 → 유효 {}개 (노드 3개 이상, 표준화율 {}% 이상, 품질 점수 {} 이상)",
+                mentorRoadmaps.size(), qualityFiltered.size(), (int)(MIN_STANDARDIZATION_RATE * 100), MIN_QUALITY_THRESHOLD);
         mentorRoadmaps = qualityFiltered;
         final int totalMentorCount = mentorRoadmaps.size();
 
@@ -81,7 +90,12 @@ public class JobRoadmapIntegrationServiceV2 {
         Map<String, Integer> rootCount = new HashMap<>();
         Map<String, Set<Long>> mentorAppearSet = new HashMap<>();
         Map<String, List<Integer>> positions = new HashMap<>();
-        // ... (학습 조언, 추천 자료 등 텍스트 정보 집계는 생략)
+        Map<String, List<String>> learningAdvices = new HashMap<>();
+        Map<String, List<String>> recommendedResourcesList = new HashMap<>();
+        Map<String, List<String>> learningGoalsList = new HashMap<>();
+        Map<String, List<Integer>> difficulties = new HashMap<>();
+        Map<String, List<Integer>> importances = new HashMap<>();
+        Map<String, List<Integer>> estimatedHoursList = new HashMap<>();
 
         for (MentorRoadmap mr : mentorRoadmaps) {
             List<RoadmapNode> nodes = mr.getNodes().stream()
@@ -100,6 +114,36 @@ public class JobRoadmapIntegrationServiceV2 {
                 positions.computeIfAbsent(k, kk -> new ArrayList<>()).add(i + 1);
                 mentorAppearSet.computeIfAbsent(k, kk -> new HashSet<>()).add(mentorId);
 
+                // learningAdvice 모으기
+                if (rn.getLearningAdvice() != null && !rn.getLearningAdvice().isBlank()) {
+                    learningAdvices.computeIfAbsent(k, kk -> new ArrayList<>()).add(rn.getLearningAdvice());
+                }
+
+                // recommendedResources 모으기
+                if (rn.getRecommendedResources() != null && !rn.getRecommendedResources().isBlank()) {
+                    recommendedResourcesList.computeIfAbsent(k, kk -> new ArrayList<>()).add(rn.getRecommendedResources());
+                }
+
+                // learningGoals 모으기
+                if (rn.getLearningGoals() != null && !rn.getLearningGoals().isBlank()) {
+                    learningGoalsList.computeIfAbsent(k, kk -> new ArrayList<>()).add(rn.getLearningGoals());
+                }
+
+                // difficulty 모으기
+                if (rn.getDifficulty() != null) {
+                    difficulties.computeIfAbsent(k, kk -> new ArrayList<>()).add(rn.getDifficulty());
+                }
+
+                // importance 모으기
+                if (rn.getImportance() != null) {
+                    importances.computeIfAbsent(k, kk -> new ArrayList<>()).add(rn.getImportance());
+                }
+
+                // estimatedHours 모으기
+                if (rn.getEstimatedHours() != null) {
+                    estimatedHoursList.computeIfAbsent(k, kk -> new ArrayList<>()).add(rn.getEstimatedHours());
+                }
+
                 if (i < nodes.size() - 1) {
                     transitions.computeIfAbsent(k, kk -> new HashMap<>()).merge(generateKey(nodes.get(i + 1)), 1, Integer::sum);
                 }
@@ -110,7 +154,7 @@ public class JobRoadmapIntegrationServiceV2 {
         // === 3. 루트 노드 선택 및 노드 인스턴스 생성 (Root Selection & Node Instantiation) ===
         // =================================================================
         String rootKey = rootCount.entrySet().stream()
-                .max(Comparator.comparingInt(Map.Entry::getValue).thenComparing(Map.Entry::getKey))
+                .max(Comparator.comparingInt((Map.Entry<String, Integer> e) -> e.getValue()).thenComparing(Map.Entry::getKey))
                 .map(Map.Entry::getKey)
                 .orElseGet(() -> agg.entrySet().stream()
                         .max(Comparator.comparingInt(e -> e.getValue().count))
@@ -120,8 +164,19 @@ public class JobRoadmapIntegrationServiceV2 {
 
         Map<String, RoadmapNode> keyToNode = new HashMap<>();
         agg.forEach((key, a) -> {
+            // 숫자 필드 평균 계산
+            Double avgDifficulty = calculateAverage(difficulties.get(key));
+            Double avgImportance = calculateAverage(importances.get(key));
+            Integer avgEstimatedHours = calculateIntegerAverage(estimatedHoursList.get(key));
+
             RoadmapNode node = RoadmapNode.builder()
                     .taskName(a.displayName)
+                    .learningAdvice(mergeTopDescriptions(learningAdvices.get(key)))
+                    .recommendedResources(mergeTopDescriptions(recommendedResourcesList.get(key)))
+                    .learningGoals(mergeTopDescriptions(learningGoalsList.get(key)))
+                    .difficulty(avgDifficulty != null ? avgDifficulty.intValue() : null)
+                    .importance(avgImportance != null ? avgImportance.intValue() : null)
+                    .estimatedHours(avgEstimatedHours)
                     .task(a.task)
                     .roadmapId(0L)
                     .roadmapType(RoadmapType.JOB)
@@ -209,7 +264,7 @@ public class JobRoadmapIntegrationServiceV2 {
             int order = 1;
             for (String ck : childs) {
                 if (visited.contains(ck)) {
-                    recordAsAlternative(pk, ck, transitions, mentorAppearSet, totalMentorCount, skippedParents, childToParentCandidates.get(ck));
+                    recordAsAlternative(pk, ck, transitions, mentorAppearSet, positions, totalMentorCount, skippedParents);
                     continue;
                 }
 
@@ -221,14 +276,14 @@ public class JobRoadmapIntegrationServiceV2 {
                     if (!visited.contains(bestParent)) {
                         deferredQueue.add(new DeferredChild(pk, ck, MAX_DEFERRED_RETRY));
                     } else {
-                        recordAsAlternative(pk, ck, transitions, mentorAppearSet, totalMentorCount, skippedParents, childToParentCandidates.get(ck));
+                        recordAsAlternative(pk, ck, transitions, mentorAppearSet, positions, totalMentorCount, skippedParents);
                     }
                     continue;
                 }
 
                 if (parentNode.getLevel() + 1 >= MAX_DEPTH) {
                     log.warn("MAX_DEPTH({})" + " 초과로 노드 추가 중단: parent={}, child={}", MAX_DEPTH, pk, ck);
-                    recordAsAlternative(pk, ck, transitions, mentorAppearSet, totalMentorCount, skippedParents, childToParentCandidates.get(ck));
+                    recordAsAlternative(pk, ck, transitions, mentorAppearSet, positions, totalMentorCount, skippedParents);
                     continue;
                 }
 
@@ -294,7 +349,7 @@ public class JobRoadmapIntegrationServiceV2 {
 
                 if (parentNode.getLevel() + 1 < MAX_DEPTH && parentNode.getChildren().size() < MAX_CHILDREN) {
                     parentNode.addChild(orphanNode);
-                    orphanNode.assignOrderInSiblings(parentNode.getChildren().size() + 1);
+                    orphanNode.assignOrderInSiblings(parentNode.getChildren().size());
 
                     // 연결된 노드와 그 자손들을 visited에 추가
                     Queue<RoadmapNode> orphanQueue = new ArrayDeque<>();
@@ -340,7 +395,66 @@ public class JobRoadmapIntegrationServiceV2 {
 
         List<JobRoadmapNodeStat> stats = new ArrayList<>();
         for (RoadmapNode persisted : saved.getNodes()) {
-            // ... (통계 저장 로직은 기존과 유사하게 진행)
+            String k = generateKey(persisted);
+            AggregatedNode a = agg.get(k);
+
+            // 해당 키를 선택한 멘토 수
+            int mentorCount = mentorAppearSet.getOrDefault(k, Collections.emptySet()).size();
+
+            // 평균 단계 위치
+            List<Integer> posList = positions.getOrDefault(k, Collections.emptyList());
+            Double avgPos = posList.isEmpty() ? null : posList.stream().mapToInt(Integer::intValue).average().orElse(0.0);
+
+            // Weight 계산: V2의 정교화된 priorityScore와 유사한 복합 가중치 사용
+            double frequencyScore = a == null ? 0.0 : (double) a.count / (double) totalMentorCount; // 0~1
+            double mentorCoverageScore = (double) mentorCount / (double) totalMentorCount; // 0~1
+            double positionScore = avgPos != null ? 1.0 / (avgPos + 1) : 0.0; // 0~1, 위치가 앞일수록 높은 점수
+
+            // 연결성 점수: outgoing + incoming transitions (정규화)
+            int outgoing = transitions.getOrDefault(k, Collections.emptyMap()).values().stream().mapToInt(Integer::intValue).sum();
+            int incoming = transitions.entrySet().stream()
+                    .mapToInt(e -> e.getValue().getOrDefault(k, 0)).sum();
+            int totalTransitions = outgoing + incoming;
+            double connectivityScore = totalTransitions > 0 ? Math.min(1.0, (double) totalTransitions / (totalMentorCount * 2)) : 0.0; // 0~1
+
+            double weight =
+                0.4 * frequencyScore +
+                0.3 * mentorCoverageScore +
+                0.2 * positionScore +
+                0.1 * connectivityScore;
+
+            // 방어적 코딩: 0~1 범위로 클램프
+            weight = Math.max(0.0, Math.min(1.0, weight));
+
+            // 다음으로 이어지는 노드들의 분포 (JSON으로 저장)
+            Map<String, Integer> outMap = transitions.getOrDefault(k, Collections.emptyMap());
+            String transitionCountsJson = null;
+            if (!outMap.isEmpty()) {
+                transitionCountsJson = Ut.json.toString(outMap);
+            }
+
+            // 대안 부모 정보 저장 (JSON으로 저장)
+            List<AlternativeParentInfo> altParents = skippedParents.get(k);
+            String alternativeParentsJson = null;
+            if (altParents != null && !altParents.isEmpty()) {
+                alternativeParentsJson = Ut.json.toString(altParents);
+            }
+
+            JobRoadmapNodeStat stat = JobRoadmapNodeStat.builder()
+                    .node(persisted)
+                    .stepOrder(persisted.getStepOrder())
+                    .weight(weight)
+                    .averagePosition(avgPos)
+                    .mentorCount(mentorCount)
+                    .totalMentorCount(totalMentorCount)
+                    .mentorCoverageRatio(mentorCoverageScore)
+                    .outgoingTransitions(outgoing)
+                    .incomingTransitions(incoming)
+                    .transitionCounts(transitionCountsJson)
+                    .alternativeParents(alternativeParentsJson)
+                    .build();
+
+            stats.add(stat);
         }
         jobRoadmapNodeStatRepository.saveAll(stats);
         
@@ -359,12 +473,15 @@ public class JobRoadmapIntegrationServiceV2 {
     }
 
     private static class AlternativeParentInfo {
-        public String parentKey;
-        public int transitionCount;
-        public double score;
-        public AlternativeParentInfo(String parentKey, int transitionCount, double score) {
+        public String parentKey;           // 부모 노드 키 (T:1, N:kotlin 등)
+        public int transitionCount;        // 전이 빈도
+        public int mentorCount;            // 해당 부모를 사용한 멘토 수
+        public double score;               // 가중치 점수
+
+        public AlternativeParentInfo(String parentKey, int transitionCount, int mentorCount, double score) {
             this.parentKey = parentKey;
             this.transitionCount = transitionCount;
+            this.mentorCount = mentorCount;
             this.score = score;
         }
     }
@@ -393,25 +510,45 @@ public class JobRoadmapIntegrationServiceV2 {
         }
     }
 
-    private void recordAsAlternative(String parentKey, String childKey, 
-                                     Map<String, Map<String, Integer>> transitions, 
-                                     Map<String, Set<Long>> mentorAppearSet, 
-                                     int totalMentorCount, 
-                                     Map<String, List<AlternativeParentInfo>> skippedParents, 
-                                     List<ParentCandidate> candidates) {
-        ParentCandidate candidate = candidates.stream()
-            .filter(c -> c.getParentKey().equals(parentKey))
-            .findFirst()
-            .orElse(null);
-        if (candidate == null) return;
+    private void recordAsAlternative(String parentKey, String childKey,
+                                     Map<String, Map<String, Integer>> transitions,
+                                     Map<String, Set<Long>> mentorAppearSet,
+                                     Map<String, List<Integer>> positions,
+                                     int totalMentorCount,
+                                     Map<String, List<AlternativeParentInfo>> skippedParents) {
+        int transitionCount = transitions.getOrDefault(parentKey, Collections.emptyMap()).getOrDefault(childKey, 0);
+        int parentMentorCount = mentorAppearSet.getOrDefault(parentKey, Collections.emptySet()).size();
 
-        AlternativeParentInfo info = new AlternativeParentInfo(parentKey, candidate.transitionCount, candidate.getPriorityScore());
+        // V2의 정교화된 priorityScore와 동일한 복합 점수 계산 (일관성 보장)
+        double transitionPopularity = (double) transitionCount / totalMentorCount;
+
+        List<Integer> parentPosList = positions.getOrDefault(parentKey, Collections.emptyList());
+        double avgParentPos = parentPosList.isEmpty() ? 99.0
+            : parentPosList.stream().mapToInt(Integer::intValue).average().orElse(99.0);
+        double positionScore = 1.0 / (avgParentPos + 1);
+
+        double mentorCoverageScore = (double) parentMentorCount / totalMentorCount;
+
+        // V2 가중치 사용 (V1과 다름)
+        double score =
+            W_TRANSITION_POPULARITY * transitionPopularity +
+            W_POSITION_SIMILARITY * positionScore +
+            W_MENTOR_COVERAGE * mentorCoverageScore;
+
+        AlternativeParentInfo info = new AlternativeParentInfo(parentKey, transitionCount, parentMentorCount, score);
         skippedParents.computeIfAbsent(childKey, k -> new ArrayList<>()).add(info);
     }
 
     private String mergeTopDescriptions(List<String> list) {
         if (list == null || list.isEmpty()) return null;
-        return list.stream().filter(s -> s != null && !s.isBlank()).distinct().limit(3).collect(Collectors.joining("\n\n"));
+        LinkedHashSet<String> set = new LinkedHashSet<>();
+        for (String s : list) {
+            if (s == null) continue;
+            String c = s.trim();
+            if (!c.isEmpty()) set.add(c);
+            if (set.size() >= 3) break;
+        }
+        return String.join("\n\n", set);
     }
 
     private Double calculateAverage(List<Integer> list) {
@@ -431,5 +568,47 @@ public class JobRoadmapIntegrationServiceV2 {
         String name = rn.getTaskName();
         if (name == null || name.trim().isEmpty()) return "N:__unknown__";
         return "N:" + name.trim().toLowerCase().replaceAll("\\s+", " ");
+    }
+
+    /**
+     * 멘토 로드맵의 Task 표준화율 계산
+     * @param roadmap 멘토 로드맵
+     * @return 표준화율 (0.0 ~ 1.0)
+     */
+    private double calculateStandardizationRate(MentorRoadmap roadmap) {
+        List<RoadmapNode> nodes = roadmap.getNodes();
+        if (nodes == null || nodes.isEmpty()) {
+            return 0.0;
+        }
+
+        long standardizedCount = nodes.stream()
+                .filter(n -> n.getTask() != null)
+                .count();
+
+        return (double) standardizedCount / nodes.size();
+    }
+
+    /**
+     * 멘토 로드맵의 품질 점수 계산
+     * 품질 점수 = (노드 개수 점수 × 0.3) + (표준화율 × 0.7)
+     *
+     * @param roadmap 멘토 로드맵
+     * @return 품질 점수 (0.0 ~ 1.0)
+     */
+    private double calculateRoadmapQuality(MentorRoadmap roadmap) {
+        List<RoadmapNode> nodes = roadmap.getNodes();
+        if (nodes == null || nodes.isEmpty()) {
+            return 0.0;
+        }
+
+        // 노드 개수 점수 (3개=0.0, 15개=1.0)
+        int nodeCount = nodes.size();
+        double nodeScore = Math.min(1.0, (nodeCount - 3.0) / 12.0);
+
+        // 표준화율
+        double standardizationScore = calculateStandardizationRate(roadmap);
+
+        // 복합 점수 (노드 개수 30%, 표준화율 70%)
+        return QUALITY_NODE_COUNT_WEIGHT * nodeScore + QUALITY_STANDARDIZATION_WEIGHT * standardizationScore;
     }
 }
