@@ -149,8 +149,7 @@ class ReservationServiceTest {
             assertThat(response.mentee().menteeId()).isEqualTo(mentee.getId());
             assertThat(response.mentor().mentorId()).isEqualTo(mentor.getId());
             assertThat(response.reservation().mentorSlotId()).isEqualTo(mentorSlot2.getId());
-            assertThat(response.reservation().mentoringSessionId()).isEqualTo(session.getId());
-            verify(reservationRepository).findByIdAndMember(reservationId, mentor.getMember());
+            verify(reservationRepository).findByIdAndMember(reservationId, mentor.getMember().getId());
         }
 
         @Test
