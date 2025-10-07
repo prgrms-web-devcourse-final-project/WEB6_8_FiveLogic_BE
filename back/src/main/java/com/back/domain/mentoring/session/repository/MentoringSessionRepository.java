@@ -13,4 +13,5 @@ public interface MentoringSessionRepository extends JpaRepository<MentoringSessi
     Optional<MentoringSession> findByMentoring(Mentoring mentoring);
     void deleteByReservation(Reservation reservation);
     Optional<MentoringSession> findBySessionUrl(String mentoringSessionUUid);
+    Optional<MentoringSession> findByReservation(Reservation reservation);
 }

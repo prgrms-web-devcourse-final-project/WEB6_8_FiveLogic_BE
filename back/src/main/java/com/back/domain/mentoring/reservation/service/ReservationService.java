@@ -47,7 +47,10 @@ public class ReservationService {
         } else {
             reservations = reservationRepository.findAllByMenteeMember(member, pageable);
         }
-        return reservations.map(ReservationDto::from);
+        return reservations.map(r -> {
+            MentoringSession mentoringSession = mentoringSessionService.getMentoringSessionByReservation(r);
+            return ReservationDto.from(r, mentoringSession);
+        });
     }
 
     @Transactional(readOnly = true)
@@ -55,7 +58,9 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findByIdAndMember(reservationId, member)
             .orElseThrow(() -> new ServiceException(ReservationErrorCode.RESERVATION_NOT_ACCESSIBLE));
 
-        return ReservationResponse.from(reservation);
+        MentoringSession mentoringSession = mentoringSessionService.getMentoringSessionByReservation(reservation);
+
+        return ReservationResponse.from(reservation, mentoringSession);
     }
 
     @Transactional

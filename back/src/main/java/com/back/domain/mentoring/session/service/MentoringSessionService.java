@@ -23,6 +23,11 @@ public class MentoringSessionService {
                 .orElseThrow(() -> new ServiceException("404", "잘못된 id"));
     }
 
+    public MentoringSession getMentoringSessionByReservation(Reservation reservation) {
+        return mentoringSessionRepository.findByReservation((reservation))
+                .orElseThrow(() -> new ServiceException("404", "해당 예약의 세션이 없습니다."));
+    }
+
     public MentoringSession getMentoringSessionByMentoring(Mentoring mentoring) {
         return mentoringSessionRepository.findByMentoring(mentoring)
                 .orElseThrow(() -> new ServiceException("404", "해당 멘토링의 세션이 없습니다."));
@@ -31,6 +36,7 @@ public class MentoringSessionService {
     public void deleteByReservation(Reservation reservation) {
         mentoringSessionRepository.deleteByReservation(reservation);
     }
+
     public MentoringSession save(MentoringSession mentoringSession) {
         return mentoringSessionRepository.save(mentoringSession);
     }
