@@ -42,4 +42,9 @@ public class MentorFixture {
         ReflectionTestUtils.setField(mentor, "id", id);
         return mentor;
     }
+
+    public static Mentor create() {
+        Member member = MemberFixture.createDefault();
+        return create(member);
+    }
 }

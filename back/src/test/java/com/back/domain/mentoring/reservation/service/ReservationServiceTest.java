@@ -12,6 +12,9 @@ import com.back.domain.mentoring.reservation.dto.response.ReservationResponse;
 import com.back.domain.mentoring.reservation.entity.Reservation;
 import com.back.domain.mentoring.reservation.error.ReservationErrorCode;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
+import com.back.domain.mentoring.session.entity.MentoringSession;
+import com.back.domain.mentoring.session.service.MentoringSessionService;
+import com.back.fixture.mentoring.MentoringSessionFixture;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.domain.mentoring.slot.error.MentorSlotErrorCode;
 import com.back.fixture.MemberFixture;
@@ -57,6 +60,9 @@ class ReservationServiceTest {
 
     @Mock
     private MentoringStorage mentoringStorage;
+
+    @Mock
+    private MentoringSessionService mentoringSessionService;
 
     private Mentor mentor;
     private Mentee mentee, mentee2;
@@ -128,6 +134,8 @@ class ReservationServiceTest {
 
             when(reservationRepository.findByIdAndMember(reservationId, mentor.getMember().getId()))
                 .thenReturn(Optional.of(reservation));
+            MentoringSession session = MentoringSessionFixture.create(reservation);
+            when(mentoringSessionService.getMentoringSessionByReservation(reservation)).thenReturn(session);
 
             // when
             ReservationResponse response = reservationService.getReservation(
@@ -141,7 +149,8 @@ class ReservationServiceTest {
             assertThat(response.mentee().menteeId()).isEqualTo(mentee.getId());
             assertThat(response.mentor().mentorId()).isEqualTo(mentor.getId());
             assertThat(response.reservation().mentorSlotId()).isEqualTo(mentorSlot2.getId());
-            verify(reservationRepository).findByIdAndMember(reservationId, mentor.getMember().getId());
+            assertThat(response.reservation().mentoringSessionId()).isEqualTo(session.getId());
+            verify(reservationRepository).findByIdAndMember(reservationId, mentor.getMember());
         }
 
         @Test

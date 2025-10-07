@@ -12,6 +12,8 @@ import com.back.domain.mentoring.reservation.dto.response.ReservationResponse;
 import com.back.domain.mentoring.reservation.entity.Reservation;
 import com.back.domain.mentoring.reservation.error.ReservationErrorCode;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
+import com.back.domain.mentoring.session.entity.MentoringSession;
+import com.back.domain.mentoring.session.service.MentoringSessionService;
 import com.back.domain.mentoring.slot.constant.MentorSlotStatus;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.domain.mentoring.slot.service.DateTimeValidator;
@@ -33,6 +35,7 @@ public class ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final MentoringStorage mentoringStorage;
+    private final MentoringSessionService mentoringSessionService;
 
     @Transactional(readOnly = true)
     public Page<ReservationDto> getReservations(Member member, int page, int size) {
@@ -45,7 +48,10 @@ public class ReservationService {
         } else {
             reservations = reservationRepository.findAllByMenteeMember(member, pageable);
         }
-        return reservations.map(ReservationDto::from);
+        return reservations.map(r -> {
+            MentoringSession mentoringSession = mentoringSessionService.getMentoringSessionByReservation(r);
+            return ReservationDto.from(r, mentoringSession);
+        });
     }
 
     @Transactional(readOnly = true)
@@ -53,7 +59,9 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findByIdAndMember(reservationId, member.getId())
             .orElseThrow(() -> new ServiceException(ReservationErrorCode.RESERVATION_NOT_ACCESSIBLE));
 
-        return ReservationResponse.from(reservation);
+        MentoringSession mentoringSession = mentoringSessionService.getMentoringSessionByReservation(reservation);
+
+        return ReservationResponse.from(reservation, mentoringSession);
     }
 
     @Transactional
@@ -90,7 +98,8 @@ public class ReservationService {
             reservation.approve(mentor);
             reservation.getMentorSlot().updateStatus(MentorSlotStatus.APPROVED);
 
-            // 세션
+            // 예약이 승인되면 세션을 생성한다.
+            MentoringSession mentoringSession = mentoringSessionService.create(reservation);
 
             return ReservationResponse.from(reservation);
         } catch (OptimisticLockException e) {
