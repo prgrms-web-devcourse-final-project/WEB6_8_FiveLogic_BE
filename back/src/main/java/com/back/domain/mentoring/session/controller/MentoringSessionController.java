@@ -34,18 +34,20 @@ public class MentoringSessionController {
     //세션 열기
     @PutMapping("/{sessionId}")
     @PreAuthorize("hasRole('MENTOR')")
-    public RsData<OpenSessionResponse> openSession(@AuthenticationPrincipal Member requestUser,@PathVariable Long sessionId) {
+    public RsData<OpenSessionResponse> openSession(@PathVariable Long sessionId) {
+        Member member = rq.getActor();
         OpenSessionRequest openSessionRequest = new OpenSessionRequest(sessionId);
-        OpenSessionResponse response = mentoringSessionManager.openSession(requestUser, openSessionRequest);
+        OpenSessionResponse response = mentoringSessionManager.openSession(member, openSessionRequest);
         return new RsData<>("200", "세션 오픈 완료", response);
     }
 
     //세션종료
     @DeleteMapping("/{sessionId}")
     @PreAuthorize("hasRole('MENTOR')")
-    public RsData<CloseSessionResponse> closeSession(@AuthenticationPrincipal Member requestUser,@PathVariable Long sessionId) {
+    public RsData<CloseSessionResponse> closeSession(@PathVariable Long sessionId) {
+        Member member = rq.getActor();
         DeleteSessionRequest deleteSessionRequest = new DeleteSessionRequest(sessionId);
-        CloseSessionResponse response = mentoringSessionManager.closeSession(requestUser, deleteSessionRequest);
+        CloseSessionResponse response = mentoringSessionManager.closeSession(member, deleteSessionRequest);
         return new RsData<>("200", "세션 종료 완료", response);
     }
 }
