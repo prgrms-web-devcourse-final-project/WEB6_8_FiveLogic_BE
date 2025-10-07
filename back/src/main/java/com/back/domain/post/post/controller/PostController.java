@@ -26,7 +26,7 @@ public class PostController {
     private final PostDetailFacade postDetailFacade;
 
 
-    @Operation(summary = "게시글 조회 - 페이징 처리")
+    @Operation(summary = "게시글 조회 - 페이징 처리", description = "keyword는 null 일수 있습니다. keyword는 title, member name(작성자 이름) 검색에 활용됩니다. \n 페이지는 10개씩 보여줍니다.")
     @GetMapping("/page/{postType}")
     public RsData<PostPagingResponse> getPostWithPage(
             @PathVariable Post.PostType postType,
@@ -85,7 +85,7 @@ public class PostController {
         return new RsData<>("200", "게시글 삭제 성공", null);
     }
 
-    @Operation(summary = "게시글 수정")
+    @Operation(summary = "게시글 수정", description = "title, content은 공백이거나 null 일 수 없습니다. 글자수 제한은 없습니다. ")
     @PutMapping("/{post_id}")
     public RsData<Void> updatePost(@PathVariable Long post_id
             ,@Valid @RequestBody PostModifyRequest postModifyRequest) {
@@ -118,7 +118,7 @@ public class PostController {
     }
 
 
-    @Operation(summary = "게시글 상세페이지")
+    @Operation(summary = "게시글 상세페이지", description = "사용자 단건 조회시 사용")
     @GetMapping("/detail/{post_id}")
     public RsData<PostDetailResponse> getPostDetail(@PathVariable Long post_id) {
 
