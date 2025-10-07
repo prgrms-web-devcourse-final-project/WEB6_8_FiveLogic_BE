@@ -45,7 +45,7 @@ class PostServiceTest {
         void createPost_informationPost_success() {
             // given
             Member member = MemberFixture.create(1L, "test@test.com", "Test User", "password", Member.Role.MENTEE);
-            PostCreateRequest request = new PostCreateRequest("INFORMATIONPOST","제목","내용");
+            PostCreateRequest request = new PostCreateRequest("INFORMATIONPOST","제목","내용","");
 
 
             Post expectedPost = createPost("제목", "내용", member, Post.PostType.INFORMATIONPOST);
@@ -68,7 +68,7 @@ class PostServiceTest {
         void createPost_practicePost_mentor_success() {
             // given
             Member mentor = MemberFixture.create(1L, "mentor@test.com", "Mentor", "password", Member.Role.MENTOR);
-            PostCreateRequest request = new PostCreateRequest("PRACTICEPOST","실무경험","실무내용");
+            PostCreateRequest request = new PostCreateRequest("PRACTICEPOST","실무경험","실무내용","123");
             Post expectedPost = createPost("실무 경험", "실무 내용", mentor, Post.PostType.PRACTICEPOST);
 
             when(postRepository.save(any(Post.class))).thenReturn(expectedPost);
@@ -86,7 +86,7 @@ class PostServiceTest {
         void createPost_practicePost_mentee_failure() {
             // given
             Member mentee = MemberFixture.create(1L, "mentee@test.com", "Mentee", "password", Member.Role.MENTEE);
-            PostCreateRequest request = new PostCreateRequest("PRACTICEPOST","실무경험","실무내용");
+            PostCreateRequest request = new PostCreateRequest("PRACTICEPOST","실무경험","실무내용","");
 
             // when & then
             assertThatThrownBy(() -> postService.createPost(request, mentee))
@@ -101,7 +101,7 @@ class PostServiceTest {
         void createPost_questionPost_initializeIsResolve() {
             // given
             Member member = MemberFixture.create(1L, "test@test.com", "Test User", "password", Member.Role.MENTEE);
-            PostCreateRequest request = new PostCreateRequest("QUESTIONPOST","질문경험","질문내용");
+            PostCreateRequest request = new PostCreateRequest("QUESTIONPOST","질문경험","질문내용","");
 
             Post expectedPost = createPost("질문", "질문 내용", member, Post.PostType.QUESTIONPOST);
             expectedPost.updateResolveStatus(false);
@@ -122,7 +122,7 @@ class PostServiceTest {
         void createPost_invalidPostType_failure() {
             // given
             Member member = MemberFixture.createDefault();
-            PostCreateRequest request = new PostCreateRequest("INVALIDPOST","질문경험","질문내용");
+            PostCreateRequest request = new PostCreateRequest("INVALIDPOST","질문경험","질문내용","");
 
             // when & then
             assertThatThrownBy(() -> postService.createPost(request, member))
@@ -202,7 +202,7 @@ class PostServiceTest {
             Member author = MemberFixture.create(1L, "author@test.com", "Author", "password", Member.Role.MENTEE);
             Post post = createPost("기존 제목", "기존 내용", author, Post.PostType.INFORMATIONPOST);
             Long postId = 1L;
-            PostCreateRequest updateRequest = new PostCreateRequest("INFORMATIONPOST","새 제목","새 내용");
+            PostCreateRequest updateRequest = new PostCreateRequest("INFORMATIONPOST","새 제목","새 내용","");
 
             when(postRepository.findById(postId)).thenReturn(Optional.of(post));
             when(postRepository.save(any(Post.class))).thenReturn(post);
@@ -224,7 +224,7 @@ class PostServiceTest {
             Member otherUser = MemberFixture.create(2L, "other@test.com", "Other", "password", Member.Role.MENTEE);
             Post post = createPost("제목", "내용", author, Post.PostType.INFORMATIONPOST);
             Long postId = 1L;
-            PostCreateRequest updateRequest = new PostCreateRequest("INFORMATIONPOST","새 내용","새 제목");
+            PostCreateRequest updateRequest = new PostCreateRequest("INFORMATIONPOST","새 내용","새 제목","");
 
 
             when(postRepository.findById(postId)).thenReturn(Optional.of(post));
@@ -244,7 +244,7 @@ class PostServiceTest {
             Member author = MemberFixture.create(1L, "author@test.com", "Author", "password", Member.Role.MENTEE);
             Post post = createPost("제목", "내용", author, Post.PostType.INFORMATIONPOST);
             Long postId = 1L;
-            PostCreateRequest updateRequest = new PostCreateRequest("INFORMATIONPOST","","새 내용");
+            PostCreateRequest updateRequest = new PostCreateRequest("INFORMATIONPOST","","새 내용","");
 
             when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
@@ -263,7 +263,7 @@ class PostServiceTest {
             Member author = MemberFixture.create(1L, "author@test.com", "Author", "password", Member.Role.MENTEE);
             Post post = createPost("제목", "내용", author, Post.PostType.INFORMATIONPOST);
             Long postId = 1L;
-            PostCreateRequest updateRequest = new PostCreateRequest("INFORMATIONPOST","새 제목","");
+            PostCreateRequest updateRequest = new PostCreateRequest("INFORMATIONPOST","새 제목","","");
 
             when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 

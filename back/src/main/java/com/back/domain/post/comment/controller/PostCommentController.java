@@ -5,6 +5,7 @@ import com.back.domain.post.comment.dto.CommentAllResponse;
 import com.back.domain.post.comment.dto.CommentCreateRequest;
 import com.back.domain.post.comment.dto.CommentDeleteRequest;
 import com.back.domain.post.comment.dto.CommentModifyRequest;
+import com.back.domain.post.comment.entity.PostComment;
 import com.back.domain.post.comment.service.PostCommentService;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
@@ -73,6 +74,14 @@ public class PostCommentController {
         Member member = rq.getActor();
         postCommentService.adoptComment(commentId, member);
         return new RsData<>("200", "댓글 채택 성공", null);
+    }
+
+    @Operation(summary = "채택된 댓글 가져오기 ")
+    @GetMapping("isAdopted/{post_id}")
+    public RsData<CommentAllResponse> getAdoptComment(@PathVariable Long post_id) {
+        CommentAllResponse commentAllResponse = postCommentService.getAdoptedComment(post_id);
+
+        return new RsData<>("200", "채택된 댓글 조회 성공", commentAllResponse);
     }
 
 }

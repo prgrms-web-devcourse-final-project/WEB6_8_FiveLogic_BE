@@ -1,10 +1,7 @@
 package com.back.domain.post.post.service;
 
 import com.back.domain.member.member.entity.Member;
-import com.back.domain.post.post.dto.PostAllResponse;
-import com.back.domain.post.post.dto.PostCreateRequest;
-import com.back.domain.post.post.dto.PostDto;
-import com.back.domain.post.post.dto.PostSingleResponse;
+import com.back.domain.post.post.dto.*;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.repository.PostRepository;
 import com.back.global.exception.ServiceException;
@@ -43,12 +40,6 @@ public class PostService {
             throw new ServiceException("400", "실무 경험 공유 게시글은 멘토만 작성할 수 있습니다.");
         }
 
-//        if( postType == Post.PostType.PRACTICEPOST ) {
-//            if(member.getCareer() == null || member.getCareer().isEmpty()) {
-//                throw new ServiceException("400", "멘토는 경력을 입력해야 실무 경험 공유 게시글을 작성할 수 있습니다.");
-//            }
-//        }
-
         Post post = Post.builder()
                 .title(postCreateRequest.title())
                 .content(postCreateRequest.content())
@@ -56,6 +47,10 @@ public class PostService {
                 .postType(postType)
                 .build();
 
+
+        if(postType == Post.PostType.PRACTICEPOST) {
+            post.updateJob(postCreateRequest.job());
+        }
 
         // PostType이 QUESTIONPOST인 경우 isResolve를 false로 초기화
         if(postType == Post.PostType.QUESTIONPOST) {
@@ -66,6 +61,7 @@ public class PostService {
 
         return post;
     }
+
 
     @Transactional
     public void removePost(Long postId, Member member) {

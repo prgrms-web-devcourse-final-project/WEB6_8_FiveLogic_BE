@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@Profile({"test", "dev"})
+@Profile({"test", "dev", "prod"})
 @Slf4j
 public class InMemoryVerificationCodeStore implements VerificationCodeStore {
     private final Map<String, CodeData> store = new ConcurrentHashMap<>();

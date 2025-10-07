@@ -1,5 +1,3 @@
-import org.gradle.kotlin.dsl.implementation
-
 plugins {
 	java
 	id("org.springframework.boot") version "3.5.5"
@@ -11,9 +9,8 @@ version = "0.0.1-SNAPSHOT"
 description = "back"
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 configurations {
@@ -69,6 +66,11 @@ dependencies {
 
 	implementation ("org.springframework.kafka:spring-kafka")
 	implementation("org.springframework.boot:spring-boot-starter-websocket")
+
+	runtimeOnly("com.mysql:mysql-connector-j")
+
+	// Sentry
+	implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.19.1")
 }
 
 tasks.withType<Test> {

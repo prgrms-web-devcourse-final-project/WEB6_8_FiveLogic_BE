@@ -78,7 +78,7 @@ class JobRoadmapServiceTest {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(testTask1)
                 .taskName(testTask1.getName())
-                .description("Java 프로그래밍 언어")
+                .learningAdvice("Java 프로그래밍 언어")
                 .stepOrder(1)
                 .level(0)
                 .build();
@@ -88,7 +88,7 @@ class JobRoadmapServiceTest {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(testTask2)
                 .taskName(testTask2.getName())
-                .description("Spring Boot 프레임워크")
+                .learningAdvice("Spring Boot 프레임워크")
                 .stepOrder(1)
                 .level(1)
                 .build();
@@ -226,7 +226,7 @@ class JobRoadmapServiceTest {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(testTask4)
                 .taskName(testTask4.getName())
-                .description("버전 관리 시스템")
+                .learningAdvice("버전 관리 시스템")
                 .stepOrder(2)
                 .level(0)
                 .build();
@@ -236,7 +236,7 @@ class JobRoadmapServiceTest {
                 .roadmapType(RoadmapNode.RoadmapType.JOB)
                 .task(testTask3)
                 .taskName(testTask3.getName())
-                .description("관계형 데이터베이스")
+                .learningAdvice("관계형 데이터베이스")
                 .stepOrder(2)
                 .level(1)
                 .build();

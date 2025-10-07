@@ -2,6 +2,12 @@ server:
   port: 8080
   forward-headers-strategy: native
 
+sentry:
+  dsn: https://2c0d2da223ce1abb9fa4ed3faaf01955@o4510117752471552.ingest.us.sentry.io/4510118514589696
+  traces-sample-rate: 1.0
+  send-default-pii: true
+
+
 spring:
   application:
     name: back

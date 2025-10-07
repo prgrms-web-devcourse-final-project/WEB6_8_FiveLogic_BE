@@ -7,18 +7,18 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public record MentoringRequest(
-    @Schema(description = "멘토링 제목")
+    @Schema(description = "멘토링 제목", example = "title")
     @NotNull @Size(max = 100)
     String title,
 
     @Schema(description = "멘토링 태그", example = "[\"Java\", \"Spring\"]")
     List<String> tags,
 
-    @Schema(description = "멘토링 소개")
+    @Schema(description = "멘토링 소개", example = "bio")
     @NotNull
     String bio,
 
-    @Schema(description = "멘토링 썸네일")
+    @Schema(description = "멘토링 썸네일", example = "test.png")
     String thumb
 ) {
 }

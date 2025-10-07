@@ -104,7 +104,7 @@ class ReservationServiceTest {
                 10
             );
 
-            when(reservationRepository.findAllByMentorMember(mentor.getMember(), pageable))
+            when(reservationRepository.findAllByMentorMember(mentor.getMember().getId(), pageable))
                 .thenReturn(reservationPage);
 
             // when
@@ -119,7 +119,7 @@ class ReservationServiceTest {
             assertThat(result.getSize()).isEqualTo(5);
             assertThat(result.getTotalElements()).isEqualTo(10);
             assertThat(result.getTotalPages()).isEqualTo(2);
-            verify(reservationRepository).findAllByMentorMember(mentor.getMember(), pageable);
+            verify(reservationRepository).findAllByMentorMember(mentor.getMember().getId(), pageable);
         }
     }
 
@@ -132,7 +132,7 @@ class ReservationServiceTest {
             // given
             Long reservationId = reservation.getId();
 
-            when(reservationRepository.findByIdAndMember(reservationId, mentor.getMember()))
+            when(reservationRepository.findByIdAndMember(reservationId, mentor.getMember().getId()))
                 .thenReturn(Optional.of(reservation));
             MentoringSession session = MentoringSessionFixture.create(reservation);
             when(mentoringSessionService.getMentoringSessionByReservation(reservation)).thenReturn(session);
@@ -157,7 +157,7 @@ class ReservationServiceTest {
         @DisplayName("권한이 없을 경우 예외")
         void getReservation_notAccessible() {
             // given
-            when(reservationRepository.findByIdAndMember(reservation.getId(), mentee2.getMember()))
+            when(reservationRepository.findByIdAndMember(reservation.getId(), mentee2.getMember().getId()))
                 .thenReturn(Optional.empty());
 
             // when & then
@@ -276,9 +276,6 @@ class ReservationServiceTest {
                 .thenReturn(mentoring);
             when(mentoringStorage.findMentorSlot(pastRequest.mentorSlotId()))
                 .thenReturn(pastSlot);
-            when(reservationRepository.findByMentorSlotIdAndStatusIn(pastSlot.getId(),
-                List.of(ReservationStatus.PENDING, ReservationStatus.APPROVED, ReservationStatus.COMPLETED)))
-                .thenReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> reservationService.createReservation(mentee, pastRequest))
