@@ -9,6 +9,7 @@ import com.back.domain.mentoring.session.dto.*;
 import com.back.domain.mentoring.session.entity.MentoringSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +22,7 @@ public class MentoringSessionManager {
         return new GetSessionUrlResponse(session.getSessionUrl());
     }
 
+    @Transactional
     public GetSessionInfoResponse getSessionDetail(Long sessionId) {
         MentoringSession session = mentoringSessionService.getMentoringSession(sessionId);
         Mentoring mentoring = session.getMentoring();
@@ -34,6 +36,7 @@ public class MentoringSessionManager {
         );
     }
 
+    @Transactional
     public OpenSessionResponse openSession(Member requestUser, OpenSessionRequest openSessionRequest) {
         Mentor mentor = memberStorage.findMentorByMember(requestUser);
         MentoringSession session = mentoringSessionService.getMentoringSession(openSessionRequest.sessionId());
@@ -41,6 +44,7 @@ public class MentoringSessionManager {
         return new OpenSessionResponse(openedSession.getSessionUrl(), openedSession.getMentoring().getTitle(), openedSession.getStatus().toString());
     }
 
+    @Transactional
     public CloseSessionResponse closeSession(Member requestUser, DeleteSessionRequest deleteRequest) {
         Mentor mentor = memberStorage.findMentorByMember(requestUser);
         MentoringSession session = mentoringSessionService.getMentoringSession(deleteRequest.sessionId());
