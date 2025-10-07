@@ -19,8 +19,8 @@ public class ChatMessageService {
     private final ChatMessageRepository chatMessageRepository;
 
     public ChatMessage create(MentoringSession mentoringSession, Member sender, String content, MessageType messageType) {
-        SenderRole senderRole = mentoringSession.getMentoring().getMentor().equals(sender) ? SenderRole.MENTOR : SenderRole.MENTEE;
-        ChatMessage chatMessage = ChatMessage.create(mentoringSession, sender, senderRole, content, messageType);
+        SenderRole senderRole = sender.getRole() == Member.Role.MENTOR ? SenderRole.MENTOR : SenderRole.MENTEE;
+        ChatMessage chatMessage = ChatMessage.create(mentoringSession, sender, senderRole , content, messageType);
         return chatMessageRepository.save(chatMessage);
     }
 
