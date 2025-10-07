@@ -1,4 +1,4 @@
-package com.back.global.listener;
+package com.back.global.websocket;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
