@@ -21,12 +21,14 @@ public class ChatManager {
     private final MentoringStorage mentoringStorage;
     private final MemberStorage memberStorage;
 
-    @Transactional
     public void chat(String mentoringSessionId, Principal principal, ChatMessageRequest chatMessageRequest) {
+        ChatMessageResponse responseDto = saveChatMessage(mentoringSessionId, principal, chatMessageRequest);
+        messagingTemplate.convertAndSend("/topic/chat/room/" + mentoringSessionId, responseDto);
+    }
+    @Transactional
+    public ChatMessageResponse saveChatMessage(String mentoringSessionId, Principal principal, ChatMessageRequest chatMessageRequest) {
         Member member = memberStorage.findMemberByEmail(principal.getName());
         MentoringSession mentoringSession = mentoringStorage.getMentoringSessionBySessionUuid(mentoringSessionId);
-        ChatMessageResponse responseDto = chatMessageService.saveAndProcessMessage(member, mentoringSession, chatMessageRequest);
-
-        messagingTemplate.convertAndSend("/topic/chat/room/" + mentoringSessionId, responseDto);
+        return chatMessageService.saveAndProcessMessage(member, mentoringSession, chatMessageRequest);
     }
 }
