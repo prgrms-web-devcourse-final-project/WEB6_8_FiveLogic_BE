@@ -33,7 +33,7 @@ public class SessionInitData {
     private final MentorRepository mentorRepository;
     private final MenteeRepository menteeRepository;
 
-    @Bean
+//    @Bean
     public CommandLineRunner initData() {
         return args -> {
             // 멘토, 멘티 생성
