@@ -402,9 +402,22 @@ public class PostControllerTest {
     @Test
     @DisplayName("게시글 수정 실패 - title blank")
     void t11() throws Exception {
+        mvc.perform(
+                post("/post")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                                "memberId": 1,
+                                "postType": "INFORMATIONPOST",
+                                "title": "삭제용 제목",
+                                "content": "삭제용 내용"
+                            }
+                            """)
+        );
+
         ResultActions resultActions = mvc
                 .perform(
-                        put("/post/{post_id}", 6L)
+                        put("/post/{post_id}", 9L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                             {                        
@@ -418,8 +431,8 @@ public class PostControllerTest {
         resultActions
                 .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("updatePost"))
-                .andExpect(jsonPath("$.resultCode").value("400-1"))
-                .andExpect(jsonPath("$.msg").value("title-NotBlank-제목은 null 혹은 공백일 수 없습니다."));
+                .andExpect(jsonPath("$.resultCode").value("400"))
+                .andExpect(jsonPath("$.msg").value("제목을 입력해주세요."));
     }
 
     @Test
