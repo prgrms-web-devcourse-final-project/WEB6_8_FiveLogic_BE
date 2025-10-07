@@ -4,6 +4,7 @@ import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.AuthTokenService;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
+import com.back.domain.mentoring.slot.dto.response.MentorSlotDto;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.domain.mentoring.slot.error.MentorSlotErrorCode;
 import com.back.domain.mentoring.slot.repository.MentorSlotRepository;
@@ -157,8 +158,8 @@ class MentorSlotControllerTest {
             .andExpect(jsonPath("$.msg").value("멘토의 예약 가능 일정을 조회하였습니다."))
             .andExpect(jsonPath("$.data.mentorSlot.mentorSlotId").value(mentorSlot.getId()))
             .andExpect(jsonPath("$.data.mentor.mentorId").value(mentorSlot.getMentor().getId()))
-            .andExpect(jsonPath("$.data.mentoring.mentoringId").value(mentoring.getId()))
-            .andExpect(jsonPath("$.data.mentoring.title").value(mentoring.getTitle()))
+            .andExpect(jsonPath("$.data.mentorings[0].mentoringId").value(mentoring.getId()))
+            .andExpect(jsonPath("$.data.mentorings[0].title").value(mentoring.getTitle()))
             .andExpect(jsonPath("$.data.mentorSlot.startDateTime").value(mentorSlot.getStartDateTime().format(formatter)))
             .andExpect(jsonPath("$.data.mentorSlot.endDateTime").value(mentorSlot.getEndDateTime().format(formatter)))
             .andExpect(jsonPath("$.data.mentorSlot.mentorSlotStatus").value(mentorSlot.getStatus().name()));
@@ -188,8 +189,8 @@ class MentorSlotControllerTest {
         resultActions
             .andExpect(jsonPath("$.data.mentorSlot.mentorSlotId").value(mentorSlot.getId()))
             .andExpect(jsonPath("$.data.mentor.mentorId").value(mentorSlot.getMentor().getId()))
-            .andExpect(jsonPath("$.data.mentoring.mentoringId").value(mentoring.getId()))
-            .andExpect(jsonPath("$.data.mentoring.title").value(mentoring.getTitle()))
+            .andExpect(jsonPath("$.data.mentorings[0].mentoringId").value(mentoring.getId()))
+            .andExpect(jsonPath("$.data.mentorings[0].title").value(mentoring.getTitle()))
             .andExpect(jsonPath("$.data.mentorSlot.startDateTime").value(startDateTime))
             .andExpect(jsonPath("$.data.mentorSlot.endDateTime").value(endDateTime))
             .andExpect(jsonPath("$.data.mentorSlot.mentorSlotStatus").value("AVAILABLE"));
@@ -274,7 +275,7 @@ class MentorSlotControllerTest {
             Set.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY));
         assertThat(afterCount - beforeCount).isEqualTo(expectedCount);
 
-        List<MentorSlot> createdSlots = mentorSlotRepository.findMySlots(
+        List<MentorSlotDto> createdSlots = mentorSlotRepository.findMySlots(
             mentor.getId(),
             startDate.atStartOfDay(),
             endDate.plusDays(1).atStartOfDay()
@@ -283,7 +284,7 @@ class MentorSlotControllerTest {
 
         // 모든 슬롯이 월/수/금인지 검증
         Set<DayOfWeek> actualDaysOfWeek = createdSlots.stream()
-            .map(slot -> slot.getStartDateTime().getDayOfWeek())
+            .map(slot -> slot.startDateTime().getDayOfWeek())
             .collect(Collectors.toSet());
 
         assertThat(actualDaysOfWeek).containsExactlyInAnyOrder(
@@ -291,9 +292,9 @@ class MentorSlotControllerTest {
         );
 
         // 시간 검증
-        MentorSlot firstSlot = createdSlots.getFirst();
-        assertThat(firstSlot.getStartDateTime().getHour()).isEqualTo(10);
-        assertThat(firstSlot.getEndDateTime().getHour()).isEqualTo(11);
+        MentorSlotDto firstSlot = createdSlots.getFirst();
+        assertThat(firstSlot.startDateTime().getHour()).isEqualTo(10);
+        assertThat(firstSlot.endDateTime().getHour()).isEqualTo(11);
     }
 
 
@@ -315,8 +316,8 @@ class MentorSlotControllerTest {
             .andExpect(jsonPath("$.msg").value("멘토의 예약 가능 일정이 수정되었습니다."))
             .andExpect(jsonPath("$.data.mentorSlot.mentorSlotId").value(mentorSlot.getId()))
             .andExpect(jsonPath("$.data.mentor.mentorId").value(mentorSlot.getMentor().getId()))
-            .andExpect(jsonPath("$.data.mentoring.mentoringId").value(mentoring.getId()))
-            .andExpect(jsonPath("$.data.mentoring.title").value(mentoring.getTitle()))
+            .andExpect(jsonPath("$.data.mentorings[0].mentoringId").value(mentoring.getId()))
+            .andExpect(jsonPath("$.data.mentorings[0].title").value(mentoring.getTitle()))
             .andExpect(jsonPath("$.data.mentorSlot.endDateTime").value(expectedEndDate))
             .andExpect(jsonPath("$.data.mentorSlot.mentorSlotStatus").value("AVAILABLE"));
     }

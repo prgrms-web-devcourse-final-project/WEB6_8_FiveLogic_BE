@@ -1,6 +1,7 @@
 package com.back.domain.roadmap.roadmap.dto.response;
 
 import com.back.domain.roadmap.roadmap.entity.JobRoadmap;
+import com.back.domain.roadmap.roadmap.entity.JobRoadmapNodeStat;
 import com.back.domain.roadmap.roadmap.entity.RoadmapNode;
 
 import java.time.LocalDateTime;
@@ -19,8 +20,8 @@ public record JobRoadmapResponse(
     LocalDateTime modifiedDate
 ) {
 
-    // 정적 팩터리 메서드 - JobRoadmap과 Job 정보로부터 Response DTO 생성
-    public static JobRoadmapResponse from(JobRoadmap jobRoadmap, String jobName) {
+    // 정적 팩터리 메서드 - JobRoadmap과 Job 정보, 통계 정보로부터 Response DTO 생성
+    public static JobRoadmapResponse from(JobRoadmap jobRoadmap, String jobName, Map<Long, JobRoadmapNodeStat> statMap) {
         // 부모-자식 관계 맵 생성
         Map<Long, List<RoadmapNode>> childrenMap = jobRoadmap.getNodes().stream()
                 .filter(node -> node.getParent() != null)
@@ -29,8 +30,8 @@ public record JobRoadmapResponse(
         // 노드를 재귀적으로 변환하는 함수
         Map<Long, JobRoadmapNodeResponse> nodeResponseMap = new HashMap<>();
 
-        // 모든 노드를 bottom-up 방식으로 변환 (자식부터 부모 순서)
-        buildNodeResponses(jobRoadmap.getNodes(), childrenMap, nodeResponseMap);
+        // 모든 노드를 bottom-up 방식으로 변환 (자식부터 부모 순서, 통계 정보 포함)
+        buildNodeResponses(jobRoadmap.getNodes(), childrenMap, nodeResponseMap, statMap);
 
         // 루트 노드들만 반환 (자식 노드들은 children 필드에 포함되어 전체 트리 구조 제공)
         List<JobRoadmapNodeResponse> nodes = jobRoadmap.getNodes().stream()
@@ -53,11 +54,12 @@ public record JobRoadmapResponse(
         );
     }
 
-    // 노드 응답 객체들을 재귀적으로 구성하는 헬퍼 메서드
+    // 노드 응답 객체들을 재귀적으로 구성하는 헬퍼 메서드 (통계 정보 포함)
     private static void buildNodeResponses(
             List<RoadmapNode> allNodes,
             Map<Long, List<RoadmapNode>> childrenMap,
-            Map<Long, JobRoadmapNodeResponse> nodeResponseMap) {
+            Map<Long, JobRoadmapNodeResponse> nodeResponseMap,
+            Map<Long, JobRoadmapNodeStat> statMap) {
 
         // 노드들을 level 역순으로 정렬 (깊은 노드부터 처리)
         List<RoadmapNode> sortedNodes = allNodes.stream()
@@ -76,6 +78,15 @@ public record JobRoadmapResponse(
 
             // 현재 노드의 응답 객체 생성
             JobRoadmapNodeResponse nodeResponse = JobRoadmapNodeResponse.from(node, childResponses);
+
+            // 통계 정보가 있으면 추가
+            JobRoadmapNodeStat stat = statMap.get(node.getId());
+            if (stat != null) {
+                nodeResponse = nodeResponse
+                        .withWeight(stat.getWeight())
+                        .withStats(stat.getMentorCount(), stat.getTotalMentorCount(), stat.getMentorCoverageRatio());
+            }
+
             nodeResponseMap.put(node.getId(), nodeResponse);
         }
     }

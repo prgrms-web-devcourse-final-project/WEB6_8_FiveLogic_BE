@@ -1,11 +1,30 @@
 spring:
   autoconfigure:
     exclude:
-  datasource: #임시
-    url: jdbc:h2:mem:proddb
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+  datasource:
+    url: jdbc:mysql://devcos-team10-mysql.czvbgr7hie3i.ap-northeast-2.rds.amazonaws.com:3306/fivelogic?useSSL=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      auto-commit: false
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+  jpa:
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 100
+  kafka:
+    bootstrap-servers: kafka:29092
+
 logging:
   level:
     org.hibernate.orm.jdbc.bind: INFO
@@ -13,8 +32,12 @@ logging:
     org.springframework.transaction.interceptor: INFO
     com.back: INFO
 custom:
-  site: # 임시입니다
-    cookieDomain: fivelogic.com
-    frontUrl: "https://fivelogic.vercel.app"
-    backUrl: "https://api.fivelogic.com"
-    name: fivelogic
+  site:
+    cookieDomain: "api.jobmate.info"  # 도메인으로 변경
+    frontUrl: "http://localhost:3000"  # 프론트엔드 도메인으로 변경
+    backUrl: "https://api.jobmate.info"  # HTTPS로 변경
+  cookie:
+    httpOnly: true
+    secure: true  # HTTPS에서는 true로 변경
+    sameSite: "None" #임시
+    maxAge: "#{60*60*24}"

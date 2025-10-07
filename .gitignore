@@ -48,3 +48,10 @@ cookies.txt
 
 ### QueryDSL Q클래스 ###
 **/generated/
+
+.terraform
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+secrets.tf
+gradle.properties

@@ -30,7 +30,8 @@ public enum ReservationErrorCode implements ErrorCode {
     NOT_AVAILABLE_SLOT("409-1", "이미 예약이 완료된 시간대입니다."),
     ALREADY_RESERVED_SLOT("409-2", "이미 예약한 시간대입니다. 예약 목록을 확인해 주세요."),
     CONCURRENT_RESERVATION_CONFLICT("409-3", "다른 사용자가 먼저 예약했습니다. 새로고침 후 다시 시도해 주세요."),
-    CONCURRENT_APPROVAL_CONFLICT("409-4", "이미 수락한 예약입니다.");
+    CONCURRENT_APPROVAL_CONFLICT("409-4", "이미 수락한 예약입니다."),
+    OVERLAPPING_TIME("409-5", "이미 해당 시간에 다른 예약이 있습니다. 예약 목록을 확인해 주세요.");
 
     private final String code;
     private final String message;

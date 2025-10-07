@@ -10,11 +10,11 @@ public record MentorSlotRequest(
     @NotNull
     Long mentorId,
 
-    @Schema(description = "시작 일시")
+    @Schema(description = "시작 일시", example = "yyyy-MM-ddTHH:mm:ss")
     @NotNull
     LocalDateTime startDateTime,
 
-    @Schema(description = "종료 일시")
+    @Schema(description = "종료 일시", example = "yyyy-MM-ddTHH:mm:ss")
     @NotNull
     LocalDateTime endDateTime
 ) {

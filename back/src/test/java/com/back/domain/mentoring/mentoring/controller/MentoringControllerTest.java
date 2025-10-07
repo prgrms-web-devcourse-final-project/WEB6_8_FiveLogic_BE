@@ -8,7 +8,6 @@ import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
-import com.back.domain.mentoring.slot.repository.MentorSlotRepository;
 import com.back.fixture.MemberTestFixture;
 import com.back.fixture.mentoring.MentoringTestFixture;
 import com.back.global.exception.ServiceException;
@@ -26,7 +25,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,7 +43,6 @@ class MentoringControllerTest {
     @Autowired private MentoringTestFixture mentoringFixture;
 
     @Autowired private MentoringRepository mentoringRepository;
-    @Autowired private MentorSlotRepository mentorSlotRepository;
     @Autowired private ReservationRepository reservationRepository;
     @Autowired private AuthTokenService authTokenService;
 
@@ -192,9 +189,11 @@ class MentoringControllerTest {
             // Mentoring 정보 검증
             .andExpect(jsonPath("$.data.mentoring.mentoringId").value(mentoring.getId()))
             .andExpect(jsonPath("$.data.mentoring.title").value(mentoring.getTitle()))
-            .andExpect(jsonPath("$.data.mentoring.tags").value(mentoring.getTags()))
             .andExpect(jsonPath("$.data.mentoring.bio").value(mentoring.getBio()))
             .andExpect(jsonPath("$.data.mentoring.thumb").value(mentoring.getThumb()))
+            .andExpect(jsonPath("$.data.mentoring.tags").isArray())
+            .andExpect(jsonPath("$.data.mentoring.tags[0]").value("Spring"))
+            .andExpect(jsonPath("$.data.mentoring.tags[1]").value("Java"))
 
             // Mentor 정보 검증
             .andExpect(jsonPath("$.data.mentor.mentorId").value(mentorOfMentoring.getId()))
@@ -302,41 +301,6 @@ class MentoringControllerTest {
         assertThat(preCnt - afterCnt).isEqualTo(1);
         assertThat(mentoringRepository.findById(mentoring.getId())).isEmpty();
         assertThat(reservationRepository.existsByMentoringId(mentoring.getId())).isFalse();
-        assertThat(mentorSlotRepository.existsByMentorId(mentor.getId())).isFalse();
-    }
-
-    @Test
-    @DisplayName("멘토링 삭제 성공 - 멘토 슬롯이 있는 경우")
-    void deleteMentoringSuccessExistsMentorSlot() throws Exception {
-        Mentoring mentoring = mentoringFixture.createMentoring(mentor);
-
-        LocalDateTime baseDateTime = LocalDateTime.now().plusMonths(3);
-        mentoringFixture.createMentorSlots(mentor, baseDateTime, 3, 2, 30L);
-
-        long preMentoringCnt = mentoringRepository.count();
-        long preSlotCnt = mentorSlotRepository.count();
-
-        ResultActions resultActions = mvc.perform(
-                delete(MENTORING_URL + "/" + mentoring.getId())
-                    .cookie(new Cookie(TOKEN, mentorToken))
-            )
-            .andDo(print());
-
-        long afterMentoringCnt = mentoringRepository.count();
-        long afterSlotCnt = mentorSlotRepository.count();
-
-        resultActions
-            .andExpect(handler().handlerType(MentoringController.class))
-            .andExpect(handler().methodName("deleteMentoring"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.resultCode").value("200"))
-            .andExpect(jsonPath("$.msg").value("멘토링이 삭제되었습니다."));
-
-        assertThat(preMentoringCnt - afterMentoringCnt).isEqualTo(1);
-        assertThat(preSlotCnt - afterSlotCnt).isEqualTo(6);
-        assertThat(mentoringRepository.findById(mentoring.getId())).isEmpty();
-        assertThat(reservationRepository.existsByMentoringId(mentoring.getId())).isFalse();
-        assertThat(mentorSlotRepository.existsByMentorId(mentor.getId())).isFalse();
     }
 
     @Test
