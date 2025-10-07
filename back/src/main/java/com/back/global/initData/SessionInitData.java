@@ -37,8 +37,8 @@ public class SessionInitData {
     public CommandLineRunner initData() {
         return args -> {
             // 멘토, 멘티 생성
-            Member mentorMember = memberService.joinMentor("mentor@example.com", "Mentor Name", "mentor123", "password123", "IT", 10);
-            Member menteeMember = memberService.joinMentee("mentee@example.com", "Mentee Name", "mentee123", "password123", "IT");
+            Member mentorMember = memberService.joinMentor("mentor@example.com", "Mentor Name", "mentor123", "123", "IT", 10);
+            Member menteeMember = memberService.joinMentee("mentee@example.com", "Mentee Name", "mentee123", "123", "IT");
 
             Mentor mentor = mentorRepository.findByMemberIdWithMember(mentorMember.getId()).orElseThrow();
             Mentee mentee = menteeRepository.findByMemberIdWithMember(menteeMember.getId()).orElseThrow();

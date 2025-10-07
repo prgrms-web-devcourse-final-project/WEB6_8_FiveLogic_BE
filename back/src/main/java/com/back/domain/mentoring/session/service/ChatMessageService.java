@@ -6,6 +6,7 @@ import com.back.domain.mentoring.session.dto.ChatMessageResponse;
 import com.back.domain.mentoring.session.entity.ChatMessage;
 import com.back.domain.mentoring.session.entity.MentoringSession;
 import com.back.domain.mentoring.session.entity.MessageType;
+import com.back.domain.mentoring.session.entity.SenderRole;
 import com.back.domain.mentoring.session.repository.ChatMessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,8 @@ public class ChatMessageService {
     private final ChatMessageRepository chatMessageRepository;
 
     public ChatMessage create(MentoringSession mentoringSession, Member sender, String content, MessageType messageType) {
-        ChatMessage chatMessage = ChatMessage.create(mentoringSession, sender, content, messageType);
+        SenderRole senderRole = mentoringSession.getMentoring().getMentor().equals(sender) ? SenderRole.MENTOR : SenderRole.MENTEE;
+        ChatMessage chatMessage = ChatMessage.create(mentoringSession, sender, senderRole, content, messageType);
         return chatMessageRepository.save(chatMessage);
     }
 
