@@ -18,8 +18,8 @@ public class MentoringSessionController {
     private final Rq rq;
 
     //세션참여 URL발급
-    @GetMapping("/{sessionId}/url")
-    public RsData<GetSessionUrlResponse> getSessionUrl(@PathVariable Long sessionId) {
+    @GetMapping("/url")
+    public RsData<GetSessionUrlResponse> getSessionUrl(@RequestParam Long sessionId) {
         GetSessionUrlResponse response = mentoringSessionManager.getSessionUrl(sessionId);
         return new RsData<>("200", "요청완료", response);
     }
