@@ -4,7 +4,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Builder;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -23,7 +22,6 @@ public class JobRoadmapIntegrationQueue {
     @Column(name = "retry_count", nullable = false)
     private Integer retryCount = 0;
 
-    @Builder
     public JobRoadmapIntegrationQueue(Long jobId) {
         this.jobId = jobId;
         this.requestedAt = LocalDateTime.now();

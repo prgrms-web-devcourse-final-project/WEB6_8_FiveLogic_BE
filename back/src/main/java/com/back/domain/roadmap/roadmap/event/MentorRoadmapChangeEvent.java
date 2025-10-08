@@ -1,14 +1,13 @@
 package com.back.domain.roadmap.roadmap.event;
 
-public class MentorRoadmapSaveEvent {
+public class MentorRoadmapChangeEvent {
     private final Long jobId;
 
-    public MentorRoadmapSaveEvent(Long jobId) {
+    public MentorRoadmapChangeEvent(Long jobId) {
         this.jobId = jobId;
     }
 
     public Long getJobId() {
         return jobId;
     }
-
 }

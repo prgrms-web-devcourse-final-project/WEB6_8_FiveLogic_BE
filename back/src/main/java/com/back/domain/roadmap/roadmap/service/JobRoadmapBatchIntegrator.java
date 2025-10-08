@@ -17,9 +17,9 @@ public class JobRoadmapBatchIntegrator {
     private final JobRoadmapIntegrationServiceV2 integrationService;
     private static final int MAX_RETRY = 3;
 
-    @Scheduled(fixedDelay = 600000)  // 10분
+    @Scheduled(fixedDelay = 60000)  // 10분
     public void integrate() {
-        List<JobRoadmapIntegrationQueue> pendingQueues = queueRepository.findAll();
+        List<JobRoadmapIntegrationQueue> pendingQueues = queueRepository.findAllOrderByRequestedAt();
 
         if(pendingQueues.isEmpty()) {
             return;
@@ -43,6 +43,7 @@ public class JobRoadmapBatchIntegrator {
                     log.warn("최대 재시도 횟수 초과로 큐에서 제거: jobId={}", jobId);
                 } else {
                     queue.incrementRetryCount();
+                    queue.updateRequestedAt();
                     queueRepository.save(queue);
                 }
             }
