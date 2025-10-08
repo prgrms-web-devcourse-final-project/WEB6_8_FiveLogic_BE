@@ -59,7 +59,7 @@ public class RoadmapInitData {
         //initSampleJobRoadmap();   // 직업 로드맵 조회 API 테스트용 샘플 데이터
 
         // 통합 로직 테스트
-        initTestMentorRoadmaps();    // 테스트용 멘토 로드맵 10개 생성
+        //initTestMentorRoadmaps();    // 테스트용 멘토 로드맵 10개 생성
         //testJobRoadmapIntegration(); // V1 통합 로직 실행 및 트리 구조 출력
         //testJobRoadmapIntegrationV2(); // V2 통합 로직 실행 및 트리 구조 출력
     }
