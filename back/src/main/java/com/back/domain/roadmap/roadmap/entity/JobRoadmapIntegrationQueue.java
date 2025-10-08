@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -21,6 +22,10 @@ public class JobRoadmapIntegrationQueue {
 
     @Column(name = "retry_count", nullable = false)
     private Integer retryCount = 0;
+
+    @Version
+    @Column(name = "version")
+    private Long version = 0L;
 
     public JobRoadmapIntegrationQueue(Long jobId) {
         this.jobId = jobId;
