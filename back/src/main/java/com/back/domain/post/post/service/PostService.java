@@ -72,20 +72,20 @@ public class PostService {
     }
 
     @Transactional
-    public void updatePost(long postId, Member member, @Valid PostCreateRequest postCreateRequest) {
+    public void updatePost(long postId, Member member, @Valid PostModifyRequest postModifyRequest) {
         Post post = findById(postId);
         if (!post.isAuthor(member)) throw new ServiceException("400", "수정 권한이 없습니다.");
 
-        if ( postCreateRequest.title() == null || postCreateRequest.title().isBlank()) {
+        if ( postModifyRequest.title() == null || postModifyRequest.title().isBlank()) {
             throw new ServiceException("400", "제목을 입력해주세요.");
         }
 
-        if ( postCreateRequest.content() == null || postCreateRequest.content().isBlank()) {
+        if ( postModifyRequest.content() == null || postModifyRequest.content().isBlank()) {
             throw new ServiceException("400", "내용을 입력해주세요.");
         }
 
-        post.updateTitle(postCreateRequest.title());
-        post.updateContent(postCreateRequest.content());
+        post.updateTitle(postModifyRequest.title());
+        post.updateContent(postModifyRequest.content());
 
         postRepository.save(post);
     }
