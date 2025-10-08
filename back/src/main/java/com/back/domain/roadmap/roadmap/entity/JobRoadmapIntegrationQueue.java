@@ -43,4 +43,8 @@ public class JobRoadmapIntegrationQueue {
     public Long getJobId() {
         return jobId;
     }
+
+    public Integer getRetryCount() {
+        return retryCount;
+    }
 }

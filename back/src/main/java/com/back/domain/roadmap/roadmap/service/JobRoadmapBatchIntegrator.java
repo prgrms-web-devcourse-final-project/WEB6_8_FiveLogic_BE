@@ -14,7 +14,7 @@ import java.util.List;
 @Slf4j
 public class JobRoadmapBatchIntegrator {
     private final JobRoadmapIntegrationQueueRepository queueRepository;
-    private final JobRoadmapIntegrationServiceV2 integrationService;
+    private final JobRoadmapIntegrationProcessor processor;
     private static final int MAX_RETRY = 3;
 
     @Scheduled(fixedDelay = 60000)  // 10분
@@ -29,22 +29,17 @@ public class JobRoadmapBatchIntegrator {
 
         int successCount = 0;
         for(JobRoadmapIntegrationQueue queue : pendingQueues) {
-            Long jobId = queue.getJobId();
             try {
-                integrationService.integrateJobRoadmap(jobId);
-                queueRepository.delete(queue);
+                processor.processQueue(queue);
                 successCount++;
-                log.info("직업 로드맵 통합 성공: jobId={}", jobId);
             } catch (Exception e) {
-                log.error("직업 로드맵 통합 실패: jobId={}, error={}", jobId, e.getMessage());
-
-                if(queue.isMaxRetryExceeded(MAX_RETRY)) {
-                    queueRepository.delete(queue);
-                    log.warn("최대 재시도 횟수 초과로 큐에서 제거: jobId={}", jobId);
-                } else {
-                    queue.incrementRetryCount();
-                    queue.updateRequestedAt();
-                    queueRepository.save(queue);
+                log.error("직업 로드맵 통합 실패: jobId={}, error={}",
+                         queue.getJobId(), e.getMessage());
+                try {
+                    processor.handleRetry(queue, MAX_RETRY);
+                } catch (Exception retryError) {
+                    log.error("재시도 처리 실패: jobId={}, error={}",
+                             queue.getJobId(), retryError.getMessage());
                 }
             }
         }
