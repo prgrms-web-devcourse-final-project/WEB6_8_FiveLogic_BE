@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +45,10 @@ public class TaskService {
         return taskRepository.findTasksByKeyword(keyword);
     }
 
+    /**
+     * 사용자가 명시적으로 새 Task를 제안할 때 사용
+     * 이미 존재하는 경우 예외를 던져 사용자에게 알림
+     */
     @Transactional
     public TaskAlias createPendingAlias(String taskName){
         // Task나 TaskAlias에 이미 존재하는 이름인지 검증
@@ -52,6 +57,57 @@ public class TaskService {
         // 모든 검증 통과 시 새로운 pending alias 생성
         TaskAlias pendingAlias = new TaskAlias(taskName);
         return taskAliasRepository.save(pendingAlias);
+    }
+
+    /**
+     * 로드맵 생성 시 자동으로 pending alias를 등록할 때 사용
+     * 이미 존재하는 경우 무시 (다른 사용자가 이미 제안했을 수 있음)
+     */
+    @Transactional
+    public void createPendingAliasIfNotExists(String taskName) {
+        // TaskAlias에 이미 존재하는지 확인
+        Optional<TaskAlias> existingAlias = taskAliasRepository.findByNameIgnoreCase(taskName);
+        if (existingAlias.isPresent()) {
+            return; // 이미 존재하면 무시
+        }
+
+        // Task에 이미 존재하는지 확인
+        Optional<Task> existingTask = taskRepository.findByNameIgnoreCase(taskName);
+        if (existingTask.isPresent()) {
+            return; // 이미 존재하면 무시
+        }
+
+        // 존재하지 않으면 새로운 pending alias 생성
+        TaskAlias pendingAlias = new TaskAlias(taskName);
+        taskAliasRepository.save(pendingAlias);
+    }
+
+    /**
+     * Task ID 목록을 검증하고 Map으로 반환 (로드맵 생성 시 사용)
+     * 존재하지 않는 Task ID가 있으면 예외 발생
+     */
+    @Transactional(readOnly = true)
+    public Map<Long, Task> validateAndGetTasks(List<Long> taskIds) {
+        if (taskIds == null || taskIds.isEmpty()) {
+            return Map.of(); // 빈 맵 반환
+        }
+
+        // 일괄 조회로 존재하는 Task들 확인
+        List<Task> existingTasks = taskRepository.findAllById(taskIds);
+        Map<Long, Task> existingTaskMap = existingTasks.stream()
+                .collect(Collectors.toMap(Task::getId, task -> task));
+
+        // 존재하지 않는 TaskId 확인
+        List<Long> missingTaskIds = taskIds.stream()
+                .filter(taskId -> !existingTaskMap.containsKey(taskId))
+                .toList();
+
+        if (!missingTaskIds.isEmpty()) {
+            throw new ServiceException("404",
+                    String.format("존재하지 않는 Task ID: %s", missingTaskIds));
+        }
+
+        return existingTaskMap;
     }
 
     // === 관리자용 기능들 ===

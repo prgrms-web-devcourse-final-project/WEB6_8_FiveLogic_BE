@@ -66,8 +66,12 @@ dependencies {
 	implementation ("software.amazon.awssdk:s3:2.25.0")
 
 	implementation ("org.springframework.kafka:spring-kafka")
+	implementation("org.springframework.boot:spring-boot-starter-websocket")
 
 	runtimeOnly("com.mysql:mysql-connector-j")
+
+	// Sentry
+	implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.19.1")
 }
 
 tasks.withType<Test> {

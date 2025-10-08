@@ -12,6 +12,9 @@ import com.back.domain.mentoring.reservation.dto.response.ReservationResponse;
 import com.back.domain.mentoring.reservation.entity.Reservation;
 import com.back.domain.mentoring.reservation.error.ReservationErrorCode;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
+import com.back.domain.mentoring.session.entity.MentoringSession;
+import com.back.domain.mentoring.session.service.MentoringSessionService;
+import com.back.fixture.mentoring.MentoringSessionFixture;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.domain.mentoring.slot.error.MentorSlotErrorCode;
 import com.back.fixture.MemberFixture;
@@ -58,6 +61,9 @@ class ReservationServiceTest {
     @Mock
     private MentoringStorage mentoringStorage;
 
+    @Mock
+    private MentoringSessionService mentoringSessionService;
+
     private Mentor mentor;
     private Mentee mentee, mentee2;
     private Mentoring mentoring;
@@ -98,7 +104,7 @@ class ReservationServiceTest {
                 10
             );
 
-            when(reservationRepository.findAllByMentorMember(mentor.getMember(), pageable))
+            when(reservationRepository.findAllByMentorMember(mentor.getMember().getId(), pageable))
                 .thenReturn(reservationPage);
 
             // when
@@ -113,7 +119,7 @@ class ReservationServiceTest {
             assertThat(result.getSize()).isEqualTo(5);
             assertThat(result.getTotalElements()).isEqualTo(10);
             assertThat(result.getTotalPages()).isEqualTo(2);
-            verify(reservationRepository).findAllByMentorMember(mentor.getMember(), pageable);
+            verify(reservationRepository).findAllByMentorMember(mentor.getMember().getId(), pageable);
         }
     }
 
@@ -126,8 +132,10 @@ class ReservationServiceTest {
             // given
             Long reservationId = reservation.getId();
 
-            when(reservationRepository.findByIdAndMember(reservationId, mentor.getMember()))
+            when(reservationRepository.findByIdAndMember(reservationId, mentor.getMember().getId()))
                 .thenReturn(Optional.of(reservation));
+            MentoringSession session = MentoringSessionFixture.create(reservation);
+            when(mentoringSessionService.getMentoringSessionByReservation(reservation)).thenReturn(session);
 
             // when
             ReservationResponse response = reservationService.getReservation(
@@ -141,14 +149,14 @@ class ReservationServiceTest {
             assertThat(response.mentee().menteeId()).isEqualTo(mentee.getId());
             assertThat(response.mentor().mentorId()).isEqualTo(mentor.getId());
             assertThat(response.reservation().mentorSlotId()).isEqualTo(mentorSlot2.getId());
-            verify(reservationRepository).findByIdAndMember(reservationId, mentor.getMember());
+            verify(reservationRepository).findByIdAndMember(reservationId, mentor.getMember().getId());
         }
 
         @Test
         @DisplayName("권한이 없을 경우 예외")
         void getReservation_notAccessible() {
             // given
-            when(reservationRepository.findByIdAndMember(reservation.getId(), mentee2.getMember()))
+            when(reservationRepository.findByIdAndMember(reservation.getId(), mentee2.getMember().getId()))
                 .thenReturn(Optional.empty());
 
             // when & then
@@ -267,9 +275,6 @@ class ReservationServiceTest {
                 .thenReturn(mentoring);
             when(mentoringStorage.findMentorSlot(pastRequest.mentorSlotId()))
                 .thenReturn(pastSlot);
-            when(reservationRepository.findByMentorSlotIdAndStatusIn(pastSlot.getId(),
-                List.of(ReservationStatus.PENDING, ReservationStatus.APPROVED, ReservationStatus.COMPLETED)))
-                .thenReturn(Optional.empty());
 
             // when & then
             assertThatThrownBy(() -> reservationService.createReservation(mentee, pastRequest))

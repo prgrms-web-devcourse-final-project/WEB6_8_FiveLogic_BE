@@ -42,8 +42,29 @@ public class RoadmapNode extends BaseEntity {
     @Column(name = "raw_task_name")
     private String taskName; // Task 이름 표시값(DB에 없는 Task 입력시 입력값 그대로 출력)
 
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
+    @Column(name = "learning_advice", columnDefinition = "TEXT")
+    private String learningAdvice; // 학습 조언/방법
+
+    @Column(name = "recommended_resources", columnDefinition = "TEXT")
+    private String recommendedResources; // 추천 자료
+
+    @Column(name = "learning_goals", columnDefinition = "TEXT")
+    private String learningGoals; // 학습 목표
+
+    @Column(name = "difficulty")
+    private Integer difficulty; // 난이도 (1-5)
+
+    @Column(name = "importance")
+    private Integer importance; // 중요도 (1-5)
+
+    @Column(name = "hours_per_day")
+    private Integer hoursPerDay; // 하루 학습 시간 (시간 단위)
+
+    @Column(name = "weeks")
+    private Integer weeks; // 학습 주차
+
+    @Column(name = "estimated_hours")
+    private Integer estimatedHours; // 총 예상 학습 시간 (시간 단위)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id")
@@ -55,9 +76,19 @@ public class RoadmapNode extends BaseEntity {
 
     // Builder 패턴 적용된 생성자
     @Builder
-    public RoadmapNode(String taskName, String description, Task task, int stepOrder, int level, long roadmapId, RoadmapType roadmapType) {
+    public RoadmapNode(String taskName, String learningAdvice, String recommendedResources,
+                       String learningGoals, Integer difficulty, Integer importance,
+                       Integer hoursPerDay, Integer weeks, Integer estimatedHours, Task task,
+                       int stepOrder, int level, long roadmapId, RoadmapType roadmapType) {
         this.taskName = taskName;
-        this.description = description;
+        this.learningAdvice = learningAdvice;
+        this.recommendedResources = recommendedResources;
+        this.learningGoals = learningGoals;
+        this.difficulty = difficulty;
+        this.importance = importance;
+        this.hoursPerDay = hoursPerDay;
+        this.weeks = weeks;
+        this.estimatedHours = estimatedHours;
         this.task = task;
         this.stepOrder = stepOrder;
         this.level = level;
@@ -96,10 +127,6 @@ public class RoadmapNode extends BaseEntity {
 
     public void setRoadmapType(RoadmapType roadmapType) {
         this.roadmapType = roadmapType;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public void setTask(Task task) {

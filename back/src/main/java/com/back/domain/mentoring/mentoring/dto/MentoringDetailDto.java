@@ -17,6 +17,8 @@ public record MentoringDetailDto(
     String bio,
     @Schema(description = "멘토링 썸네일")
     String thumb,
+    @Schema(description = "멘토링 평점")
+    Double rating,
     @Schema(description = "생성일")
     LocalDateTime createDate,
     @Schema(description = "수정일")
@@ -26,9 +28,10 @@ public record MentoringDetailDto(
         return new MentoringDetailDto(
             mentoring.getId(),
             mentoring.getTitle(),
-            mentoring.getTags(),
+            mentoring.getTagNames(),
             mentoring.getBio(),
             mentoring.getThumb(),
+            mentoring.getRating(),
             mentoring.getCreateDate(),
             mentoring.getModifyDate()
         );

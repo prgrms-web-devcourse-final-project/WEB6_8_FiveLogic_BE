@@ -98,7 +98,7 @@ class MentorRoadmapServiceTest {
         // Given
         MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
                 "제목", "설명",
-                List.of(new RoadmapNodeRequest(99999L, "존재하지 않는 Task", "설명", 1))
+                List.of(new RoadmapNodeRequest(99999L, "존재하지 않는 Task", "설명", null,  null, null, null, null, null, 1))
         );
 
         // When & Then
@@ -153,8 +153,8 @@ class MentorRoadmapServiceTest {
                 "수정된 로드맵 제목",
                 "수정된 설명",
                 List.of(
-                        new RoadmapNodeRequest(null, "Java", "객체지향 프로그래밍 언어 학습", 1),
-                        new RoadmapNodeRequest(null, "Spring Boot", "Java 웹 애플리케이션 프레임워크", 2)
+                        new RoadmapNodeRequest(null, "Java", "객체지향 프로그래밍 언어 학습", null,  null, null, null, null, null,1),
+                        new RoadmapNodeRequest(null, "Spring Boot", "Java 웹 애플리케이션 프레임워크", null,  null, null, null, null, null,2)
                 )
         );
 
@@ -181,7 +181,7 @@ class MentorRoadmapServiceTest {
                 "수정된 로드맵 제목",
                 "수정된 설명",
                 List.of(
-                        new RoadmapNodeRequest(null, "Python", "프로그래밍 언어", 1)
+                        new RoadmapNodeRequest(null, "Python", "프로그래밍 언어", null,  null, null, null, null, null,1)
                 )
         );
 
@@ -226,7 +226,7 @@ class MentorRoadmapServiceTest {
 
         MentorRoadmapSaveRequest updateRequest = new MentorRoadmapSaveRequest(
                 "악의적 수정 시도", "다른 멘토가 수정 시도",
-                List.of(new RoadmapNodeRequest(null, "Hacked", "해킹 시도", 1))
+                List.of(new RoadmapNodeRequest(null, "Hacked", "해킹 시도", null,  null, null, null, null, null,1))
         );
 
         // When & Then - 다른 멘토가 수정 시도 시 권한 오류
@@ -287,8 +287,8 @@ class MentorRoadmapServiceTest {
         MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
                 "혼합 로드맵", "Task 연결 및 비연결 노드 혼합",
                 List.of(
-                        new RoadmapNodeRequest(task.getId(), "Custom Task", "연결된 노드", 1),
-                        new RoadmapNodeRequest(null, "직접 입력 노드", "연결되지 않은 노드", 2)
+                        new RoadmapNodeRequest(task.getId(), "Custom Task", "연결된 노드", null,  null, null, null, null, null,1),
+                        new RoadmapNodeRequest(null, "직접 입력 노드", "연결되지 않은 노드", null,  null, null, null, null, null,2)
                 )
         );
 
@@ -311,9 +311,9 @@ class MentorRoadmapServiceTest {
         MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
                 "잘못된 로드맵", "stepOrder가 비연속",
                 List.of(
-                        new RoadmapNodeRequest(null, "Java", "1단계", 1),
-                        new RoadmapNodeRequest(null, "Spring", "3단계", 3), // 2가 빠짐
-                        new RoadmapNodeRequest(null, "Database", "5단계", 5) // 4가 빠짐
+                        new RoadmapNodeRequest(null, "Java", "1단계", null,  null, null, null, null, null,1),
+                        new RoadmapNodeRequest(null, "Spring", "3단계", null,  null, null, null, null, null,3), // 2가 빠짐
+                        new RoadmapNodeRequest(null, "Database", "5단계", null,  null, null, null, null, null,5) // 4가 빠짐
                 )
         );
 
@@ -330,9 +330,9 @@ class MentorRoadmapServiceTest {
         MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
                 "잘못된 로드맵", "stepOrder가 중복",
                 List.of(
-                        new RoadmapNodeRequest(null, "Java", "1단계", 1),
-                        new RoadmapNodeRequest(null, "Spring", "중복 1단계", 1), // 중복
-                        new RoadmapNodeRequest(null, "Database", "2단계", 2)
+                        new RoadmapNodeRequest(null, "Java", "1단계", null,  null, null, null, null, null,1),
+                        new RoadmapNodeRequest(null, "Spring", "중복 1단계", null,  null, null, null, null, null,1), // 중복
+                        new RoadmapNodeRequest(null, "Database", "2단계", null,  null, null, null, null, null,2)
                 )
         );
 
@@ -349,8 +349,8 @@ class MentorRoadmapServiceTest {
         MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
                 "잘못된 로드맵", "stepOrder가 2부터 시작",
                 List.of(
-                        new RoadmapNodeRequest(null, "Java", "2단계", 2), // 2부터 시작
-                        new RoadmapNodeRequest(null, "Spring", "3단계", 3)
+                        new RoadmapNodeRequest(null, "Java", "2단계", null,  null, null, null, null, null,2), // 2부터 시작
+                        new RoadmapNodeRequest(null, "Spring", "3단계", null,  null, null, null, null, null,3)
                 )
         );
 
@@ -367,9 +367,9 @@ class MentorRoadmapServiceTest {
         MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
                 "순서 무관 로드맵", "입력 순서와 stepOrder가 달라도 성공",
                 List.of(
-                        new RoadmapNodeRequest(null, "Database", "3단계", 3),
-                        new RoadmapNodeRequest(null, "Java", "1단계", 1),
-                        new RoadmapNodeRequest(null, "Spring", "2단계", 2)
+                        new RoadmapNodeRequest(null, "Database", "3단계", null,  null, null, null, null, null,3),
+                        new RoadmapNodeRequest(null, "Java", "1단계", null,  null, null, null, null, null,1),
+                        new RoadmapNodeRequest(null, "Spring", "2단계", null,  null, null, null, null, null,2)
                 )
         );
 
@@ -401,8 +401,8 @@ class MentorRoadmapServiceTest {
         MentorRoadmapSaveRequest updateRequest = new MentorRoadmapSaveRequest(
                 "수정된 로드맵", "잘못된 stepOrder",
                 List.of(
-                        new RoadmapNodeRequest(null, "Java", "1단계", 1),
-                        new RoadmapNodeRequest(null, "Spring", "3단계", 3) // 2가 빠짐
+                        new RoadmapNodeRequest(null, "Java", "1단계", null,  null, null, null, null, null,1),
+                        new RoadmapNodeRequest(null, "Spring", "3단계", null,  null, null, null, null, null,3) // 2가 빠짐
                 )
         );
 
@@ -417,8 +417,8 @@ class MentorRoadmapServiceTest {
                 "백엔드 개발자 로드맵",
                 "Java 백엔드 개발자를 위한 학습 로드맵",
                 List.of(
-                        new RoadmapNodeRequest(null, "Java", "객체지향 프로그래밍 언어 학습", 1),
-                        new RoadmapNodeRequest(null, "Spring Boot", "Java 웹 애플리케이션 프레임워크", 2)
+                        new RoadmapNodeRequest(null, "Java", "객체지향 프로그래밍 언어 학습", null,  null, null, null, null, null,1),
+                        new RoadmapNodeRequest(null, "Spring Boot", "Java 웹 애플리케이션 프레임워크", null,  null, null, null, null, null,2)
                 )
         );
     }

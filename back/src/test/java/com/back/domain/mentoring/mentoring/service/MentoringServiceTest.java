@@ -6,11 +6,14 @@ import com.back.domain.mentoring.mentoring.dto.MentoringWithTagsDto;
 import com.back.domain.mentoring.mentoring.dto.request.MentoringRequest;
 import com.back.domain.mentoring.mentoring.dto.response.MentoringResponse;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
+import com.back.domain.mentoring.mentoring.entity.Tag;
 import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
+import com.back.domain.mentoring.mentoring.repository.TagRepository;
 import com.back.fixture.MemberFixture;
 import com.back.fixture.MentorFixture;
 import com.back.fixture.mentoring.MentoringFixture;
+import com.back.fixture.mentoring.TagFixture;
 import com.back.global.exception.ServiceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,6 +43,9 @@ class MentoringServiceTest {
 
     @Mock
     private MentoringRepository mentoringRepository;
+
+    @Mock
+    private TagRepository tagRepository;
 
     @Mock
     private MentoringStorage mentoringStorage;
@@ -166,7 +172,11 @@ class MentoringServiceTest {
         @Test
         @DisplayName("생성 성공")
         void createMentoring() {
-            when(mentoringRepository.existsByMentorId(mentor1.getId()))
+            List<Tag> tags = TagFixture.createDefaultTags();
+
+            when(tagRepository.findByNameIn(request.tags()))
+                .thenReturn(tags);
+            when(mentoringRepository.existsByMentorIdAndTitle(mentor1.getId(), request.title()))
                 .thenReturn(false);
 
             // when
@@ -178,22 +188,23 @@ class MentoringServiceTest {
             assertThat(result.mentoring().bio()).isEqualTo(request.bio());
             assertThat(result.mentoring().tags()).isEqualTo(request.tags());
             assertThat(result.mentoring().thumb()).isEqualTo(request.thumb());
-            verify(mentoringRepository).existsByMentorId(mentor1.getId());
+            verify(mentoringRepository).existsByMentorIdAndTitle(mentor1.getId(), request.title());
+            verify(tagRepository).findByNameIn(request.tags());
             verify(mentoringRepository).save(any(Mentoring.class));
         }
 
         @Test
-        @DisplayName("이미 존재하면 예외 (멘토당 멘토링 1개 제한)")
+        @DisplayName("해당 멘토에게 동일한 이름의 멘토링이 존재하면 예외")
         void throwExceptionWhenAlreadyExists() {
             // given
-            when(mentoringRepository.existsByMentorId(mentor1.getId()))
+            when(mentoringRepository.existsByMentorIdAndTitle(mentor1.getId(), request.title()))
                 .thenReturn(true);
 
             // when & then
             assertThatThrownBy(() -> mentoringService.createMentoring(request, mentor1))
                 .isInstanceOf(ServiceException.class)
                 .hasFieldOrPropertyWithValue("resultCode", MentoringErrorCode.ALREADY_EXISTS_MENTORING.getCode());
-            verify(mentoringRepository).existsByMentorId(mentor1.getId());
+            verify(mentoringRepository).existsByMentorIdAndTitle(mentor1.getId(), request.title());
             verify(mentoringRepository, never()).save(any(Mentoring.class));
         }
     }
@@ -207,7 +218,10 @@ class MentoringServiceTest {
         void updateMentoring() {
             // given
             Long mentoringId = 1L;
+            List<Tag> tags = TagFixture.createDefaultTags();
 
+            when(tagRepository.findByNameIn(request.tags()))
+                .thenReturn(tags);
             when(mentoringStorage.findMentoring(mentoringId))
                 .thenReturn(mentoring1);
 
@@ -220,7 +234,9 @@ class MentoringServiceTest {
             assertThat(result.mentoring().bio()).isEqualTo(request.bio());
             assertThat(result.mentoring().tags()).isEqualTo(request.tags());
             assertThat(result.mentoring().thumb()).isEqualTo(request.thumb());
+
             verify(mentoringStorage).findMentoring(mentoringId);
+            verify(tagRepository).findByNameIn(request.tags());
         }
 
         @Test
@@ -253,8 +269,6 @@ class MentoringServiceTest {
                 .thenReturn(mentoring1);
             when(mentoringStorage.hasReservationsForMentoring(mentoringId))
                 .thenReturn(false);
-            when(mentoringStorage.hasMentorSlotsForMentor(mentor1.getId()))
-                .thenReturn(false);
 
             // when
             mentoringService.deleteMentoring(mentoringId, mentor1);
@@ -262,28 +276,6 @@ class MentoringServiceTest {
             // then
             verify(mentoringStorage).findMentoring(mentoringId);
             verify(mentoringStorage).hasReservationsForMentoring(mentoringId);
-            verify(mentoringStorage).hasMentorSlotsForMentor(mentor1.getId());
-            verify(mentoringRepository).delete(mentoring1);
-        }
-
-        @Test
-        @DisplayName("멘토 슬롯 있으면 함께 삭제")
-        void deleteWithMentorSlots() {
-            // given
-            Long mentoringId = 1L;
-
-            when(mentoringStorage.findMentoring(mentoringId))
-                .thenReturn(mentoring1);
-            when(mentoringStorage.hasReservationsForMentoring(mentoringId))
-                .thenReturn(false);
-            when(mentoringStorage.hasMentorSlotsForMentor(mentor1.getId()))
-                .thenReturn(true);
-
-            // when
-            mentoringService.deleteMentoring(mentoringId, mentor1);
-
-            // then
-            verify(mentoringStorage).deleteMentorSlotsData(mentor1.getId());
             verify(mentoringRepository).delete(mentoring1);
         }
 
