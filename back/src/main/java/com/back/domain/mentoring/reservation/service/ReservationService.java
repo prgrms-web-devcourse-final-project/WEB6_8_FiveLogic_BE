@@ -48,10 +48,7 @@ public class ReservationService {
         } else {
             reservations = reservationRepository.findAllByMenteeMember(member, pageable);
         }
-        return reservations.map(r -> {
-            MentoringSession mentoringSession = mentoringSessionService.getMentoringSessionByReservation(r);
-            return ReservationDto.from(r, mentoringSession);
-        });
+        return reservations.map(ReservationDto::from);
     }
 
     @Transactional(readOnly = true)
@@ -66,28 +63,24 @@ public class ReservationService {
 
     @Transactional
     public ReservationResponse createReservation(Mentee mentee, ReservationRequest reqDto) {
-        try {
-            Mentoring mentoring = mentoringStorage.findMentoring(reqDto.mentoringId());
-            MentorSlot mentorSlot = mentoringStorage.findMentorSlot(reqDto.mentorSlotId());
+        Mentoring mentoring = mentoringStorage.findMentoring(reqDto.mentoringId());
+        MentorSlot mentorSlot = mentoringStorage.findMentorSlot(reqDto.mentorSlotId());
 
-            DateTimeValidator.validateStartTimeNotInPast(mentorSlot.getStartDateTime());
-            validateMentorSlotStatus(mentorSlot, mentee);
-            validateOverlappingTimeForMentee(mentee, mentorSlot);
+        DateTimeValidator.validateStartTimeNotInPast(mentorSlot.getStartDateTime());
+        validateMentorSlotStatus(mentorSlot, mentee);
+        validateOverlappingTimeForMentee(mentee, mentorSlot);
 
-            Reservation reservation = Reservation.builder()
-                .mentoring(mentoring)
-                .mentee(mentee)
-                .mentorSlot(mentorSlot)
-                .preQuestion(reqDto.preQuestion())
-                .build();
-            reservationRepository.save(reservation);
+        Reservation reservation = Reservation.builder()
+            .mentoring(mentoring)
+            .mentee(mentee)
+            .mentorSlot(mentorSlot)
+            .preQuestion(reqDto.preQuestion())
+            .build();
+        reservationRepository.save(reservation);
 
-            mentorSlot.updateStatus(MentorSlotStatus.PENDING);
+        mentorSlot.updateStatus(MentorSlotStatus.PENDING);
 
-            return ReservationResponse.from(reservation);
-        } catch (OptimisticLockException e) {
-            throw new ServiceException(ReservationErrorCode.CONCURRENT_RESERVATION_CONFLICT);
-        }
+        return ReservationResponse.from(reservation);
     }
 
     @Transactional
@@ -98,10 +91,9 @@ public class ReservationService {
             reservation.approve(mentor);
             reservation.getMentorSlot().updateStatus(MentorSlotStatus.APPROVED);
 
-            // 예약이 승인되면 세션을 생성한다.
             MentoringSession mentoringSession = mentoringSessionService.create(reservation);
 
-            return ReservationResponse.from(reservation);
+            return ReservationResponse.from(reservation, mentoringSession);
         } catch (OptimisticLockException e) {
             throw new ServiceException(ReservationErrorCode.CONCURRENT_APPROVAL_CONFLICT);
         }
