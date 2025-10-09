@@ -63,19 +63,8 @@ public class MentoringStorage {
         return reservationRepository.existsByMentoringId(mentoringId);
     }
 
-    public boolean hasMentorSlotsForMentor(Long mentorId) {
-        return mentorSlotRepository.existsByMentorId(mentorId);
-    }
-
     public boolean hasReservationForMentorSlot(Long slotId) {
         return reservationRepository.existsByMentorSlotId(slotId);
-    }
-
-
-    // ===== 데이터 조작 메서드 =====
-
-    public void deleteMentorSlotsData(Long mentorId) {
-        mentorSlotRepository.deleteAllByMentorId(mentorId);
     }
 
     public MentoringSession getMentoringSessionBySessionUuid(String mentoringSessionId) {
