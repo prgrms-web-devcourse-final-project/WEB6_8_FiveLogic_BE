@@ -2,6 +2,7 @@ package com.back.domain.roadmap.roadmap.repository;
 
 import com.back.domain.roadmap.roadmap.entity.JobRoadmapNodeStat;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -15,4 +16,8 @@ public interface JobRoadmapNodeStatRepository extends JpaRepository<JobRoadmapNo
             WHERE n.roadmapId = :roadmapId
             """)
     List<JobRoadmapNodeStat> findByNode_RoadmapIdWithNode(@Param("roadmapId") Long roadmapId);
+
+    @Modifying
+    @Query("DELETE FROM JobRoadmapNodeStat s WHERE s.node.id IN :nodeIds")
+    void deleteByNodeIdIn(@Param("nodeIds") List<Long> nodeIds);
 }

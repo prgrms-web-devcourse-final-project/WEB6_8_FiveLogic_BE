@@ -6,6 +6,8 @@ import com.back.domain.roadmap.roadmap.repository.JobRoadmapIntegrationQueueRepo
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -16,6 +18,7 @@ public class JobRoadmapUpdateEventListener {
     private final JobRoadmapIntegrationQueueRepository jobRoadmapIntegrationQueueRepository;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void requestJobRoadmapUpdate(MentorRoadmapChangeEvent event) {
         Long jobId = event.getJobId();
 

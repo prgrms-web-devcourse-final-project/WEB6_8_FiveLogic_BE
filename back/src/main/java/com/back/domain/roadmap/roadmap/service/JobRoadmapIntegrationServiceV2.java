@@ -32,6 +32,7 @@ public class JobRoadmapIntegrationServiceV2 {
     private final JobRoadmapRepository jobRoadmapRepository;
     private final TaskRepository taskRepository;
     private final JobRoadmapNodeStatRepository jobRoadmapNodeStatRepository;
+    private final com.back.domain.roadmap.roadmap.repository.RoadmapNodeRepository roadmapNodeRepository;
 
     // --- 통합 알고리즘 상수 ---
     private final double BRANCH_THRESHOLD = 0.25;
@@ -86,8 +87,36 @@ public class JobRoadmapIntegrationServiceV2 {
 
     private void deleteExistingJobRoadmap(Job job) {
         jobRoadmapRepository.findByJob(job).ifPresent(existing -> {
+            Long roadmapId = existing.getId();
+
+            // 1. 연관된 노드 ID들 조회
+            List<Long> nodeIds = roadmapNodeRepository.findIdsByRoadmapIdAndRoadmapType(
+                    roadmapId,
+                    RoadmapType.JOB
+            );
+
+            // 2. 해당 노드들의 JobRoadmapNodeStat 먼저 삭제
+            if (!nodeIds.isEmpty()) {
+                jobRoadmapNodeStatRepository.deleteByNodeIdIn(nodeIds);
+            }
+
+            // 3. 레벨이 깊은 노드부터 삭제 (leaf → root 순서)
+            // 최대 레벨 조회
+            Integer maxLevel = roadmapNodeRepository.findMaxLevelByRoadmapIdAndRoadmapType(
+                    roadmapId, RoadmapType.JOB);
+
+            if (maxLevel != null) {
+                // 가장 깊은 레벨부터 0까지 역순으로 삭제
+                for (int level = maxLevel; level >= 0; level--) {
+                    roadmapNodeRepository.deleteByRoadmapIdAndRoadmapTypeAndLevel(
+                            roadmapId, RoadmapType.JOB, level);
+                }
+            }
+
+            // 5. JobRoadmap 삭제
             jobRoadmapRepository.delete(existing);
-            log.info("기존 JobRoadmap 삭제: id={}", existing.getId());
+
+            log.info("기존 JobRoadmap 삭제: id={}, 노드들 먼저 삭제됨", roadmapId);
         });
     }
 
