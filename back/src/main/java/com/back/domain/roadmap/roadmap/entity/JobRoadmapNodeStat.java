@@ -47,53 +47,29 @@ public class JobRoadmapNodeStat extends BaseEntity {
     private String alternativeParents; // 대안 부모 후보들: JSON 형태 { "T:1": 8, "N:kotlin": 7 }
 
     @Builder
-    public JobRoadmapNodeStat(Integer stepOrder, Double weight, RoadmapNode node) {
+    public JobRoadmapNodeStat(
+            RoadmapNode node,
+            Integer stepOrder,
+            Double weight,
+            Double averagePosition,
+            Integer mentorCount,
+            Integer totalMentorCount,
+            Double mentorCoverageRatio,
+            Integer outgoingTransitions,
+            Integer incomingTransitions,
+            String transitionCounts,
+            String alternativeParents
+    ) {
+        this.node = node;
         this.stepOrder = stepOrder;
         this.weight = weight != null ? weight : 0.0;
-        this.node = node;
-    }
-
-    public void setStepOrder(Integer stepOrder) {
-        this.stepOrder = stepOrder;
-    }
-
-    public void setWeight(Double weight) {
-        this.weight = weight;
-    }
-
-    public void setNode(RoadmapNode node) {
-        this.node = node;
-    }
-
-    public void setAveragePosition(Double averagePosition) {
         this.averagePosition = averagePosition;
-    }
-
-    public void setMentorCount(Integer mentorCount) {
         this.mentorCount = mentorCount;
-    }
-
-    public void setTotalMentorCount(Integer totalMentorCount) {
         this.totalMentorCount = totalMentorCount;
-    }
-
-    public void setMentorCoverageRatio(Double mentorCoverageRatio) {
         this.mentorCoverageRatio = mentorCoverageRatio;
-    }
-
-    public void setOutgoingTransitions(Integer outgoingTransitions) {
         this.outgoingTransitions = outgoingTransitions;
-    }
-
-    public void setIncomingTransitions(Integer incomingTransitions) {
         this.incomingTransitions = incomingTransitions;
-    }
-
-    public void setTransitionCounts(String transitionCounts) {
         this.transitionCounts = transitionCounts;
-    }
-
-    public void setAlternativeParents(String alternativeParents) {
         this.alternativeParents = alternativeParents;
     }
 }

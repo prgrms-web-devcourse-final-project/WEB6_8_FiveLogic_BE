@@ -20,7 +20,7 @@ public enum MentoringErrorCode implements ErrorCode {
     NOT_FOUND_MENTEE("404-3", "멘티를 찾을 수 없습니다."),
 
     // 409
-    ALREADY_EXISTS_MENTORING("409-1", "이미 멘토링 정보가 존재합니다.");
+    ALREADY_EXISTS_MENTORING("409-1", "이미 동일한 이름의 멘토링이 존재합니다.");
 
     private final String code;
     private final String message;

@@ -39,6 +39,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation ("org.springframework.boot:spring-boot-starter-data-redis")
+	implementation("org.springframework.boot:spring-boot-starter-mail")
 
 	// QueryDSL
 	implementation("com.querydsl:querydsl-jpa:5.0.0:jakarta")
@@ -65,8 +66,12 @@ dependencies {
 	implementation ("software.amazon.awssdk:s3:2.25.0")
 
 	implementation ("org.springframework.kafka:spring-kafka")
+	implementation("org.springframework.boot:spring-boot-starter-websocket")
 
 	runtimeOnly("com.mysql:mysql-connector-j")
+
+	// Sentry
+	implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.19.1")
 }
 
 tasks.withType<Test> {

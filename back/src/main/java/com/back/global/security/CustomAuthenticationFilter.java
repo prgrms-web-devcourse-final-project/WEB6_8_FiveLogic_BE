@@ -6,6 +6,7 @@ import com.back.domain.member.member.service.MemberService;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import com.back.standard.util.Ut;
+import io.sentry.Sentry;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -36,8 +38,9 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             work(request, response, filterChain);
-        } catch (Exception e) {
+        } catch (AuthenticationException e) {
             log.error("CustomAuthenticationFilter에서 예외 발생: ",e); //401 에러로 빠지는거 추적 가능
+            Sentry.captureException(e);
             RsData<Void> rsData = new RsData<>("401-1", "인증 오류가 발생했습니다.");
             response.setContentType("application/json;charset=UTF-8");
             response.setStatus(rsData.statusCode());

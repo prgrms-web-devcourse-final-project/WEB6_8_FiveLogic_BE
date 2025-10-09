@@ -1,12 +1,13 @@
 package com.back.domain.mentoring.mentoring.service;
 
-import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
 import com.back.domain.mentoring.reservation.entity.Reservation;
 import com.back.domain.mentoring.reservation.error.ReservationErrorCode;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
+import com.back.domain.mentoring.session.entity.MentoringSession;
+import com.back.domain.mentoring.session.repository.MentoringSessionRepository;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.domain.mentoring.slot.error.MentorSlotErrorCode;
 import com.back.domain.mentoring.slot.repository.MentorSlotRepository;
@@ -28,17 +29,13 @@ public class MentoringStorage {
     private final MentoringRepository mentoringRepository;
     private final MentorSlotRepository mentorSlotRepository;
     private final ReservationRepository reservationRepository;
+    private final MentoringSessionRepository mentoringSessionRepository;
 
     // ===== find 메서드 =====
 
     public Mentoring findMentoring(Long mentoringId) {
         return mentoringRepository.findById(mentoringId)
             .orElseThrow(() -> new ServiceException(MentoringErrorCode.NOT_FOUND_MENTORING));
-    }
-
-    // TODO : 멘토:멘토링 1:N으로 변경 시 삭제 예정
-    public Mentoring findMentoringByMentor(Mentor mentor) {
-        return findMentoringsByMentorId(mentor.getId()).getFirst();
     }
 
     public List<Mentoring> findMentoringsByMentorId(Long mentorId) {
@@ -79,5 +76,10 @@ public class MentoringStorage {
 
     public void deleteMentorSlotsData(Long mentorId) {
         mentorSlotRepository.deleteAllByMentorId(mentorId);
+    }
+
+    public MentoringSession getMentoringSessionBySessionUuid(String mentoringSessionId) {
+        return mentoringSessionRepository.findBySessionUrl(mentoringSessionId)
+            .orElseThrow(() -> new ServiceException("404", "세션을 찾을 수 없습니다."));
     }
 }

@@ -1,8 +1,9 @@
 package com.back.domain.member.member.verification;
 
+import com.back.domain.member.member.email.EmailService;
 import com.back.global.exception.ServiceException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -10,12 +11,18 @@ import java.time.Duration;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class EmailVerificationService {
     private final VerificationCodeStore codeStore;
+    private final Optional<EmailService> emailService;
     private static final Duration CODE_TTL = Duration.ofMinutes(5);
     private static final SecureRandom random = new SecureRandom();
+
+    public EmailVerificationService(VerificationCodeStore codeStore,
+                                     @Autowired(required = false) EmailService emailService) {
+        this.codeStore = codeStore;
+        this.emailService = Optional.ofNullable(emailService);
+    }
 
     public String generateAndSendCode(String email) {
         // 6자리 랜덤 코드 생성
@@ -24,8 +31,12 @@ public class EmailVerificationService {
         // 저장
         codeStore.saveCode(email, code, CODE_TTL);
 
-        // TODO: 실제 이메일 발송 로직 추가 (JavaMailSender)
-        log.info("Generated verification code for {}: {}", email, code);
+        // 이메일 발송 (EmailService가 있을 때만)
+        emailService.ifPresentOrElse(
+                service -> service.sendVerificationCode(email, code),
+                () -> log.info("EmailService not available - verification code: {}", code)
+        );
+        log.info("Generated and sent verification code for {}: {}", email, code);
 
         return code; // 테스트용으로 반환 (실제로는 이메일로만 전송)
     }

@@ -14,6 +14,7 @@ import com.back.domain.roadmap.roadmap.entity.RoadmapNode;
 import com.back.domain.roadmap.roadmap.repository.JobRoadmapRepository;
 import com.back.domain.roadmap.roadmap.repository.MentorRoadmapRepository;
 import com.back.domain.roadmap.roadmap.service.JobRoadmapIntegrationService;
+import com.back.domain.roadmap.roadmap.service.JobRoadmapIntegrationServiceV2;
 import com.back.domain.roadmap.roadmap.service.MentorRoadmapService;
 import com.back.domain.roadmap.task.entity.Task;
 import com.back.domain.roadmap.task.repository.TaskRepository;
@@ -43,6 +44,7 @@ public class RoadmapInitData {
     private final MentorRoadmapRepository mentorRoadmapRepository;
     private final JobRoadmapRepository jobRoadmapRepository;
     private final JobRoadmapIntegrationService jobRoadmapIntegrationService;
+    private final JobRoadmapIntegrationServiceV2 jobRoadmapIntegrationServiceV2;
 
     @Bean
     ApplicationRunner baseInitDataApplicationRunner2() {
@@ -58,7 +60,8 @@ public class RoadmapInitData {
 
         // 통합 로직 테스트
         //initTestMentorRoadmaps();    // 테스트용 멘토 로드맵 10개 생성
-        //testJobRoadmapIntegration(); // 통합 로직 실행 및 트리 구조 출력
+        //testJobRoadmapIntegration(); // V1 통합 로직 실행 및 트리 구조 출력
+        //testJobRoadmapIntegrationV2(); // V2 통합 로직 실행 및 트리 구조 출력
     }
 
     // --- Job 초기화 ---
@@ -1051,5 +1054,19 @@ public class RoadmapInitData {
             boolean isLastChild = (i == children.size() - 1);
             printNodeRecursive(children.get(i), childPrefix, isLastChild);
         }
+    }
+
+    // --- V2 통합 로직 테스트 및 트리 구조 출력 ---
+    public void testJobRoadmapIntegrationV2() {
+        Job backendJob = jobRepository.findByName("백엔드 개발자")
+                .orElseThrow(() -> new RuntimeException("백엔드 개발자 직업을 찾을 수 없습니다."));
+
+        log.info("\n\n=== V2 직업 로드맵 통합 시작 ===");
+        JobRoadmap integratedRoadmap = jobRoadmapIntegrationServiceV2.integrateJobRoadmap(backendJob.getId());
+        log.info("=== V2 직업 로드맵 통합 완료 ===\n");
+
+        log.info("\n\n=== V2 통합된 직업 로드맵 트리 구조 출력 ===");
+        printJobRoadmapTree(integratedRoadmap);
+        log.info("=== V2 트리 구조 출력 완료 ===\n\n");
     }
 }

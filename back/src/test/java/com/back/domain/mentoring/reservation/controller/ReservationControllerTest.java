@@ -2,7 +2,6 @@ package com.back.domain.mentoring.reservation.controller;
 
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.AuthTokenService;
-import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.reservation.entity.Reservation;
@@ -49,7 +48,6 @@ class ReservationControllerTest {
     private static final String RESERVATION_URL = "/reservations";
 
     private Mentor mentor;
-    private Mentee mentee;
     private Mentoring mentoring;
     private MentorSlot mentorSlot;
     private String menteeToken;
@@ -62,7 +60,7 @@ class ReservationControllerTest {
 
         // Mentee
         Member menteeMember = memberFixture.createMenteeMember();
-        mentee = memberFixture.createMentee(menteeMember);
+        memberFixture.createMentee(menteeMember);
         menteeToken = authTokenService.genAccessToken(menteeMember);
 
         // Mentoring, MentorSlot

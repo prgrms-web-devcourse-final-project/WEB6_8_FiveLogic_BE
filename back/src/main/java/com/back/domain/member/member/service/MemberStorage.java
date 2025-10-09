@@ -2,6 +2,7 @@ package com.back.domain.member.member.service;
 
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.error.MemberErrorCode;
+import com.back.domain.member.member.repository.MemberRepository;
 import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentee.repository.MenteeRepository;
 import com.back.domain.member.mentor.entity.Mentor;
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class MemberStorage {
-
+    private final MemberRepository memberRepository;
     private final MentorRepository mentorRepository;
     private final MenteeRepository menteeRepository;
 
@@ -38,5 +39,10 @@ public class MemberStorage {
 
     public boolean existsMentorById(Long mentorId) {
         return mentorRepository.existsById(mentorId);
+    }
+
+    public Member findMemberByEmail(String email) {
+        return memberRepository.findByEmail(email)
+            .orElseThrow(() -> new ServiceException(MemberErrorCode.NOT_FOUND_MEMBER));
     }
 }

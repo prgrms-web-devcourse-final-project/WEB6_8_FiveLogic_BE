@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,22 +21,22 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         SELECT r
         FROM Reservation r
         WHERE r.id = :reservationId
-        AND (r.mentee.member = :member
-            OR r.mentor.member = :member)
+        AND (r.mentee.member.id = :memberId
+            OR r.mentor.member.id = :memberId)
         """)
     Optional<Reservation> findByIdAndMember(
         @Param("reservationId") Long reservationId,
-        @Param("member") Member member
+        @Param("memberId") Long memberId
     );
 
     @Query("""
         SELECT r
         FROM Reservation r
-        WHERE r.mentor.member = :member
+        WHERE r.mentor.member.id = :memberId
         ORDER BY r.mentorSlot.startDateTime DESC
         """)
     Page<Reservation> findAllByMentorMember(
-        @Param("member") Member member,
+        @Param("memberId") Long memberId,
         Pageable pageable
     );
 
@@ -58,4 +59,21 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
      * - 취소/거절된 예약도 히스토리로 보존
      */
     boolean existsByMentorSlotId(Long slotId);
+
+    @Query("""
+        SELECT CASE WHEN COUNT(r) > 0
+            THEN TRUE
+            ELSE FALSE
+            END
+        FROM Reservation r
+        WHERE r.mentee.id = :menteeId
+        AND r.status NOT IN ('REJECTED', 'CANCELED')
+        AND r.mentorSlot.startDateTime < :end
+        AND r.mentorSlot.endDateTime > :start
+        """)
+    boolean existsOverlappingTimeForMentee(
+        @Param("menteeId") Long menteeId,
+        @Param("start") LocalDateTime start,
+        @Param("end") LocalDateTime end
+    );
 }

@@ -16,7 +16,7 @@ public record ReservationRequest(
     @NotNull
     Long mentoringId,
 
-    @Schema(description = "사전 질문")
+    @Schema(description = "사전 질문", example = "question")
     String preQuestion
 ) {
 }

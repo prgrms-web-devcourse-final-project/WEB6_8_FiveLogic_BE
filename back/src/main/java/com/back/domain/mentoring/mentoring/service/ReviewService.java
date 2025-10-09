@@ -4,6 +4,7 @@ import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.dto.request.ReviewRequest;
 import com.back.domain.mentoring.mentoring.dto.response.ReviewResponse;
+import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.entity.Review;
 import com.back.domain.mentoring.mentoring.error.ReviewErrorCode;
 import com.back.domain.mentoring.mentoring.repository.ReviewRepository;
@@ -54,6 +55,7 @@ public class ReviewService {
             .build();
         reviewRepository.save(review);
 
+        updateMentoringRating(review.getReservation().getMentoring());
         updateMentorRating(reservation.getMentor());
 
         return ReviewResponse.from(review);
@@ -67,29 +69,34 @@ public class ReviewService {
         validateRating(reqDto.rating());
 
         review.update(reqDto.rating(), reqDto.content());
+        updateMentoringRating(review.getReservation().getMentoring());
         updateMentorRating(review.getReservation().getMentor());
 
         return ReviewResponse.from(review);
     }
 
     @Transactional
-    public ReviewResponse deleteReview(Long reviewId, Mentee mentee) {
+    public void deleteReview(Long reviewId, Mentee mentee) {
         Review review = findReview(reviewId);
 
         validateMentee(mentee, review);
 
         reviewRepository.delete(review);
+        updateMentoringRating(review.getReservation().getMentoring());
         updateMentorRating(review.getReservation().getMentor());
-
-        return ReviewResponse.from(review);
     }
 
 
     // ===== 평점 업데이트 =====
 
     private void updateMentorRating(Mentor mentor) {
-        Double averageRating = reviewRepository.findAverageRating(mentor);
+        Double averageRating = reviewRepository.calculateMentorAverageRating(mentor.getId());
         mentor.updateRating(averageRating != null ? averageRating : 0.0);
+    }
+
+    private void updateMentoringRating(Mentoring mentoring) {
+        Double averageRating = reviewRepository.calculateMentoringAverageRating (mentoring.getId());
+        mentoring.updateRating(averageRating != null ? averageRating : 0.0);
     }
 
 

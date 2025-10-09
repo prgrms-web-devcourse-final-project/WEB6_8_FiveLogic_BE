@@ -33,35 +33,27 @@ public class MentorSlotService {
     public List<MentorSlotDto> getMyMentorSlots(Mentor mentor, LocalDateTime startDate, LocalDateTime endDate) {
         DateTimeValidator.validateTime(startDate, endDate);
 
-        List<MentorSlot> availableSlots = mentorSlotRepository.findMySlots(mentor.getId(), startDate, endDate);
-
-        return availableSlots.stream()
-            .map(MentorSlotDto::from)
-            .toList();
+        return mentorSlotRepository.findMySlots(mentor.getId(), startDate, endDate);
     }
 
     @Transactional(readOnly = true)
     public List<MentorSlotDto> getAvailableMentorSlots(Long mentorId, LocalDateTime startDate, LocalDateTime endDate) {
         DateTimeValidator.validateTime(startDate, endDate);
 
-        List<MentorSlot> availableSlots = mentorSlotRepository.findAvailableSlots(mentorId, startDate, endDate);
-
-        return availableSlots.stream()
-            .map(MentorSlotDto::from)
-            .toList();
+        return mentorSlotRepository.findAvailableSlots(mentorId, startDate, endDate);
     }
 
     @Transactional(readOnly = true)
     public MentorSlotResponse getMentorSlot(Long slotId) {
         MentorSlot mentorSlot = mentorStorage.findMentorSlot(slotId);
-        Mentoring mentoring = mentorStorage.findMentoringByMentor(mentorSlot.getMentor());
+        List<Mentoring> mentorings = mentorStorage.findMentoringsByMentorId(mentorSlot.getMentor().getId());
 
-        return MentorSlotResponse.from(mentorSlot, mentoring);
+        return MentorSlotResponse.from(mentorSlot, mentorings);
     }
 
     @Transactional
     public MentorSlotResponse createMentorSlot(MentorSlotRequest reqDto, Mentor mentor) {
-        Mentoring mentoring = mentorStorage.findMentoringByMentor(mentor);
+        List<Mentoring> mentorings = mentorStorage.findMentoringsByMentorId(mentor.getId());
 
         DateTimeValidator.validateTimeSlot(reqDto.startDateTime(), reqDto.endDateTime());
         validateOverlappingSlots(mentor, reqDto.startDateTime(), reqDto.endDateTime());
@@ -73,7 +65,7 @@ public class MentorSlotService {
             .build();
         mentorSlotRepository.save(mentorSlot);
 
-        return MentorSlotResponse.from(mentorSlot, mentoring);
+        return MentorSlotResponse.from(mentorSlot, mentorings);
     }
 
     @Transactional
@@ -92,7 +84,6 @@ public class MentorSlotService {
 
     @Transactional
     public MentorSlotResponse updateMentorSlot(Long slotId, MentorSlotRequest reqDto, Mentor mentor) {
-        Mentoring mentoring = mentorStorage.findMentoringByMentor(mentor);
         MentorSlot mentorSlot = mentorStorage.findMentorSlot(slotId);
 
         validateOwner(mentorSlot, mentor);
@@ -104,7 +95,8 @@ public class MentorSlotService {
 
         mentorSlot.updateTime(reqDto.startDateTime(), reqDto.endDateTime());
 
-        return MentorSlotResponse.from(mentorSlot, mentoring);
+        List<Mentoring> mentorings = mentorStorage.findMentoringsByMentorId(mentor.getId());
+        return MentorSlotResponse.from(mentorSlot, mentorings);
     }
 
     @Transactional
