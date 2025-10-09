@@ -351,7 +351,7 @@ public class JobRoadmapIntegrationService {
                 // 연결 수행
                 visited.add(ck);
                 parentNode.addChild(childNode);
-                childNode.setStepOrder(order++);
+                childNode.assignOrderInSiblings(order++);
                 q.add(ck);
             }
         }
@@ -372,7 +372,7 @@ public class JobRoadmapIntegrationService {
                     visited.add(dc.childKey);
                     bestParentNode.addChild(childNode);
                     int childCount = bestParentNode.getChildren().size();
-                    childNode.setStepOrder(childCount);
+                    childNode.assignOrderInSiblings(childCount);
                     deferredProcessed++;
                     log.debug("Deferred 연결 성공: {} -> {}", bestParent, dc.childKey);
                 } else {
@@ -393,7 +393,7 @@ public class JobRoadmapIntegrationService {
                         visited.add(dc.childKey);
                         fallbackParentNode.addChild(childNode);
                         int childCount = fallbackParentNode.getChildren().size();
-                        childNode.setStepOrder(childCount);
+                        childNode.assignOrderInSiblings(childCount);
                         log.debug("Fallback 연결: {} -> {}", dc.parentKey, dc.childKey);
                     } else {
                         // 최종 실패 -> 대안 기록
@@ -408,8 +408,7 @@ public class JobRoadmapIntegrationService {
         // 메인 루트 설정 (단일 루트만 허용)
         RoadmapNode mainRoot = keyToNode.get(rootKey);
         if (mainRoot != null) {
-            mainRoot.setStepOrder(1);
-            mainRoot.setLevel(0);
+            mainRoot.initializeAsRoot();
         }
 
         // 고아 노드(visited되지 않은 노드) 로그 기록
@@ -447,8 +446,7 @@ public class JobRoadmapIntegrationService {
 
         // 모든 노드에 roadmapId, roadmapType 설정 후 JobRoadmap의 노드로 추가
         for (RoadmapNode n : allNodes) {
-            n.setRoadmapId(roadmapId);
-            n.setRoadmapType(RoadmapType.JOB);
+            n.assignToRoadmap(roadmapId, RoadmapType.JOB);
             jobRoadmap.getNodes().add(n);
         }
 
@@ -459,18 +457,13 @@ public class JobRoadmapIntegrationService {
         for (RoadmapNode persisted : saved.getNodes()) {
             String k = generateKey(persisted);
             AggregatedNode a = agg.get(k);
-            JobRoadmapNodeStat stat = new JobRoadmapNodeStat();
-            stat.setNode(persisted);
-            stat.setStepOrder(persisted.getStepOrder());
 
             // 해당 키를 선택한 멘토 수
             int mentorCount = mentorAppearSet.getOrDefault(k, Collections.emptySet()).size();
-            stat.setMentorCount(mentorCount);
 
             // 평균 단계 위치
             List<Integer> posList = positions.getOrDefault(k, Collections.emptyList());
             Double avgPos = posList.isEmpty() ? null : posList.stream().mapToInt(Integer::intValue).average().orElse(0.0);
-            stat.setAveragePosition(avgPos);
 
             // Weight 계산: priorityScore와 동일한 복합 가중치 사용
             // (등장빈도, 멘토커버리지, 평균위치, 연결성)
@@ -494,29 +487,33 @@ public class JobRoadmapIntegrationService {
             // 방어적 코딩: 0~1 범위로 클램프
             weight = Math.max(0.0, Math.min(1.0, weight));
 
-            stat.setWeight(weight);
-            stat.setTotalMentorCount(totalMentorCount);
-            stat.setMentorCoverageRatio(mentorCoverageScore); // 0.0 ~ 1.0
-            stat.setOutgoingTransitions(outgoing);
-            stat.setIncomingTransitions(incoming);
-
             // 다음으로 이어지는 노드들의 분포 (Ut.json 사용)
             Map<String, Integer> outMap = transitions.getOrDefault(k, Collections.emptyMap());
+            String transitionCountsJson = null;
             if (!outMap.isEmpty()) {
-                String json = Ut.json.toString(outMap);
-                if (json != null) {
-                    stat.setTransitionCounts(json);
-                }
+                transitionCountsJson = Ut.json.toString(outMap);
             }
 
             // 대안 부모 정보 저장 (메타정보 포함, Ut.json 사용)
             List<AlternativeParentInfo> altParents = skippedParents.get(k);
+            String alternativeParentsJson = null;
             if (altParents != null && !altParents.isEmpty()) {
-                String json = Ut.json.toString(altParents);
-                if (json != null) {
-                    stat.setAlternativeParents(json);
-                }
+                alternativeParentsJson = Ut.json.toString(altParents);
             }
+
+            JobRoadmapNodeStat stat = JobRoadmapNodeStat.builder()
+                    .node(persisted)
+                    .stepOrder(persisted.getStepOrder())
+                    .weight(weight)
+                    .averagePosition(avgPos)
+                    .mentorCount(mentorCount)
+                    .totalMentorCount(totalMentorCount)
+                    .mentorCoverageRatio(mentorCoverageScore)
+                    .outgoingTransitions(outgoing)
+                    .incomingTransitions(incoming)
+                    .transitionCounts(transitionCountsJson)
+                    .alternativeParents(alternativeParentsJson)
+                    .build();
 
             stats.add(stat);
         }
