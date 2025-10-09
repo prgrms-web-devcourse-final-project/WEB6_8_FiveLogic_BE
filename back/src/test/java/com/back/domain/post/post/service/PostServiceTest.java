@@ -3,6 +3,7 @@ package com.back.domain.post.post.service;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.post.post.dto.PostCreateRequest;
 import com.back.domain.post.post.dto.PostDto;
+import com.back.domain.post.post.dto.PostModifyRequest;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.repository.PostRepository;
 import com.back.fixture.MemberFixture;
@@ -202,7 +203,7 @@ class PostServiceTest {
             Member author = MemberFixture.create(1L, "author@test.com", "Author", "password", Member.Role.MENTEE);
             Post post = createPost("기존 제목", "기존 내용", author, Post.PostType.INFORMATIONPOST);
             Long postId = 1L;
-            PostCreateRequest updateRequest = new PostCreateRequest("INFORMATIONPOST","새 제목","새 내용","");
+            PostModifyRequest updateRequest = new PostModifyRequest("새 제목","새 내용");
 
             when(postRepository.findById(postId)).thenReturn(Optional.of(post));
             when(postRepository.save(any(Post.class))).thenReturn(post);
@@ -224,7 +225,7 @@ class PostServiceTest {
             Member otherUser = MemberFixture.create(2L, "other@test.com", "Other", "password", Member.Role.MENTEE);
             Post post = createPost("제목", "내용", author, Post.PostType.INFORMATIONPOST);
             Long postId = 1L;
-            PostCreateRequest updateRequest = new PostCreateRequest("INFORMATIONPOST","새 내용","새 제목","");
+            PostModifyRequest updateRequest = new PostModifyRequest("새 내용","새 제목");
 
 
             when(postRepository.findById(postId)).thenReturn(Optional.of(post));
@@ -244,7 +245,7 @@ class PostServiceTest {
             Member author = MemberFixture.create(1L, "author@test.com", "Author", "password", Member.Role.MENTEE);
             Post post = createPost("제목", "내용", author, Post.PostType.INFORMATIONPOST);
             Long postId = 1L;
-            PostCreateRequest updateRequest = new PostCreateRequest("INFORMATIONPOST","","새 내용","");
+            PostModifyRequest updateRequest = new PostModifyRequest("","새 내용");
 
             when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
@@ -263,7 +264,7 @@ class PostServiceTest {
             Member author = MemberFixture.create(1L, "author@test.com", "Author", "password", Member.Role.MENTEE);
             Post post = createPost("제목", "내용", author, Post.PostType.INFORMATIONPOST);
             Long postId = 1L;
-            PostCreateRequest updateRequest = new PostCreateRequest("INFORMATIONPOST","새 제목","","");
+            PostModifyRequest updateRequest = new PostModifyRequest("새 제목","");
 
             when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 

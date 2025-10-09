@@ -1,5 +1,6 @@
 package com.back.domain.member.member.verification;
 
+import com.back.domain.member.member.email.EmailService;
 import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import java.util.Optional;
 @Slf4j
 public class EmailVerificationService {
     private final VerificationCodeStore codeStore;
+    private final EmailService emailService;
     private static final Duration CODE_TTL = Duration.ofMinutes(5);
     private static final SecureRandom random = new SecureRandom();
 
@@ -24,8 +26,9 @@ public class EmailVerificationService {
         // 저장
         codeStore.saveCode(email, code, CODE_TTL);
 
-        // TODO: 실제 이메일 발송 로직 추가 (JavaMailSender)
-        log.info("Generated verification code for {}: {}", email, code);
+        // 이메일 발송
+        emailService.sendVerificationCode(email, code);
+        log.info("Generated and sent verification code for {}: {}", email, code);
 
         return code; // 테스트용으로 반환 (실제로는 이메일로만 전송)
     }

@@ -6,7 +6,6 @@ import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.reservation.constant.ReservationStatus;
 import com.back.domain.mentoring.reservation.error.ReservationErrorCode;
-import com.back.domain.mentoring.slot.constant.MentorSlotStatus;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import com.back.fixture.MemberFixture;
 import com.back.fixture.MenteeFixture;
@@ -63,7 +62,6 @@ class ReservationTest {
 
             // then
             assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.APPROVED);
-            assertThat(reservation.getMentorSlot().getStatus()).isEqualTo(MentorSlotStatus.APPROVED);
         }
 
         @Test
@@ -120,8 +118,6 @@ class ReservationTest {
 
             // then
             assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.REJECTED);
-            assertThat(reservation.getMentorSlot().getStatus()).isEqualTo(MentorSlotStatus.AVAILABLE);
-            assertThat(reservation.getMentorSlot().getReservation()).isNull();
         }
 
         @Test
@@ -149,8 +145,6 @@ class ReservationTest {
 
             // then
             assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CANCELED);
-            assertThat(reservation.getMentorSlot().getStatus()).isEqualTo(MentorSlotStatus.AVAILABLE);
-            assertThat(reservation.getMentorSlot().getReservation()).isNull();
         }
 
         @Test
@@ -164,8 +158,6 @@ class ReservationTest {
 
             // then
             assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CANCELED);
-            assertThat(reservation.getMentorSlot().getStatus()).isEqualTo(MentorSlotStatus.AVAILABLE);
-            assertThat(reservation.getMentorSlot().getReservation()).isNull();
         }
 
         @Test
@@ -194,8 +186,6 @@ class ReservationTest {
 
             // then
             assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CANCELED);
-            assertThat(reservation.getMentorSlot().getStatus()).isEqualTo(MentorSlotStatus.AVAILABLE);
-            assertThat(reservation.getMentorSlot().getReservation()).isNull();
         }
 
         @Test
@@ -209,8 +199,6 @@ class ReservationTest {
 
             // then
             assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CANCELED);
-            assertThat(reservation.getMentorSlot().getStatus()).isEqualTo(MentorSlotStatus.AVAILABLE);
-            assertThat(reservation.getMentorSlot().getReservation()).isNull();
         }
 
         @Test

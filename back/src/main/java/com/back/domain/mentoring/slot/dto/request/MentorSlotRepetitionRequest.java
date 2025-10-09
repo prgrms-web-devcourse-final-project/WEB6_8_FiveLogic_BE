@@ -11,24 +11,24 @@ import java.time.LocalTime;
 import java.util.List;
 
 public record MentorSlotRepetitionRequest(
-    @Schema(description = "반복 시작일")
+    @Schema(description = "반복 시작일", example = "yyyy-MM-dd")
     @NotNull
     LocalDate repeatStartDate,
 
-    @Schema(description = "반복 종료일")
+    @Schema(description = "반복 종료일", example = "yyyy-MM-dd")
     @NotNull
     LocalDate repeatEndDate,
 
-    @Schema(description = "반복 요일")
+    @Schema(description = "반복 요일", example = "[\"MONDAY\", \"FRIDAY\"]")
     @NotEmpty
     List<DayOfWeek> daysOfWeek,
 
-    @Schema(description = "시작 시간")
+    @Schema(description = "시작 시간", example = "HH:mm:ss")
     @NotNull
     @JsonFormat(pattern = "HH:mm:ss")
     LocalTime startTime,
 
-    @Schema(description = "종료 시간")
+    @Schema(description = "종료 시간", example = "HH:mm:ss")
     @NotNull
     @JsonFormat(pattern = "HH:mm:ss")
     LocalTime endTime

@@ -25,7 +25,7 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @GetMapping("/mentorings/{mentoringId}/reviews")
-    @Operation(summary = "멘토링 리뷰 조회", description = "멘토링 리뷰 목록을 조회합니다.")
+    @Operation(summary = "멘토링 리뷰 목록 조회", description = "멘토링 리뷰 목록을 조회합니다.")
     public RsData<ReviewPagingResponse> getReviews(
         @PathVariable Long mentoringId,
         @RequestParam(defaultValue = "0") int page,
