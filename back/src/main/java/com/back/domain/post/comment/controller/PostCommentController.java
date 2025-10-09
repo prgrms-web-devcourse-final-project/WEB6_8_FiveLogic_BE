@@ -41,7 +41,6 @@ public class PostCommentController {
 
     @Operation(summary = "댓글 다건 조회")
     @GetMapping("/post/{post_id}")
-    @Transactional(readOnly = true)
     public RsData<List<CommentAllResponse>> getAllPostComment(@PathVariable Long post_id) {
         List<CommentAllResponse> postAllResponse = postCommentService.getAllPostCommentResponse(post_id);
         return new RsData<>("200", "게시글 다건 조회 성공", postAllResponse);
