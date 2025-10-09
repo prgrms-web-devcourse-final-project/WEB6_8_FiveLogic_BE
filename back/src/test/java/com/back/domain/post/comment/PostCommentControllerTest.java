@@ -142,7 +142,7 @@ public class PostCommentControllerTest {
                 .andExpect(handler().methodName("getAllPostComment"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.msg").value("게시글 다건 조회 성공"))
+                .andExpect(jsonPath("$.msg").value("댓글 조회 성공"))
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data", hasSize(greaterThan(0))));
 
@@ -186,7 +186,7 @@ public class PostCommentControllerTest {
                 .andExpect(handler().handlerType(PostCommentController.class))
                 .andExpect(handler().methodName("removePostComment"))
                 .andExpect(jsonPath("$.resultCode").value("200"))
-                .andExpect(jsonPath("$.msg").value("게시글 삭제 성공"));
+                .andExpect(jsonPath("$.msg").value("댓글 삭제 성공"));
     }
 
     @Test
