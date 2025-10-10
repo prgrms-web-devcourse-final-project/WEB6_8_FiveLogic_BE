@@ -3,6 +3,7 @@ package com.back.domain.post.like.service;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.post.like.entity.PostLike;
 import com.back.domain.post.like.repository.PostLikeRepository;
+import com.back.domain.post.post.dto.PostLikedResponse;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.service.PostService;
 import com.back.domain.post.rq.PostDetailFacade;
@@ -18,7 +19,6 @@ import java.util.Optional;
 public class PostLikeService {
     private final Rq rq;
     private final PostLikeRepository postLikeRepository;
-   //private final PostDetailFacade postDetailFacade;
     private final PostService postService; // 리팩토링 대상
 
     @Transactional
@@ -47,6 +47,11 @@ public class PostLikeService {
         }
     }
 
+    public PostLikedResponse getLikeCount(Long postId) {
+        int likeCount = postLikeRepository.countLikesByPostId(postId);
+        return new PostLikedResponse(likeCount);
+    }
+
     @Transactional
     public void disLikePost(long postId) {
         Member member = rq.getActor();
@@ -72,13 +77,11 @@ public class PostLikeService {
         }
     }
 
-    public int getDisLikeCount(Long postId) {
-        return postLikeRepository.countDislikesByPostId(postId);
+    public PostLikedResponse getDisLikeCount(Long postId) {
+        int disLikeCount = postLikeRepository.countDislikesByPostId(postId);
+        return new PostLikedResponse(disLikeCount);
     }
 
-    public int getLikeCount(Long postId) {
-        return postLikeRepository.countLikesByPostId(postId);
-    }
 
     public String getPresentStatus(Long postId) {
         Member member = rq.getActor();

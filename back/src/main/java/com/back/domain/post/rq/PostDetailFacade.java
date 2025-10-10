@@ -4,6 +4,7 @@ import com.back.domain.post.comment.dto.CommentAllResponse;
 import com.back.domain.post.comment.service.PostCommentService;
 import com.back.domain.post.like.service.PostLikeService;
 import com.back.domain.post.post.dto.PostDetailResponse;
+import com.back.domain.post.post.dto.PostLikedResponse;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.service.PostService;
 import lombok.RequiredArgsConstructor;
@@ -26,11 +27,11 @@ public class PostDetailFacade {
         Post post = postService.getPostDetailWithViewIncrement(postId);
 
         List<CommentAllResponse> comments = postCommentService.getAllPostCommentResponse(postId);
-        int likeCount = postLikeService.getLikeCount(postId);
-        int dislikeCount = postLikeService.getDisLikeCount(postId);
+        PostLikedResponse postLikedResponse = postLikeService.getLikeCount(postId);
+        PostLikedResponse postDisLikedResponse = postLikeService.getDisLikeCount(postId);
         String userStatus = postLikeService.getPresentStatus(postId);
 
-        return PostDetailResponse.from(post, comments, likeCount, dislikeCount, userStatus);
+        return PostDetailResponse.from(post, comments, postLikedResponse.likeCount(), postDisLikedResponse.likeCount(), userStatus);
     }
 
 

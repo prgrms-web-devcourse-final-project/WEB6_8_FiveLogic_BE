@@ -87,8 +87,9 @@ public class PostController {
 
     @Operation(summary = "게시글 수정", description = "title, content은 공백이거나 null 일 수 없습니다. 글자수 제한은 없습니다. ")
     @PutMapping("/{post_id}")
-    public RsData<Void> updatePost(@PathVariable Long post_id
-            ,@Valid @RequestBody PostModifyRequest postModifyRequest) {
+    public RsData<Void> updatePost(
+            @PathVariable Long post_id,
+            @Valid @RequestBody PostModifyRequest postModifyRequest) {
         Member member = rq.getActor();
         postService.updatePost(post_id, member, postModifyRequest);
 
@@ -99,10 +100,7 @@ public class PostController {
     @PostMapping("/{post_id}/liked")
     public RsData<PostLikedResponse> likePost(@PathVariable Long post_id) {
         postLikeService.likePost(post_id);
-
-        int likeCount = postLikeService.getLikeCount(post_id);
-        PostLikedResponse postLikedResponse = new PostLikedResponse(likeCount);
-
+        PostLikedResponse postLikedResponse = postLikeService.getLikeCount(post_id);
         return new RsData<>("200", "게시글 좋아요 성공", postLikedResponse);
     }
 
@@ -110,10 +108,7 @@ public class PostController {
     @PostMapping("/{post_id}/disliked")
     public RsData<PostLikedResponse> disLikePost(@PathVariable Long post_id) {
         postLikeService.disLikePost(post_id);
-
-        int likeCount = postLikeService.getDisLikeCount(post_id);
-        PostLikedResponse postLikedResponse = new PostLikedResponse(likeCount);
-
+        PostLikedResponse postLikedResponse = postLikeService.getDisLikeCount(post_id);
         return new RsData<>("200", "게시글 싫어요 성공", postLikedResponse);
     }
 
@@ -121,9 +116,7 @@ public class PostController {
     @Operation(summary = "게시글 상세페이지", description = "사용자 단건 조회시 사용")
     @GetMapping("/detail/{post_id}")
     public RsData<PostDetailResponse> getPostDetail(@PathVariable Long post_id) {
-
         PostDetailResponse response = postDetailFacade.getDetailWithViewIncrement(post_id);
-
         return new RsData<>("200", "게시글 상세 조회 성공", response);
     }
 }
