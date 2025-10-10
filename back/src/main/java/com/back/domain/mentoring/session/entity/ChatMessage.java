@@ -70,6 +70,13 @@ public class ChatMessage extends BaseEntity {
             if (senderRole != SenderRole.MENTOR && senderRole != SenderRole.MENTEE) {
                 throw new IllegalArgumentException("일반 메시지의 senderRole은 MENTOR 또는 MENTEE여야 합니다.");
             }
+
+            boolean isParticipant = (mentoringSession.getReservation().getMentor().isMember(sender) ||
+                    mentoringSession.getReservation().getMentee().isMember(sender));
+
+            if (!isParticipant) {
+                throw new IllegalArgumentException("메시지 발신자는 해당 멘토링 세션의 참여자가 아닙니다.");
+            }
         }
 
         return ChatMessage.builder()

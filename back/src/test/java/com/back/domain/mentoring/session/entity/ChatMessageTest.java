@@ -5,23 +5,21 @@ import com.back.domain.member.member.entity.Member;
 import com.back.fixture.MemberFixture;
 import com.back.fixture.mentoring.MentoringSessionFixture;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
-import org.junit.jupiter.api.Nested;
-
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ChatMessageTest {
     @Test
     @DisplayName("ChatMessage 생성 테스트")
-    void createChatMessageTest(){
+    void createChatMessageTest() {
         // given
         MentoringSession session = MentoringSessionFixture.createDefault();
-        Member sender = MemberFixture.createDefault();
+        Member sender = session.getReservation().getMentor().getMember();
         String content = "Hello world";
         SenderRole senderRole = SenderRole.MENTOR;
         MessageType type = MessageType.TEXT;
@@ -120,6 +118,20 @@ class ChatMessageTest {
         void createUserMessageWithInvalidRole_shouldThrowException() {
             assertThrows(IllegalArgumentException.class, () ->
                     ChatMessage.create(MentoringSessionFixture.createDefault(), MemberFixture.createDefault(), SenderRole.SYSTEM, "user message", MessageType.TEXT));
+        }
+
+        @Test
+        @DisplayName("메시지 발신자가 멘토링 참여자가 아니면 예외가 발생한다")
+        void createWithNonParticipantSender_shouldThrowException() {
+            // given
+            MentoringSession session = MentoringSessionFixture.createDefault();
+            Member nonParticipant = MemberFixture.create(99L, "non@participant.com", "외부인", "password", Member.Role.MENTEE);
+
+            // when & then
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                    ChatMessage.create(session, nonParticipant, SenderRole.MENTOR, "some message", MessageType.TEXT));
+
+            assertThat(exception.getMessage()).isEqualTo("메시지 발신자는 해당 멘토링 세션의 참여자가 아닙니다.");
         }
     }
 }
