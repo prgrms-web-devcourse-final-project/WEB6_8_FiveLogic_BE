@@ -50,8 +50,8 @@ public class PostController {
             @Valid @RequestBody PostCreateRequest postCreateRequest
             ) {
         Member member = rq.getActor();
-        Post post = postService.createPost(postCreateRequest, member);
-        PostCreateResponse postCreateResponse = PostCreateResponse.from(post);
+
+        PostCreateResponse postCreateResponse = postService.createPost(postCreateRequest, member);
 
         return new RsData<>("200", "게시글이 성공적으로 생성되었습니다.", postCreateResponse);
     }

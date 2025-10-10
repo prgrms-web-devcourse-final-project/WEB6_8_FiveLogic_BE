@@ -2,6 +2,7 @@ package com.back.domain.post.post.service;
 
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.post.post.dto.PostCreateRequest;
+import com.back.domain.post.post.dto.PostCreateResponse;
 import com.back.domain.post.post.dto.PostDto;
 import com.back.domain.post.post.dto.PostModifyRequest;
 import com.back.domain.post.post.entity.Post;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -48,38 +50,44 @@ class PostServiceTest {
             Member member = MemberFixture.create(1L, "test@test.com", "Test User", "password", Member.Role.MENTEE);
             PostCreateRequest request = new PostCreateRequest("INFORMATIONPOST","제목","내용","");
 
-
-            Post expectedPost = createPost("제목", "내용", member, Post.PostType.INFORMATIONPOST);
-
-            when(postRepository.save(any(Post.class))).thenReturn(expectedPost);
-
             // when
-            Post result = postService.createPost(request, member);
+            postService.createPost(request, member);
+
+            ArgumentCaptor<Post> captor = ArgumentCaptor.forClass(Post.class);
+            verify(postRepository).save(captor.capture());
+
+            Post savedPost = captor.getValue();
 
             // then
-            assertThat(result.getTitle()).isEqualTo("제목");
-            assertThat(result.getContent()).isEqualTo("내용");
-            assertThat(result.getMember()).isEqualTo(member);
-            assertThat(result.getPostType()).isEqualTo(Post.PostType.INFORMATIONPOST);
-            verify(postRepository).save(any(Post.class));
+            assertThat(savedPost.getPostType()).isEqualTo(Post.PostType.INFORMATIONPOST);
+            assertThat(savedPost.getTitle()).isEqualTo("제목");
+            assertThat(savedPost.getContent()).isEqualTo("내용");
+            assertThat(savedPost.getJob()).isNull();
+            assertThat(savedPost.getMember()).isEqualTo(member);
         }
 
         @Test
-        @DisplayName("멘토가 실무 경험 공유 게시글 생성 성공")
+        @DisplayName("실무 경험 공유 게시글 생성 성공 - 멘토")
         void createPost_practicePost_mentor_success() {
             // given
             Member mentor = MemberFixture.create(1L, "mentor@test.com", "Mentor", "password", Member.Role.MENTOR);
-            PostCreateRequest request = new PostCreateRequest("PRACTICEPOST","실무경험","실무내용","123");
-            Post expectedPost = createPost("실무 경험", "실무 내용", mentor, Post.PostType.PRACTICEPOST);
-
-            when(postRepository.save(any(Post.class))).thenReturn(expectedPost);
+            PostCreateRequest request = new PostCreateRequest("PRACTICEPOST","실무경험","실무내용","백엔드");
 
             // when
-            Post result = postService.createPost(request, mentor);
+            postService.createPost(request, mentor);
+
 
             // then
-            assertThat(result.getPostType()).isEqualTo(Post.PostType.PRACTICEPOST);
-            verify(postRepository).save(any(Post.class));
+            ArgumentCaptor<Post> captor = ArgumentCaptor.forClass(Post.class);
+            verify(postRepository).save(captor.capture());
+
+            Post savedPost = captor.getValue();
+
+            assertThat(savedPost.getPostType()).isEqualTo(Post.PostType.PRACTICEPOST);
+            assertThat(savedPost.getTitle()).isEqualTo("실무경험");
+            assertThat(savedPost.getContent()).isEqualTo("실무내용");
+            assertThat(savedPost.getJob()).isEqualTo("백엔드");
+            assertThat(savedPost.getMember()).isEqualTo(mentor);
         }
 
         @Test
@@ -104,18 +112,25 @@ class PostServiceTest {
             Member member = MemberFixture.create(1L, "test@test.com", "Test User", "password", Member.Role.MENTEE);
             PostCreateRequest request = new PostCreateRequest("QUESTIONPOST","질문경험","질문내용","");
 
-            Post expectedPost = createPost("질문", "질문 내용", member, Post.PostType.QUESTIONPOST);
-            expectedPost.updateResolveStatus(false);
-
-            when(postRepository.save(any(Post.class))).thenReturn(expectedPost);
 
             // when
-            Post result = postService.createPost(request, member);
+            postService.createPost(request, member);
 
             // then
-            assertThat(result.getPostType()).isEqualTo(Post.PostType.QUESTIONPOST);
-            assertThat(result.getIsResolve()).isFalse();
-            verify(postRepository).save(any(Post.class));
+
+            ArgumentCaptor<Post> captor = ArgumentCaptor.forClass(Post.class);
+            verify(postRepository).save(captor.capture());
+
+            Post savedPost = captor.getValue();
+
+            assertThat(savedPost.getPostType()).isEqualTo(Post.PostType.QUESTIONPOST);
+            assertThat(savedPost.getTitle()).isEqualTo("질문경험");
+            assertThat(savedPost.getContent()).isEqualTo("질문내용");
+            assertThat(savedPost.getMember()).isEqualTo(member);
+            assertThat(savedPost.getIsResolve()).isFalse();
+
+
+
         }
 
         @Test

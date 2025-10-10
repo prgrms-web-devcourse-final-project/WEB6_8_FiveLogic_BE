@@ -30,7 +30,7 @@ public class PostService {
     }
 
     @Transactional
-    public Post createPost(PostCreateRequest postCreateRequest, Member member) {
+    public PostCreateResponse createPost(PostCreateRequest postCreateRequest, Member member) {
         String postTypeStr = postCreateRequest.postType();
         Post.validPostType(postTypeStr);
         Post.PostType postType = Post.PostType.valueOf(postTypeStr);
@@ -59,7 +59,7 @@ public class PostService {
 
         postRepository.save(post);
 
-        return post;
+        return PostCreateResponse.from(post);
     }
 
 
