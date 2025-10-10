@@ -76,6 +76,8 @@ services:
       - kafka
     ports:
       - "8080:8080"
+    env_file:
+      - back/.env
     environment:
       - SPRING_PROFILES_ACTIVE=prod
     networks:
