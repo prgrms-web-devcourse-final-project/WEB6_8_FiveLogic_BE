@@ -190,6 +190,8 @@ jobs:
             sed -i "s|image:.*${IMAGE_REPOSITORY}.*|image: ${IMAGE}|g" docker-compose.yml
 
             echo "🚀 새 컨테이너 시작 중..."
+            MAIL_USERNAME='${{ secrets.MAIL_USERNAME }}' \
+            MAIL_PASSWORD='${{ secrets.MAIL_PASSWORD }}' \
             docker-compose up -d $CONTAINER_NAME
 
             echo "🏥 헬스체크 중..."
