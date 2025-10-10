@@ -7,6 +7,8 @@ import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.reservation.entity.Reservation;
 import com.back.domain.mentoring.session.dto.*;
 import com.back.domain.mentoring.session.entity.MentoringSession;
+import com.back.domain.mentoring.slot.constant.MentorSlotStatus;
+import com.back.domain.mentoring.slot.entity.MentorSlot;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +51,11 @@ public class MentoringSessionManager {
         Mentor mentor = memberStorage.findMentorByMember(requestUser);
         MentoringSession session = mentoringSessionService.getMentoringSession(deleteRequest.sessionId());
         MentoringSession closedSession = mentoringSessionService.save(session.closeSession(mentor));
+
+        Reservation reservation = closedSession.getReservation();
+        reservation.complete();
+        MentorSlot slot = reservation.getMentorSlot();
+        slot.updateStatus(MentorSlotStatus.COMPLETED);
         return new CloseSessionResponse(closedSession.getSessionUrl(), closedSession.getMentoring().getTitle(), closedSession.getStatus().toString());
     }
 }

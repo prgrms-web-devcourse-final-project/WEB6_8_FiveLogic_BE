@@ -27,6 +27,10 @@ public class PostCommentService {
     public void createComment(Member member, Long postId, CommentCreateRequest commentCreateRequest) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
 
+        if ( commentCreateRequest.comment() == null || commentCreateRequest.comment().isEmpty()) {
+            throw new ServiceException("400", "댓글은 비어 있을 수 없습니다.");
+        }
+
         PostComment postComment = PostComment.builder()
                 .post(post)
                 .content(commentCreateRequest.comment())

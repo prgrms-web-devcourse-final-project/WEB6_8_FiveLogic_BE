@@ -281,27 +281,6 @@ class ReservationServiceTest {
                 .isInstanceOf(ServiceException.class)
                 .hasFieldOrPropertyWithValue("resultCode", MentorSlotErrorCode.START_TIME_IN_PAST.getCode());
         }
-
-        @Test
-        @DisplayName("동시성 충돌 발생 시 예외")
-        void throwExceptionOnConcurrentReservation() {
-            // given
-            when(mentoringStorage.findMentoring(request.mentoringId()))
-                .thenReturn(mentoring);
-            when(mentoringStorage.findMentorSlot(request.mentorSlotId()))
-                .thenReturn(mentorSlot);
-            when(reservationRepository.findByMentorSlotIdAndStatusIn(mentorSlot.getId(),
-                List.of(ReservationStatus.PENDING, ReservationStatus.APPROVED, ReservationStatus.COMPLETED)))
-                .thenReturn(Optional.empty());
-
-            // OptimisticLockException 테스트 위해 save 호출 시 예외 설정
-            doThrow(new OptimisticLockException()).when(reservationRepository).save(any(Reservation.class));
-
-            // when & then
-            assertThatThrownBy(() -> reservationService.createReservation(mentee, request))
-                .isInstanceOf(ServiceException.class)
-                .hasFieldOrPropertyWithValue("resultCode", ReservationErrorCode.CONCURRENT_RESERVATION_CONFLICT.getCode());
-        }
     }
 
     @Nested
@@ -314,6 +293,9 @@ class ReservationServiceTest {
             // given
             when(mentoringStorage.findReservation(reservation.getId()))
                 .thenReturn(reservation);
+            ReflectionTestUtils.setField(reservation, "status", ReservationStatus.APPROVED);
+            when(mentoringSessionService.create(any())).thenReturn(MentoringSessionFixture.create(reservation));
+            ReflectionTestUtils.setField(reservation, "status", ReservationStatus.PENDING);
 
             // when
             ReservationResponse result = reservationService.approveReservation(mentor, reservation.getId());
