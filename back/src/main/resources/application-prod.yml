@@ -33,7 +33,7 @@ logging:
     com.back: INFO
 custom:
   site:
-    cookieDomain: "api.jobmate.info"  # 도메인으로 변경
+    cookieDomain: ""  # 크로스 도메인 쿠키를 위해 빈 문자열로 설정
     frontUrl: "https://jbmate.vercel.app"  # 프론트엔드 도메인으로 변경
     backUrl: "https://api.jobmate.info"  # HTTPS로 변경
   cookie:
