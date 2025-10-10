@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/news/{newsId}/comment")
 @RequiredArgsConstructor
-public class CommentController {
+public class NewsCommentController {
     private final NewsService newsService;
     private final NewsCommentService newsCommentService;
     private final Rq rq;
