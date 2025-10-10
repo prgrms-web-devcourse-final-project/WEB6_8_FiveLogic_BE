@@ -91,7 +91,7 @@ class PostServiceTest {
         }
 
         @Test
-        @DisplayName("멘티가 실무 경험 공유 게시글 생성 실패")
+        @DisplayName("실무 경험 공유 게시글 생성 실패 - 멘티")
         void createPost_practicePost_mentee_failure() {
             // given
             Member mentee = MemberFixture.create(1L, "mentee@test.com", "Mentee", "password", Member.Role.MENTEE);
@@ -221,7 +221,6 @@ class PostServiceTest {
             PostModifyRequest updateRequest = new PostModifyRequest("새 제목","새 내용");
 
             when(postRepository.findById(postId)).thenReturn(Optional.of(post));
-            when(postRepository.save(any(Post.class))).thenReturn(post);
 
             // when
             postService.updatePost(postId, author, updateRequest);
@@ -297,7 +296,7 @@ class PostServiceTest {
     class GetPostTest {
 
         @Test
-        @DisplayName("모든 게시글 조회 성공")
+        @DisplayName("게시글 다건 조회 성공")
         void getAllPosts_success() {
             // given
             Member member1 = MemberFixture.create(1L, "user1@test.com", "User1", "password", Member.Role.MENTEE);
@@ -360,22 +359,42 @@ class PostServiceTest {
             int page = 0;
             int size = 10;
             Post.PostType postType = Post.PostType.INFORMATIONPOST;
-            Pageable pageable = PageRequest.of(page, size);
 
             Member member = MemberFixture.create(1L, "user@test.com", "User", "password", Member.Role.MENTEE);
-            Post post = createPost("테스트 제목", "테스트 내용", member, Post.PostType.INFORMATIONPOST);
-            List<Post> posts = Arrays.asList(post);
-            Page<Post> postPage = new PageImpl<>(posts, pageable, 1);
 
-            when(postRepository.searchPosts(keyword, pageable, postType)).thenReturn(postPage);
+            List<Post> posts = Arrays.asList(
+                    createPost("테스트 제목1", "테스트 내용1", member, Post.PostType.INFORMATIONPOST)
+            );
+
+            Pageable expectedPageable = PageRequest.of(page, size);
+            Page<Post> postPage = new PageImpl<>(posts, expectedPageable, 1);
+
+            when(postRepository.searchPosts(anyString(), any(Pageable.class), any(Post.PostType.class)))
+                    .thenReturn(postPage);
 
             // when
             Page<PostDto> result = postService.getPosts(keyword, page, size, postType);
 
-            // then
+            // then - ArgumentCaptor로 인자 캡처
+            ArgumentCaptor<String> keywordCaptor = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            ArgumentCaptor<Post.PostType> postTypeCaptor = ArgumentCaptor.forClass(Post.PostType.class);
+
+            verify(postRepository).searchPosts(
+                    keywordCaptor.capture(),
+                    pageableCaptor.capture(),
+                    postTypeCaptor.capture()
+            );
+
+            // 전달된 인자 검증
+            assertThat(keywordCaptor.getValue()).isEqualTo("테스트");
+            assertThat(pageableCaptor.getValue().getPageNumber()).isEqualTo(0);
+            assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(10);
+            assertThat(postTypeCaptor.getValue()).isEqualTo(Post.PostType.INFORMATIONPOST);
+
+            // 결과 검증
             assertThat(result.getContent()).hasSize(1);
             assertThat(result.getTotalElements()).isEqualTo(1);
-            verify(postRepository).searchPosts(keyword, pageable, postType);
         }
 
         @Test
