@@ -8,6 +8,7 @@ import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapResponse;
 import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapSaveResponse;
 import com.back.domain.roadmap.roadmap.entity.MentorRoadmap;
 import com.back.domain.roadmap.roadmap.entity.RoadmapNode;
+import com.back.domain.roadmap.roadmap.event.MentorRoadmapChangeEvent;
 import com.back.domain.roadmap.roadmap.repository.MentorRoadmapRepository;
 import com.back.domain.roadmap.roadmap.repository.RoadmapNodeRepository;
 import com.back.domain.roadmap.task.entity.Task;
@@ -15,6 +16,7 @@ import com.back.domain.roadmap.task.service.TaskService;
 import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,7 @@ public class MentorRoadmapService {
     private final RoadmapNodeRepository roadmapNodeRepository;
     private final MentorRepository mentorRepository;
     private final TaskService taskService;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 멘토 로드맵 생성
     @Transactional
@@ -55,9 +58,10 @@ public class MentorRoadmapService {
 
         // roadmapId를 포함한 노드 생성 및 추가
         List<RoadmapNode> allNodes = createValidatedNodesWithRoadmapId(request.nodes(), mentorRoadmap.getId());
+        // CASCADE로 노드들이 자동 저장됨 (추가 save() 호출 불필요)
         mentorRoadmap.addNodes(allNodes);
 
-        // CASCADE로 노드들이 자동 저장됨 (추가 save() 호출 불필요)
+        eventPublisher.publishEvent(new MentorRoadmapChangeEvent(mentor.getJobId()));
 
         log.info("멘토 로드맵 생성 완료 - 멘토 ID: {}, 로드맵 ID: {}, 노드 수: {} (cascade 활용)",
                  mentorId, mentorRoadmap.getId(), mentorRoadmap.getNodes().size());
@@ -130,6 +134,8 @@ public class MentorRoadmapService {
         log.info("멘토 로드맵 수정 완료 - 로드맵 ID: {}, 노드 수: {} (cascade 활용)",
                 mentorRoadmap.getId(), mentorRoadmap.getNodes().size());
 
+        eventPublisher.publishEvent(new MentorRoadmapChangeEvent(mentorRoadmap.getMentor().getJobId()));
+
         return new MentorRoadmapSaveResponse(
                 mentorRoadmap.getId(),
                 mentorRoadmap.getMentor().getId(),
@@ -151,6 +157,8 @@ public class MentorRoadmapService {
             throw new ServiceException("403", "본인의 로드맵만 삭제할 수 있습니다.");
         }
 
+        Long jobId = mentorRoadmap.getMentor().getJobId();
+
         // 1. 관련 노드들을 먼저 직접 삭제
         roadmapNodeRepository.deleteByRoadmapIdAndRoadmapType(
             roadmapId,
@@ -161,6 +169,8 @@ public class MentorRoadmapService {
         mentorRoadmapRepository.delete(mentorRoadmap);
 
         log.info("멘토 로드맵 삭제 완료 - 멘토 ID: {}, 로드맵 ID: {}", mentorId, roadmapId);
+
+        eventPublisher.publishEvent(new MentorRoadmapChangeEvent(jobId));
     }
 
     // taskId가 null인 자유입력 Task를 자동으로 pending alias로 등록

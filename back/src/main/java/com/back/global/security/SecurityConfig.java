@@ -51,8 +51,7 @@ public class SecurityConfig {
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));   //로컬 개발시  아래로 교체
-//        configuration.addAllowedOriginPattern("*");
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "https://jbmate.vercel.app"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
         configuration.setAllowCredentials(true);

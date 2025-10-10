@@ -2,7 +2,6 @@ package com.back.domain.mentoring.reservation.dto;
 
 import com.back.domain.mentoring.reservation.constant.ReservationStatus;
 import com.back.domain.mentoring.reservation.entity.Reservation;
-import com.back.domain.mentoring.session.entity.MentoringSession;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -23,11 +22,9 @@ public record ReservationDto(
     @Schema(description = "시작 일시")
     LocalDateTime startDateTime,
     @Schema(description = "종료 일시")
-    LocalDateTime endDateTime,
-    @Schema(description = "멘토링 세션 ID")
-    Long mentoringSessionId
+    LocalDateTime endDateTime
 ) {
-    public static ReservationDto from(Reservation reservation, MentoringSession mentoringSession) {
+    public static ReservationDto from(Reservation reservation) {
         return new ReservationDto(
             reservation.getId(),
             reservation.getStatus(),
@@ -35,8 +32,7 @@ public record ReservationDto(
             reservation.getMentoring().getTitle(),
             reservation.getMentorSlot().getId(),
             reservation.getMentorSlot().getStartDateTime(),
-            reservation.getMentorSlot().getEndDateTime(),
-            mentoringSession != null ? mentoringSession.getId() : null
+            reservation.getMentorSlot().getEndDateTime()
         );
     }
 }
