@@ -27,7 +27,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom("snake20011600@gmail.com", "JobMate");
+            helper.setFrom("jobmateemail@gmail.com", "JobMate");
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(text, false); // false = plain text
@@ -48,7 +48,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom("snake20011600@gmail.com", "JobMate");
+            helper.setFrom("jobmateemail@gmail.com", "JobMate");
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlContent, true); // true = HTML
