@@ -143,6 +143,25 @@ class MentoringServiceTest {
         }
     }
 
+    @Test
+    @DisplayName("나의 멘토링 목록 조회")
+    void getMentorings() {
+        // given
+        Mentoring mentoring2 = MentoringFixture.create(2L, mentor2);
+
+        List<Mentoring> mentorings = List.of(mentoring1);
+
+        when(mentoringRepository.findByMentorIdOrderByIdDesc(mentor1.getId()))
+            .thenReturn(mentorings);
+
+        // when
+        List<MentoringWithTagsDto> result = mentoringService.getMyMentorings(mentor1);
+
+        // then
+        assertThat(result).hasSize(1);
+        verify(mentoringRepository).findByMentorIdOrderByIdDesc(mentor1.getId());
+    }
+
     @Nested
     @DisplayName("멘토링 조회")
     class Describe_getMentoring {

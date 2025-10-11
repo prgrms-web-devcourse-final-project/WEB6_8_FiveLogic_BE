@@ -34,8 +34,6 @@ public class MentoringSession extends BaseEntity {
     @OneToMany(mappedBy = "mentoringSession", cascade = CascadeType.ALL)
     private List<ChatMessage> chatMessages = new ArrayList<>();
 
-    // 화면 공유, WebRTC 관련 필드 등 추가 가능
-
     @Builder(access = AccessLevel.PRIVATE)
     private MentoringSession(Reservation reservation) {
         this.sessionUrl = java.util.UUID.randomUUID().toString();
