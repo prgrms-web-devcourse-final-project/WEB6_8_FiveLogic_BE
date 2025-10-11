@@ -247,8 +247,8 @@ class MentorSlotControllerTest {
             "repeatStartDate": "%s",
             "repeatEndDate": "%s",
             "daysOfWeek": ["MONDAY", "WEDNESDAY", "FRIDAY"],
-            "startTime": "10:00:00",
-            "endTime": "11:00:00"
+            "startTime": "10:00",
+            "endTime": "11:00"
         }
         """.formatted(
             startDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
