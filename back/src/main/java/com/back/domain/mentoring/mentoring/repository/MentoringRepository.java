@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface MentoringRepository extends JpaRepository<Mentoring, Long>, MentoringRepositoryCustom {
     List<Mentoring> findByMentorId(Long mentorId);
+    List<Mentoring> findByMentorIdOrderByIdDesc(Long mentorId);
     Optional<Mentoring> findTopByOrderByIdDesc();
     boolean existsByMentorIdAndTitle(Long mentorId, String title);
     boolean existsByMentorIdAndTitleAndIdNot(Long mentorId, String title, Long MentoringId);

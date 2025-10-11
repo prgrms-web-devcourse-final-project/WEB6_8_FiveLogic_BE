@@ -17,6 +17,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/mentorings")
 @RequiredArgsConstructor
@@ -39,6 +41,20 @@ public class MentoringController {
         return new RsData<>(
             "200",
             "멘토링 목록을 조회하였습니다.",
+            resDto
+        );
+    }
+
+    @GetMapping("/my")
+    @PreAuthorize("hasRole('MENTOR')")
+    @Operation(summary = "나의 멘토링 목록 조회", description = "나의 멘토링 목록을 조회합니다. 로그인한 멘토만 접근할 수 있습니다.")
+    public RsData<List<MentoringWithTagsDto>> getMyMentorings() {
+        Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
+        List<MentoringWithTagsDto> resDto = mentoringService.getMyMentorings(mentor);
+
+        return new RsData<>(
+            "200",
+            "나의 멘토링 목록을 조회하였습니다.",
             resDto
         );
     }
