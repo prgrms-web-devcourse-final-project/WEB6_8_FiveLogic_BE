@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class JobRoadmapIntegrationProcessor {
     private final JobRoadmapIntegrationQueueRepository queueRepository;
-    private final JobRoadmapIntegrationServiceV2 integrationService;
+    private final JobRoadmapIntegrationServiceV3 integrationService;
 
     /**
      * 단일 큐 항목 처리 (통합 + 큐 삭제를 하나의 트랜잭션으로)

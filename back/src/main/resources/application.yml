@@ -57,6 +57,14 @@ spring:
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
+  ai:
+    openai:
+      api-key: ${AI_API_KEY}
+      base-url: ${AI_BASE_URL}
+      chat:
+        options:
+          model: meta-llama/llama-4-scout-17b-16e-instruct
+          temperature: 0.2
 
 springdoc: #Swagger ??
   default-produces-media-type: application/json;charset=UTF-8
