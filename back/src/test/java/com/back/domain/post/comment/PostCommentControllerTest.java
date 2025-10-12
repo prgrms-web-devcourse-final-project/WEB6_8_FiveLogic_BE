@@ -77,7 +77,7 @@ public class PostCommentControllerTest {
     void t1() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        post("/post/comment/post/{post_id}", 1L)
+                        post("/post/{post_id}/comment", 1L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
@@ -105,7 +105,7 @@ public class PostCommentControllerTest {
     void t2() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        post("/post/comment/post/{post_id}", 1L)
+                        post("/post/{post_id}/comment", 1L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
@@ -132,7 +132,7 @@ public class PostCommentControllerTest {
     void t3() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        get("/post/comment/post/{post_id}", 1L)
+                        get("/post/post/{post_id}", 1L)
                 )
                 .andDo(print());
 
@@ -142,7 +142,7 @@ public class PostCommentControllerTest {
                 .andExpect(handler().methodName("getAllPostComment"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.msg").value("게시글 다건 조회 성공"))
+                .andExpect(jsonPath("$.msg").value("댓글 조회 성공"))
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data", hasSize(greaterThan(0))));
 
@@ -153,7 +153,7 @@ public class PostCommentControllerTest {
     void t4() throws Exception {
         mvc
                 .perform(
-                        post("/post/comment/post/{post_id}", 2L)
+                        post("/post/{post_id}/comment", 2L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
@@ -171,7 +171,7 @@ public class PostCommentControllerTest {
         // 댓글 삭제
         ResultActions resultActions = mvc
                 .perform(
-                        delete("/post/comment/post/{post_id}/comment", 2L)  // URL 수정
+                        delete("/post/{post_id}/comment", 2L)  // URL 수정
                                 .contentType(MediaType.APPLICATION_JSON)   // Content-Type 추가
                                 .content("""
                                     {
@@ -186,7 +186,7 @@ public class PostCommentControllerTest {
                 .andExpect(handler().handlerType(PostCommentController.class))
                 .andExpect(handler().methodName("removePostComment"))
                 .andExpect(jsonPath("$.resultCode").value("200"))
-                .andExpect(jsonPath("$.msg").value("게시글 삭제 성공"));
+                .andExpect(jsonPath("$.msg").value("댓글 삭제 성공"));
     }
 
     @Test
@@ -194,7 +194,7 @@ public class PostCommentControllerTest {
     void t5() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        delete("/post/comment/post/{post_id}/comment", 1L)  // URL 수정
+                        delete("/post/{post_id}/comment", 1L)  // URL 수정
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                     {
@@ -217,7 +217,7 @@ public class PostCommentControllerTest {
     void t6() throws Exception {
         mvc
                 .perform(
-                        post("/post/comment/post/{post_id}", 2L)
+                        post("/post/{post_id}/comment", 2L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
@@ -232,7 +232,7 @@ public class PostCommentControllerTest {
 
         ResultActions resultActions = mvc
                 .perform(
-                        put("/post/comment/post/{post_id}/comment/", 2L)
+                        put("/post/{post_id}/comment", 2L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                             {                        
@@ -255,7 +255,7 @@ public class PostCommentControllerTest {
     void t7() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        put("/post/comment/post/{post_id}/comment/", 1L)
+                        put("/post/{post_id}/comment", 1L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                             {                        
@@ -278,7 +278,7 @@ public class PostCommentControllerTest {
     void t8() throws Exception {
         ResultActions resultActions = mvc
                 .perform(
-                        put("/post/comment/post/{post_id}/comment/", 1L)
+                        put("/post/{post_id}/comment", 1L)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                             {                        

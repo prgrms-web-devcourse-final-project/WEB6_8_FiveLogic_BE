@@ -23,14 +23,14 @@ public record MentorSlotRepetitionRequest(
     @NotEmpty
     List<DayOfWeek> daysOfWeek,
 
-    @Schema(description = "시작 시간", example = "HH:mm:ss")
+    @Schema(description = "시작 시간", example = "HH:mm")
     @NotNull
-    @JsonFormat(pattern = "HH:mm:ss")
+    @JsonFormat(pattern = "HH:mm")
     LocalTime startTime,
 
-    @Schema(description = "종료 시간", example = "HH:mm:ss")
+    @Schema(description = "종료 시간", example = "HH:mm")
     @NotNull
-    @JsonFormat(pattern = "HH:mm:ss")
+    @JsonFormat(pattern = "HH:mm")
     LocalTime endTime
 ){
 }

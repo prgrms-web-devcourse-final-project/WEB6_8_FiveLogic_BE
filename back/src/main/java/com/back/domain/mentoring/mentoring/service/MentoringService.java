@@ -40,6 +40,14 @@ public class MentoringService {
     }
 
     @Transactional(readOnly = true)
+    public List<MentoringWithTagsDto> getMyMentorings(Mentor mentor) {
+        return mentoringRepository.findByMentorIdOrderByIdDesc(mentor.getId())
+            .stream()
+            .map(MentoringWithTagsDto::from)
+            .toList();
+    }
+
+    @Transactional(readOnly = true)
     public MentoringResponse getMentoring(Long mentoringId)  {
         Mentoring mentoring = mentoringStorage.findMentoring(mentoringId);
 

@@ -50,7 +50,7 @@ class PostCommentServiceTest {
             Member member = MemberFixture.create(1L, "user@test.com", "User", "password", Member.Role.MENTEE);
             Post post = createDefaultPost(member);
             Long postId = 1L;
-            CommentCreateRequest request = new CommentCreateRequest("MENTEE","테스트 댓글");
+            CommentCreateRequest request = new CommentCreateRequest("테스트 댓글");
 
             when(postRepository.findById(postId)).thenReturn(Optional.of(post));
             when(postCommentRepository.save(any(PostComment.class))).thenReturn(any(PostComment.class));
@@ -69,7 +69,7 @@ class PostCommentServiceTest {
             // given
             Member member = MemberFixture.createDefault();
             Long postId = 999L;
-            CommentCreateRequest request = new CommentCreateRequest("MENTEE","테스트 댓글");
+            CommentCreateRequest request = new CommentCreateRequest("테스트 댓글");
 
             when(postRepository.findById(postId)).thenReturn(Optional.empty());
 
