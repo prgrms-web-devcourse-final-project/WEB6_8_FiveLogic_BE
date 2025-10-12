@@ -2,6 +2,7 @@ package com.back.domain.file.video.service;
 
 import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -17,8 +18,12 @@ import java.time.Duration;
 public class S3Service {
     private final S3Presigner presigner;
     private final S3Client s3Client;
+    @Value("${aws.s3.bucket}")
+    private String bucket;
 
-    public URL generateUploadUrl(String bucket, String objectKey, Integer expireMinutes) {
+    public URL generateUploadUrl(String objectKey, Integer expireMinutes) {
+        validateRequest(objectKey);
+
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(objectKey)
@@ -33,19 +38,15 @@ public class S3Service {
             throw new ServiceException("500", "Presigned URL 생성 실패");
         }
 
-        URL url = presignedRequest.url();
-
-        return url;
+        return presignedRequest.url();
     }
 
-    public URL generateUploadUrl(String bucket, String objectKey) {
-        validateRequest(bucket, objectKey);
-
-        return generateUploadUrl(bucket, objectKey, 30);
+    public URL generateUploadUrl(String objectKey) {
+        return generateUploadUrl(objectKey, 30);
     }
 
-    public URL generateDownloadUrl(String bucket, String objectKey, Integer expireHours) {
-        isExist(bucket, objectKey);
+    public URL generateDownloadUrl(String objectKey, Integer expireMinutes) {
+        isExist(objectKey);
 
         GetObjectRequest request = GetObjectRequest.builder()
                 .bucket(bucket)
@@ -54,25 +55,22 @@ public class S3Service {
 
         PresignedGetObjectRequest presignedRequest =
                 presigner.presignGetObject(builder -> builder
-                        .signatureDuration(Duration.ofMinutes(expireHours))
+                        .signatureDuration(Duration.ofMinutes(expireMinutes))
                         .getObjectRequest(request));
 
         if (presignedRequest == null) {
             throw new ServiceException("500", "Presigned URL 생성 실패");
         }
 
-        URL url = presignedRequest.url();
-
-        return url;
+        return presignedRequest.url();
     }
 
-    public URL generateDownloadUrl(String bucket, String objectKey) {
-        validateRequest(bucket, objectKey);
-
-        return generateDownloadUrl(bucket, objectKey, 60);
+    public URL generateDownloadUrl(String objectKey) {
+        return generateDownloadUrl(objectKey, 60);
     }
 
-    public void isExist(String bucket, String objectKey) {
+    public void isExist(String objectKey) {
+        validateRequest(objectKey);
         try {
             HeadObjectRequest headRequest = HeadObjectRequest.builder()
                     .bucket(bucket)
@@ -87,9 +85,9 @@ public class S3Service {
         }
     }
 
-    public void validateRequest(String bucket, String objectKey) {
-        if (bucket == null || bucket.isEmpty() || objectKey == null || objectKey.isEmpty()) {
-            throw new ServiceException("400", "버킷 이름과 객체 키는 필수입니다.");
+    public void validateRequest(String objectKey) {
+        if (objectKey == null || objectKey.isEmpty()) {
+            throw new ServiceException("400", "객체 키는 필수입니다.");
         }
     }
 }
