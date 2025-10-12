@@ -100,7 +100,7 @@ custom: # ??? ??
     maxAge: "#{60*60*24}"  # 24??
 aws:
   s3:
-    access-key: ${AWS_ACCESS_KEY_ID}
-    secret-key: ${AWS_SECRET_ACCESS_KEY}
+    access-key: ${AWS_ACCESS_KEY_ID:local-access-key}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:local-secret-key}
     region: "ap-northeast-2"
     bucket: "fivelogic-files-bucket"
