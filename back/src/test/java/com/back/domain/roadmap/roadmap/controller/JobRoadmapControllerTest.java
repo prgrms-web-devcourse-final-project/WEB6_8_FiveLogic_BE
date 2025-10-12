@@ -129,8 +129,8 @@ class JobRoadmapControllerTest {
                 .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.msg").value("직업 로드맵 목록 조회 성공"))
                 .andExpect(jsonPath("$.data.jobRoadmaps").isArray())
-                .andExpect(jsonPath("$.data.jobRoadmaps.length()").value(2))
-                .andExpect(jsonPath("$.data.totalElements").value(2))
+                .andExpect(jsonPath("$.data.jobRoadmaps.length()").value(7))
+                .andExpect(jsonPath("$.data.totalElements").value(7))
                 .andExpect(jsonPath("$.data.totalPage").value(1))
                 .andExpect(jsonPath("$.data.currentPage").value(0))
                 .andExpect(jsonPath("$.data.hasNext").value(false));
@@ -147,8 +147,8 @@ class JobRoadmapControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.jobRoadmaps.length()").value(1))
-                .andExpect(jsonPath("$.data.totalElements").value(2))
-                .andExpect(jsonPath("$.data.totalPage").value(2))
+                .andExpect(jsonPath("$.data.totalElements").value(7))
+                .andExpect(jsonPath("$.data.totalPage").value(7))
                 .andExpect(jsonPath("$.data.currentPage").value(0));
     }
 
@@ -157,11 +157,11 @@ class JobRoadmapControllerTest {
     void getJobRoadmaps_WithKeyword() throws Exception {
         // when & then
         mvc.perform(get("/job-roadmaps")
-                        .param("keyword", "백엔드")
+                        .param("keyword", "테스트")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.jobRoadmaps.length()").value(1))
+                .andExpect(jsonPath("$.data.jobRoadmaps.length()").value(2))
                 .andExpect(jsonPath("$.data.jobRoadmaps[0].jobName").value(testJob1.getName()));
     }
 

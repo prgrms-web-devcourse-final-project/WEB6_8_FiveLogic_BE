@@ -107,9 +107,9 @@ class JobRoadmapServiceTest {
 
         // then
         assertThat(result).isNotEmpty();
-        assertThat(result).hasSize(1);
+        assertThat(result).hasSize(6);
 
-        JobRoadmapListResponse response = result.get(0);
+        JobRoadmapListResponse response = result.get(5); // 마지막에 추가된 테스트 데이터
         assertThat(response.id()).isEqualTo(testJobRoadmap.getId());
         assertThat(response.jobName()).isEqualTo(testJob.getName());
         assertThat(response.jobDescription()).isEqualTo(testJob.getDescription());
@@ -119,7 +119,7 @@ class JobRoadmapServiceTest {
     @DisplayName("직업 로드맵 다건 조회 - 페이징 및 키워드 검색")
     void getJobRoadmaps_WithPagingAndKeyword() {
         // given
-        String keyword = "백엔드";
+        String keyword = "테스트";
         int page = 0;
         int size = 10;
 
@@ -165,8 +165,8 @@ class JobRoadmapServiceTest {
         Page<JobRoadmapListResponse> result = jobRoadmapService.getJobRoadmaps(keyword, page, size);
 
         // then
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent()).hasSize(6);
+        assertThat(result.getTotalElements()).isEqualTo(6);
     }
 
     @Test
