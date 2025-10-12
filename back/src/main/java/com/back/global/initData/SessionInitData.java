@@ -43,7 +43,7 @@ public class SessionInitData {
             Mentee mentee = menteeRepository.findByMemberIdWithMember(menteeMember.getId()).orElseThrow();
 
             // 멘토링 생성
-            MentoringRequest mentoringRequest = new MentoringRequest("Test Mentoring", Arrays.asList("Java", "Spring"), "This is a test mentoring.", null);
+            MentoringRequest mentoringRequest = new MentoringRequest("Test Mentoring", Arrays.asList("Java", "Spring"), "This is a test mentoring.");
             MentoringResponse mentoringResponse = mentoringService.createMentoring(mentoringRequest, null, mentor);
 
             // 멘토 슬롯 생성

@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
@@ -236,15 +237,20 @@ class MentoringControllerTest {
         MentoringRequest reqDto = new MentoringRequest(
             "Next.js 멘토링",
             List.of("Next.js", "React"),
-            "Next.js를 활용한 프론트 개발 입문",
-            "https://example.com/thumb.jpg"
+            "Next.js를 활용한 프론트 개발 입문"
+        );
+
+        MockMultipartFile jsonPart = new MockMultipartFile(
+            "reqDto",
+            "",
+            "application/json",
+            Ut.json.toString(reqDto).getBytes(StandardCharsets.UTF_8)
         );
 
         ResultActions resultActions = mvc.perform(
-                put(MENTORING_URL + "/" + mentoring.getId())
+                multipart(HttpMethod.PUT, MENTORING_URL + "/" + mentoring.getId())
+                    .file(jsonPart)
                     .cookie(new Cookie(TOKEN, mentorToken))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(Ut.json.toString(reqDto))
             )
             .andDo(print());
 
@@ -260,8 +266,7 @@ class MentoringControllerTest {
             .andExpect(jsonPath("$.data.mentoring.title").value(reqDto.title()))
             .andExpect(jsonPath("$.data.mentoring.tags[0]").value(reqDto.tags().get(0)))
             .andExpect(jsonPath("$.data.mentoring.tags[1]").value(reqDto.tags().get(1)))
-            .andExpect(jsonPath("$.data.mentoring.bio").value(reqDto.bio()))
-            .andExpect(jsonPath("$.data.mentoring.thumb").value(reqDto.thumb()));
+            .andExpect(jsonPath("$.data.mentoring.bio").value(reqDto.bio()));
     }
 
     @Test
@@ -369,17 +374,21 @@ class MentoringControllerTest {
                     {
                         "title": "Next.js 멘토링",
                         "tags": ["Next.js", "React"],
-                        "bio": "Next.js를 활용한 프론트 개발 입문",
-                        "thumb": "https://example.com/thumb.jpg"
+                        "bio": "Next.js를 활용한 프론트 개발 입문"
                     }
                     """;
+        MockMultipartFile jsonPart = new MockMultipartFile(
+            "reqDto",
+            "",
+            "application/json",
+            req.getBytes(StandardCharsets.UTF_8)
+        );
 
         return mvc
             .perform(
-                put(MENTORING_URL + "/" + mentoringId)
+                multipart(HttpMethod.PUT, MENTORING_URL + "/" + mentoringId)
+                    .file(jsonPart)
                     .cookie(new Cookie(TOKEN, token))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(req)
             )
             .andDo(print())
             .andExpect(handler().handlerType(MentoringController.class))

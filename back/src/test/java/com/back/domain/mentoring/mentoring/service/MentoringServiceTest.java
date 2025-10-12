@@ -72,8 +72,7 @@ class MentoringServiceTest {
         request = new MentoringRequest(
             "Spring Boot 멘토링",
             List.of("Spring", "Java"),
-            "Spring Boot를 활용한 백엔드 개발 입문",
-            "https://example.com/thumb.jpg"
+            "Spring Boot를 활용한 백엔드 개발 입문"
         );
     }
 
@@ -292,14 +291,13 @@ class MentoringServiceTest {
                 .thenReturn(mentoring1);
 
             // when
-            MentoringResponse result = mentoringService.updateMentoring(mentoringId, request, mentor1);
+            MentoringResponse result = mentoringService.updateMentoring(mentoringId, request, null, mentor1);
 
             // then
             assertThat(result).isNotNull();
             assertThat(result.mentoring().title()).isEqualTo(request.title());
             assertThat(result.mentoring().bio()).isEqualTo(request.bio());
             assertThat(result.mentoring().tags()).isEqualTo(request.tags());
-            assertThat(result.mentoring().thumb()).isEqualTo(request.thumb());
 
             verify(mentoringStorage).findMentoring(mentoringId);
             verify(tagRepository).findByNameIn(request.tags());
@@ -315,7 +313,7 @@ class MentoringServiceTest {
                 .thenReturn(mentoring1);
 
             // when & then
-            assertThatThrownBy(() -> mentoringService.updateMentoring(mentoringId, request, mentor2))
+            assertThatThrownBy(() -> mentoringService.updateMentoring(mentoringId, request,null, mentor2))
                 .isInstanceOf(ServiceException.class)
                 .hasFieldOrPropertyWithValue("resultCode", MentoringErrorCode.FORBIDDEN_NOT_OWNER.getCode());
         }

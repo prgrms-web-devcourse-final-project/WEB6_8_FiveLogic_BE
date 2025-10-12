@@ -40,10 +40,9 @@ public class Mentoring extends BaseEntity {
         this.bio = bio;
     }
 
-    public void update(String title, String bio, List<Tag> tags, String thumb) {
+    public void update(String title, String bio, List<Tag> tags) {
         this.title = title;
         this.bio = bio;
-        this.thumb = thumb;
 
         updateTags(tags);
     }

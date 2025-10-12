@@ -76,17 +76,7 @@ public class MentoringService {
 
         mentoringRepository.saveAndFlush(mentoring);
 
-        if (thumb != null && !thumb.isEmpty()) {
-            String imageUrl = null;
-            try {
-                String path = "mentoring/" + mentoring.getId();
-                imageUrl = s3ImageUploader.upload(thumb, path);
-            } catch (IOException e) {
-                throw new ServiceException(ImageErrorCode.IMAGE_UPLOAD_FAILED);
-            }
-
-            mentoring.updateThumb(imageUrl);
-        }
+        uploadThumb(thumb, mentoring);
 
         return new MentoringResponse(
             MentoringDetailDto.from(mentoring),
@@ -95,7 +85,7 @@ public class MentoringService {
     }
 
     @Transactional
-    public MentoringResponse updateMentoring(Long mentoringId, MentoringRequest reqDto, Mentor mentor) {
+    public MentoringResponse updateMentoring(Long mentoringId, MentoringRequest reqDto, MultipartFile thumb, Mentor mentor) {
         Mentoring mentoring = mentoringStorage.findMentoring(mentoringId);
 
         validateOwner(mentoring, mentor);
@@ -103,7 +93,8 @@ public class MentoringService {
 
         List<Tag> tags = getOrCreateTags(reqDto.tags());
 
-        mentoring.update(reqDto.title(), reqDto.bio(), tags, reqDto.thumb());
+        mentoring.update(reqDto.title(), reqDto.bio(), tags);
+        uploadThumb(thumb, mentoring);
 
         return new MentoringResponse(
             MentoringDetailDto.from(mentoring),
@@ -159,6 +150,23 @@ public class MentoringService {
             tagRepository.saveAll(newTags);
         }
         return newTags;
+    }
+
+
+    // ===== 썸네일 =====
+
+    private void uploadThumb(MultipartFile thumb, Mentoring mentoring) {
+        if (thumb != null && !thumb.isEmpty()) {
+            String imageUrl = null;
+            try {
+                String path = "mentoring/" + mentoring.getId();
+                imageUrl = s3ImageUploader.upload(thumb, path);
+            } catch (IOException e) {
+                throw new ServiceException(ImageErrorCode.IMAGE_UPLOAD_FAILED);
+            }
+
+            mentoring.updateThumb(imageUrl);
+        }
     }
 
 
