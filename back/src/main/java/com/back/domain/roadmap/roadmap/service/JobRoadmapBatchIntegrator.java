@@ -18,7 +18,7 @@ public class JobRoadmapBatchIntegrator {
     private final JobRoadmapIntegrationProcessor processor;
     private static final int MAX_RETRY = 3;
 
-    @Scheduled(fixedDelay = 120000)  // 2분
+    @Scheduled(fixedDelay = 3600000)  // 1시간 (3600000ms)
     public void integrate() {
         List<JobRoadmapIntegrationQueue> pendingQueues = queueRepository.findAllOrderByRequestedAt();
 

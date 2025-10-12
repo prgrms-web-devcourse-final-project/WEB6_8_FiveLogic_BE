@@ -2,6 +2,7 @@ package com.back.domain.roadmap.roadmap.service;
 
 import com.back.domain.job.job.entity.Job;
 import com.back.domain.job.job.repository.JobRepository;
+import com.back.domain.roadmap.roadmap.dto.response.TextFieldIntegrationResponse;
 import com.back.domain.roadmap.roadmap.entity.JobRoadmap;
 import com.back.domain.roadmap.roadmap.entity.JobRoadmapNodeStat;
 import com.back.domain.roadmap.roadmap.entity.MentorRoadmap;
@@ -33,6 +34,7 @@ public class JobRoadmapIntegrationServiceV2 {
     private final TaskRepository taskRepository;
     private final JobRoadmapNodeStatRepository jobRoadmapNodeStatRepository;
     private final com.back.domain.roadmap.roadmap.repository.RoadmapNodeRepository roadmapNodeRepository;
+    private final TextFieldIntegrationService textFieldIntegrationService;
 
     // --- 통합 알고리즘 상수 ---
     private final double BRANCH_THRESHOLD = 0.25;
@@ -280,11 +282,20 @@ public class JobRoadmapIntegrationServiceV2 {
             Double avgImportance = calculateAverage(aggregation.descriptions.importances.get(key));
             Integer avgEstimatedHours = calculateIntegerAverage(aggregation.descriptions.estimatedHours.get(key));
 
+            List<String> advices = aggregation.descriptions.getLearningAdvices().getOrDefault(key, Collections.emptyList());
+            List<String> resources = aggregation.descriptions.getRecommendedResources().getOrDefault(key, Collections.emptyList());
+            List<String> goals = aggregation.descriptions.getLearningGoals().getOrDefault(key, Collections.emptyList());
+
+            TextFieldIntegrationResponse integratedTexts = textFieldIntegrationService.integrateTextFields(advices, resources, goals);
+
             RoadmapNode node = RoadmapNode.builder()
                     .taskName(aggNode.displayName)
-                    .learningAdvice(mergeTopDescriptions(aggregation.descriptions.learningAdvices.get(key)))
-                    .recommendedResources(mergeTopDescriptions(aggregation.descriptions.recommendedResources.get(key)))
-                    .learningGoals(mergeTopDescriptions(aggregation.descriptions.learningGoals.get(key)))
+                    //.learningAdvice(mergeTopDescriptions(aggregation.descriptions.learningAdvices.get(key)))
+                    .learningAdvice(integratedTexts.learningAdvice())
+                    //.recommendedResources(mergeTopDescriptions(aggregation.descriptions.recommendedResources.get(key)))
+                    .recommendedResources(integratedTexts.recommendedResources())
+                    //.learningGoals(mergeTopDescriptions(aggregation.descriptions.learningGoals.get(key)))
+                    .learningGoals(integratedTexts.learningGoals())
                     .difficulty(avgDifficulty != null ? avgDifficulty.intValue() : null)
                     .importance(avgImportance != null ? avgImportance.intValue() : null)
                     .estimatedHours(avgEstimatedHours)

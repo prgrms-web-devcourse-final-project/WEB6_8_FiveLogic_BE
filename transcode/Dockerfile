@@ -9,10 +9,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY consumer.py .
 
 ENV KAFKA_TOPIC=s3-events
-ENV KAFKA_BOOTSTRAP=kafka:9092
-ENV MINIO_ENDPOINT=http://minio:9000
-ENV MINIO_ACCESS_KEY=minioadmin
-ENV MINIO_SECRET_KEY=minioadmin
+ENV KAFKA_BOOTSTRAP=kafka:29092
 ENV DOWNLOAD_DIR=/downloads
 
 VOLUME ["/downloads"]

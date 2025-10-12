@@ -18,14 +18,14 @@ public class FileManager {
     public PresignedUrlResponse getUploadUrl() {
         String uuid = UUID.randomUUID().toString();
         Integer expires = 5;
-        URL url = s3Service.generateUploadUrl("videos", uuid, expires);
+        URL url = s3Service.generateUploadUrl("videos/"+uuid, expires);
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(expires);
         return new PresignedUrlResponse(url, expiresAt);
     }
 
     public PresignedUrlResponse getDownloadUrl(String objectKey) {
         Integer expires = 60;
-        URL url = s3Service.generateDownloadUrl("videos", objectKey, expires);
+        URL url = s3Service.generateDownloadUrl(objectKey, expires);
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(expires);
         return new PresignedUrlResponse(url, expiresAt);
     }

@@ -41,13 +41,15 @@ public interface MentorRoadmapRepository extends JpaRepository<MentorRoadmap, Lo
     boolean existsByMentor(Mentor mentor);
 
     /**
-     * 직업 ID로 멘토 로드맵 목록 조회 (노드 포함)
+     * 직업 ID로 멘토 로드맵 목록 조회 (노드 및 Task 포함)
      * - 특정 직업에 속한 멘토들의 로드맵 목록 조회
      * - 통합된 직업 로드맵 생성용
+     * - Task까지 fetch하여 트랜잭션 외부에서도 접근 가능하도록 보장
      */
     @Query("""
-    SELECT mr FROM MentorRoadmap mr
+    SELECT DISTINCT mr FROM MentorRoadmap mr
     LEFT JOIN FETCH mr.nodes n
+    LEFT JOIN FETCH n.task t
     WHERE mr.mentor.jobId = :jobId
     ORDER BY mr.id, n.stepOrder
     """)
