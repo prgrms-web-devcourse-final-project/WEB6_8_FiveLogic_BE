@@ -25,7 +25,7 @@ public class TextFieldIntegrationService {
     private final ObjectMapper objectMapper;
 
     // 배치 처리 시 한 번에 처리할 노드 개수 (TPM 제한 고려)
-    private static final int BATCH_SIZE = 15;
+    private static final int BATCH_SIZE = 10;
 
     public TextFieldIntegrationResponse integrateTextFields(List<String> learningAdvices, List<String> recommendedResources, List<String> learningGoals) {
         String systemPrompt = """
@@ -40,15 +40,12 @@ public class TextFieldIntegrationService {
             {
                 "learningAdvice": "통합되고 정제된 학습 조언 (문자열, 400자 이내)",
                 "recommendedResources": "추천 자료1\\n추천 자료2\\n추천 자료3 (줄바꿈으로 구분된 문자열)",
-                "learningGoals": "- 목표1\\n- 목표2\\n- 목표3\\n\\n이 단계를 마치면... (리스트 + 설명)"
+                "learningGoals": "- 목표1\\n- 목표2\\n- 목표3 (목표 리스트만)"
             }
             4. 각 필드 작성 규칙:
                - learningAdvice: 핵심 내용을 충분히 설명, 400자 이내로 작성
                - recommendedResources: 각 자료를 줄바꿈(\\n)으로 구분, 최대 5개까지
-               - learningGoals:
-                 * 첫 부분: 목표 리스트 (각 목표 앞에 "- " 붙이고 줄바꿈으로 구분, 최대 5개)
-                 * 빈 줄 (\\n\\n)
-                 * 두 번째 부분: 목표 달성 시 얻을 수 있는 것에 대한 설명 (200자 이내)
+               - learningGoals: 목표 리스트만 작성 (각 목표 앞에 "- " 붙이고 줄바꿈으로 구분, 최대 5개)
             5. 입력 데이터가 없거나 불충분한 경우, 해당 필드에는 "정보 없음"이라고 기재합니다.
             """;
 
@@ -146,17 +143,14 @@ public class TextFieldIntegrationService {
                 "nodeKey": "노드 키",
                 "learningAdvice": "통합되고 정제된 학습 조언 (문자열, 400자 이내)",
                 "recommendedResources": "추천 자료1\\n추천 자료2\\n추천 자료3 (줄바꿈으로 구분된 문자열)",
-                "learningGoals": "- 목표1\\n- 목표2\\n- 목표3\\n\\n이 단계를 마치면... (리스트 + 설명)"
+                "learningGoals": "- 목표1\\n- 목표2\\n- 목표3 (목표 리스트만)"
               },
               ...
             ]
             4. 각 필드 작성 규칙:
                - learningAdvice: 핵심 내용을 충분히 설명, 400자 이내로 작성
                - recommendedResources: 각 자료를 줄바꿈(\\n)으로 구분, 최대 5개까지
-               - learningGoals:
-                 * 첫 부분: 목표 리스트 (각 목표 앞에 "- " 붙이고 줄바꿈으로 구분, 최대 5개)
-                 * 빈 줄 (\\n\\n)
-                 * 두 번째 부분: 목표 달성 시 얻을 수 있는 것에 대한 설명 (200자 이내)
+               - learningGoals: 목표 리스트만 작성 (각 목표 앞에 "- " 붙이고 줄바꿈으로 구분, 최대 5개)
             5. **중요**: 모든 필드는 문자열(String) 타입이어야 합니다. 배열이 아닙니다.
             6. 입력 데이터가 없거나 불충분한 경우, 해당 필드에는 null을 기재합니다.
             7. 모든 노드에 대해 반드시 응답을 생성하세요.
