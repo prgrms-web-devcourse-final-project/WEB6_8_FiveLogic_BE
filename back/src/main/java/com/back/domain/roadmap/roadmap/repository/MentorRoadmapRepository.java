@@ -48,7 +48,7 @@ public interface MentorRoadmapRepository extends JpaRepository<MentorRoadmap, Lo
     @Query("""
     SELECT mr FROM MentorRoadmap mr
     LEFT JOIN FETCH mr.nodes n
-    WHERE mr.mentor.jobId = :jobId
+    WHERE mr.mentor.job.id = :jobId
     ORDER BY mr.id, n.stepOrder
     """)
     List<MentorRoadmap> findAllByMentorJobIdWithNodes(@Param("jobId") Long jobId);

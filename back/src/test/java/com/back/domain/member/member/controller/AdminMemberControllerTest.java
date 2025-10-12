@@ -1,26 +1,25 @@
 package com.back.domain.member.member.controller;
 
+import com.back.domain.member.member.dto.MenteeUpdateRequest;
+import com.back.domain.member.member.dto.MentorUpdateRequest;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.http.MediaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.back.domain.member.member.dto.MentorUpdateRequest;
-import com.back.domain.member.member.dto.MenteeUpdateRequest;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -104,8 +103,10 @@ public class AdminMemberControllerTest {
         result
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.role").value("MENTEE"))
-                .andExpect(jsonPath("$.data.interestedField").exists()) // 희망직업 필드 존재 확인
-                .andExpect(jsonPath("$.data.careerYears").doesNotExist()); // 멘티는 연차 없음
+                .andExpect(jsonPath("$.data.job").value("Backend")) // 희망직업 확인
+                .andExpect(jsonPath("$.data.careerYears").doesNotExist()) // 멘티는 연차 없음
+                .andExpect(jsonPath("$.data.menteeId").exists()) // 멘티 ID 존재 확인
+                .andExpect(jsonPath("$.data.mentorId").doesNotExist()); // 멘토 ID는 없음
     }
 
     @Test
@@ -124,9 +125,10 @@ public class AdminMemberControllerTest {
         result
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.role").value("MENTOR"))
-                .andExpect(jsonPath("$.data.career").exists()) // 직업 필드 존재 확인
+                .andExpect(jsonPath("$.data.job").value("Backend")) // 직업 확인
                 .andExpect(jsonPath("$.data.careerYears").value(5)) // 연차 확인
-                .andExpect(jsonPath("$.data.interestedField").doesNotExist()); // 멘토는 희망직업 없음
+                .andExpect(jsonPath("$.data.mentorId").exists()) // 멘토 ID 존재 확인
+                .andExpect(jsonPath("$.data.menteeId").doesNotExist()); // 멘티 ID는 없음
     }
 
     @Test

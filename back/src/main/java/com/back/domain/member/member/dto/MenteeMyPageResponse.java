@@ -8,7 +8,7 @@ public record MenteeMyPageResponse(
         String email,
         String name,
         String nickname,
-        Long jobId
+        String job
 ) {
     public static MenteeMyPageResponse from(Member member, Mentee mentee) {
         return new MenteeMyPageResponse(
@@ -16,7 +16,7 @@ public record MenteeMyPageResponse(
                 member.getEmail(),
                 member.getName(),
                 member.getNickname(),
-                mentee.getJobId()
+                mentee.getJob().getName()
         );
     }
 }

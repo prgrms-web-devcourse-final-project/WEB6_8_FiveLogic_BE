@@ -522,7 +522,7 @@ public class RoadmapInitData {
 
         Mentor updatedMentor = Mentor.builder()
                 .member(mentor.getMember())
-                .jobId(job.getId())
+                .job(job)
                 .careerYears(mentor.getCareerYears())
                 .rate(mentor.getRate())
                 .build();
