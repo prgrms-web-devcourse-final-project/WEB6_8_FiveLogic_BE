@@ -41,8 +41,18 @@ services:
       - app-network
     restart: unless-stopped
 
-volumes:
-  minio-data:
+  transcode:
+    build: ./transcode
+    container_name: transcode
+    depends_on:
+      - kafka
+    env_file:
+      - ./back/.env.default
+    environment:
+      - KAFKA_BOOTSTRAP=kafka:29092
+    networks:
+      - app-network
+    restart: unless-stopped
 
 networks:
   app-network:
