@@ -96,29 +96,56 @@ public class TextFieldIntegrationService {
             int endIndex = Math.min(i + BATCH_SIZE, entries.size());
             List<Map.Entry<String, NodeTextData>> batch = entries.subList(i, endIndex);
 
+            // 첫 배치가 아니면 TPM 제한 준수를 위해 1분 대기
+            if (i > 0) {
+                try {
+                    log.info("TPM 제한 준수를 위해 60초 대기...");
+                    Thread.sleep(60000);  // 1분 (60000ms)
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    log.warn("배치 간 대기 중 인터럽트 발생", e);
+                }
+            }
+
             log.info("배치 처리 중: {}-{}/{}", i + 1, endIndex, entries.size());
 
             try {
                 Map<String, TextFieldIntegrationResponse> batchResults = processBatch(batch);
                 results.putAll(batchResults);
             } catch (Exception e) {
-                log.error("배치 처리 실패: {}-{}, 에러: {}", i + 1, endIndex, e.getMessage());
-                // 실패한 배치는 개별 처리로 폴백
-                for (Map.Entry<String, NodeTextData> entry : batch) {
+                log.error("배치 처리 실패: {}-{}, 개별 처리로 폴백 (TPM 제한 준수를 위해 딜레이 추가)", i + 1, endIndex);
+                log.error("배치 실패 원인: {}", e.getMessage());
+
+                // 실패한 배치는 개별 처리로 폴백 (TPM 초과 방지를 위해 딜레이 추가)
+                for (int j = 0; j < batch.size(); j++) {
+                    Map.Entry<String, NodeTextData> entry = batch.get(j);
+
                     try {
+                        // TPM 제한 준수: 개별 처리 간 6초 대기 (10개 × 6초 = 60초)
+                        if (j > 0) {
+                            log.debug("개별 폴백 TPM 제한 준수: 6초 대기 ({}/{})", j + 1, batch.size());
+                            Thread.sleep(6000);
+                        }
+
                         NodeTextData data = entry.getValue();
                         TextFieldIntegrationResponse response = integrateTextFields(
-                            data.advices(),
-                            data.resources(),
-                            data.goals()
+                                data.advices(),
+                                data.resources(),
+                                data.goals()
                         );
                         results.put(entry.getKey(), response);
+                        log.debug("개별 폴백 성공: key={} ({}/{})", entry.getKey(), j + 1, batch.size());
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        log.warn("개별 폴백 대기 중 인터럽트 발생: key={}", entry.getKey());
+                        results.put(entry.getKey(), new TextFieldIntegrationResponse(null, null, null));
                     } catch (Exception ex) {
                         log.error("개별 처리도 실패: key={}, 에러={}", entry.getKey(), ex.getMessage());
                         // 최후의 폴백: 빈 응답
                         results.put(entry.getKey(), new TextFieldIntegrationResponse(null, null, null));
                     }
                 }
+                log.info("개별 폴백 처리 완료: {}개 노드", batch.size());
             }
         }
 
@@ -227,20 +254,20 @@ public class TextFieldIntegrationService {
      * AI 응답 JSON을 파싱하여 Map으로 변환
      */
     private Map<String, TextFieldIntegrationResponse> parseBatchResponse(
-        String responseJson,
-        List<Map.Entry<String, NodeTextData>> batch
+            String responseJson,
+            List<Map.Entry<String, NodeTextData>> batch
     ) {
         try {
             // JSON 배열 파싱
             List<BatchResponseItem> items = objectMapper.readValue(
-                responseJson,
-                new TypeReference<List<BatchResponseItem>>() {}
+                    responseJson,
+                    new TypeReference<List<BatchResponseItem>>() {}
             );
 
             // 응답 검증: 요청한 노드 키 수집
             Set<String> requestedKeys = batch.stream()
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toSet());
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toSet());
 
             Map<String, TextFieldIntegrationResponse> results = new HashMap<>();
             Set<String> respondedKeys = new HashSet<>();
@@ -256,12 +283,12 @@ public class TextFieldIntegrationService {
                 }
 
                 results.put(
-                    nodeKey,
-                    new TextFieldIntegrationResponse(
-                        item.learningAdvice(),
-                        item.recommendedResources(),
-                        item.learningGoals()
-                    )
+                        nodeKey,
+                        new TextFieldIntegrationResponse(
+                                item.learningAdvice(),
+                                item.recommendedResources(),
+                                item.learningGoals()
+                        )
                 );
             }
 
@@ -293,9 +320,9 @@ public class TextFieldIntegrationService {
      * 노드 하나의 텍스트 데이터
      */
     public record NodeTextData(
-        List<String> advices,
-        List<String> resources,
-        List<String> goals
+            List<String> advices,
+            List<String> resources,
+            List<String> goals
     ) {}
 
     /**

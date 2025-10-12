@@ -58,7 +58,7 @@ public class RoadmapTreeBuilder {
     private Map<String, RoadmapNode> createNodes(RoadmapAggregator.AggregationResult aggregation, Map<Long, Task> taskMap) {
         // 1단계: 텍스트 필드 배치 통합
         Map<String, TextFieldIntegrationResponse> integratedTextsMap =
-            integrateTextFieldsBatch(aggregation);
+                integrateTextFieldsBatch(aggregation);
 
         // 2단계: 통합된 텍스트로 노드 생성
         return buildNodesFromIntegratedTexts(aggregation, taskMap, integratedTextsMap);
@@ -71,7 +71,7 @@ public class RoadmapTreeBuilder {
      * @return key: 노드 키, value: 통합된 텍스트 필드
      */
     private Map<String, TextFieldIntegrationResponse> integrateTextFieldsBatch(
-        RoadmapAggregator.AggregationResult aggregation
+            RoadmapAggregator.AggregationResult aggregation
     ) {
         // 텍스트 데이터가 있는 노드만 수집
         Map<String, TextFieldIntegrationService.NodeTextData> nodeTextsMap = new HashMap<>();
@@ -79,16 +79,16 @@ public class RoadmapTreeBuilder {
 
         aggregation.agg.forEach((key, aggNode) -> {
             List<String> advices = aggregation.descriptions.getLearningAdvices()
-                .getOrDefault(key, Collections.emptyList());
+                    .getOrDefault(key, Collections.emptyList());
             List<String> resources = aggregation.descriptions.getRecommendedResources()
-                .getOrDefault(key, Collections.emptyList());
+                    .getOrDefault(key, Collections.emptyList());
             List<String> goals = aggregation.descriptions.getLearningGoals()
-                .getOrDefault(key, Collections.emptyList());
+                    .getOrDefault(key, Collections.emptyList());
 
             // 텍스트 데이터가 하나라도 있으면 배치에 포함
             if (!advices.isEmpty() || !resources.isEmpty() || !goals.isEmpty()) {
                 nodeTextsMap.put(key, new TextFieldIntegrationService.NodeTextData(
-                    advices, resources, goals
+                        advices, resources, goals
                 ));
             } else {
                 // 빈 데이터는 AI 호출 없이 빈 응답으로 처리
@@ -100,10 +100,18 @@ public class RoadmapTreeBuilder {
         Map<String, TextFieldIntegrationResponse> integratedTextsMap = new HashMap<>();
 
         if (!nodeTextsMap.isEmpty()) {
-            log.info("배치 텍스트 통합 시작: {}개 노드 (빈 데이터 {}개 제외)",
-                nodeTextsMap.size(), emptyResponseMap.size());
-            integratedTextsMap.putAll(textFieldIntegrationService.integrateBatch(nodeTextsMap));
-            log.info("배치 텍스트 통합 완료");
+            try {
+                log.info("배치 텍스트 통합 시작: {}개 노드 (빈 데이터 {}개 제외)",
+                        nodeTextsMap.size(), emptyResponseMap.size());
+                integratedTextsMap.putAll(textFieldIntegrationService.integrateBatch(nodeTextsMap));
+                log.info("배치 텍스트 통합 완료");
+            } catch (Exception e) {
+                log.error("배치 텍스트 통합 실패, 모든 노드에 빈 응답 적용: {}", e.getMessage(), e);
+                // AI 호출 실패해도 통합은 계속 진행 (빈 응답으로 대체)
+                nodeTextsMap.keySet().forEach(key ->
+                        integratedTextsMap.put(key, new TextFieldIntegrationResponse(null, null, null))
+                );
+            }
         } else {
             log.info("텍스트 데이터가 없어 AI 호출 생략 (모든 노드 빈 데이터)");
         }
@@ -123,9 +131,9 @@ public class RoadmapTreeBuilder {
      * @return key: 노드 키, value: 생성된 노드
      */
     private Map<String, RoadmapNode> buildNodesFromIntegratedTexts(
-        RoadmapAggregator.AggregationResult aggregation,
-        Map<Long, Task> taskMap,
-        Map<String, TextFieldIntegrationResponse> integratedTextsMap
+            RoadmapAggregator.AggregationResult aggregation,
+            Map<Long, Task> taskMap,
+            Map<String, TextFieldIntegrationResponse> integratedTextsMap
     ) {
         Map<String, RoadmapNode> keyToNode = new HashMap<>();
 
@@ -177,7 +185,14 @@ public class RoadmapTreeBuilder {
                 if (i == 0) {
                     chosen.add(childKey);
                 } else {
-                    double ratio = (double) transitionCount / aggregation.agg.get(parentKey).count;
+                    // NPE 방어: parentKey가 agg에 없는 경우 처리 (데이터 정합성 오류)
+                    RoadmapAggregator.AggregatedNode parentAggNode = aggregation.agg.get(parentKey);
+                    if (parentAggNode == null) {
+                        log.warn("데이터 정합성 오류: parentKey={}가 집계 데이터에 없음, childKey={} skip",
+                                parentKey, childKey);
+                        continue;
+                    }
+                    double ratio = (double) transitionCount / parentAggNode.count;
                     if (ratio >= BRANCH_THRESHOLD) {
                         chosen.add(childKey);
                     }
@@ -229,6 +244,13 @@ public class RoadmapTreeBuilder {
         while (!q.isEmpty()) {
             String pk = q.poll();
             RoadmapNode parentNode = result.keyToNode.get(pk);
+
+            // NPE 방어: parentNode가 없는 경우 처리
+            if (parentNode == null) {
+                log.warn("부모 노드가 keyToNode 맵에 없음: parentKey={}, skip", pk);
+                continue;
+            }
+
             List<String> childs = parentEval.chosenChildren.getOrDefault(pk, Collections.emptyList());
             int order = 1;
             for (String ck : childs) {

@@ -49,23 +49,65 @@ public class JobRoadmapIntegrationServiceV3 {
     // Public API
     // ========================================
 
-    @Transactional
+    /**
+     * 직업 로드맵 통합 (DB 커넥션 점유 시간 감소를 위해 AI 호출을 트랜잭션 밖에서 수행)
+     *
+     * 트랜잭션 전략:
+     * 1. 짧은 트랜잭션으로 데이터 로드 (읽기 전용)
+     * 2. 트랜잭션 외부에서 AI 호출 (DB 커넥션 미사용)
+     * 3. 짧은 트랜잭션으로 기존 로드맵 삭제 + 새 로드맵 저장 (쓰기)
+     */
     public JobRoadmap integrateJobRoadmap(Long jobId) {
-        // 1. 데이터 준비
-        Job job = validateAndGetJob(jobId);
-        deleteExistingJobRoadmap(job);
-        List<MentorRoadmap> mentorRoadmaps = loadAndFilterMentorRoadmaps(jobId);
+        // 1. 데이터 로드 (짧은 읽기 전용 트랜잭션)
+        IntegrationData data = loadIntegrationData(jobId);
 
-        // 2. 통계 집계
-        RoadmapAggregator.AggregationResult aggregation = roadmapAggregator.aggregate(mentorRoadmaps);
+        // 2. 메모리 집계 (트랜잭션 외부)
+        RoadmapAggregator.AggregationResult aggregation = roadmapAggregator.aggregate(data.mentorRoadmaps);
 
-        // 3. Task prefetch 및 트리 구성
+        // 3. Task prefetch (트랜잭션 외부, 읽기만 수행)
         Map<Long, Task> taskMap = prefetchTasks(aggregation);
+
+        // 4. 트리 구성 및 AI 호출 (트랜잭션 외부, 6-10분 소요)
+        // 이 시간 동안 DB 커넥션은 사용하지 않음
         RoadmapTreeBuilder.TreeBuildResult treeResult = roadmapTreeBuilder.build(aggregation, taskMap);
 
-        // 4. 로그 및 영속화
+        // 5. 로그
         logOrphanNodes(treeResult, aggregation);
-        return persistJobRoadmap(job, treeResult, aggregation);
+
+        // 6. 기존 로드맵 삭제 + 새 로드맵 저장 (짧은 쓰기 트랜잭션)
+        return replaceJobRoadmap(data.job, treeResult, aggregation);
+    }
+
+    /**
+     * 통합에 필요한 데이터 로드 (짧은 읽기 전용 트랜잭션)
+     */
+    @Transactional(readOnly = true)
+    public IntegrationData loadIntegrationData(Long jobId) {
+        Job job = validateAndGetJob(jobId);
+        List<MentorRoadmap> mentorRoadmaps = loadAndFilterMentorRoadmaps(jobId);
+        return new IntegrationData(job, mentorRoadmaps);
+    }
+
+    /**
+     * 기존 로드맵 삭제 후 새 로드맵 저장 (짧은 쓰기 트랜잭션)
+     *
+     * 트랜잭션 시간: 약 0.5초
+     * - DELETE: 기존 JobRoadmap, RoadmapNode, JobRoadmapNodeStat
+     * - INSERT: 새 JobRoadmap, RoadmapNode, JobRoadmapNodeStat
+     * - COMMIT
+     *
+     * 조회 불가 구간: DELETE 실행 ~ INSERT 완료 (약 50ms, COMMIT 시점)
+     */
+    @Transactional
+    public JobRoadmap replaceJobRoadmap(Job job, RoadmapTreeBuilder.TreeBuildResult treeResult, RoadmapAggregator.AggregationResult aggregation) {
+        // 1. 기존 로드맵 삭제
+        deleteExistingJobRoadmap(job);
+
+        // 2. 새 로드맵 저장
+        JobRoadmap newRoadmap = persistJobRoadmap(job, treeResult, aggregation);
+
+        log.info("JobRoadmap 교체 완료: jobId={}, 새 로드맵 id={}", job.getId(), newRoadmap.getId());
+        return newRoadmap;
     }
 
 
@@ -313,4 +355,14 @@ public class JobRoadmapIntegrationServiceV3 {
         // 복합 점수 (노드 개수 30%, 표준화율 70%)
         return QUALITY_NODE_COUNT_WEIGHT * nodeScore + QUALITY_STANDARDIZATION_WEIGHT * standardizationScore;
     }
+
+
+    // ========================================
+    // 데이터 전달용 DTO
+    // ========================================
+
+    /**
+     * 통합에 필요한 데이터를 트랜잭션 간 전달하기 위한 컨테이너
+     */
+    private record IntegrationData(Job job, List<MentorRoadmap> mentorRoadmaps) {}
 }
