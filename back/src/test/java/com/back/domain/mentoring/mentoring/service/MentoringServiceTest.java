@@ -27,7 +27,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.io.IOException;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,6 +52,9 @@ class MentoringServiceTest {
 
     @Mock
     private MentoringStorage mentoringStorage;
+
+    @Mock
+    private S3ImageUploader s3ImageUploader;
 
     private Mentor mentor1, mentor2;
     private Mentoring mentoring1;
@@ -199,17 +205,58 @@ class MentoringServiceTest {
                 .thenReturn(false);
 
             // when
-            MentoringResponse result = mentoringService.createMentoring(request, mentor1);
+            MentoringResponse result = mentoringService.createMentoring(request, null, mentor1);
 
             // then
             assertThat(result).isNotNull();
             assertThat(result.mentoring().title()).isEqualTo(request.title());
             assertThat(result.mentoring().bio()).isEqualTo(request.bio());
             assertThat(result.mentoring().tags()).isEqualTo(request.tags());
-            assertThat(result.mentoring().thumb()).isEqualTo(request.thumb());
             verify(mentoringRepository).existsByMentorIdAndTitle(mentor1.getId(), request.title());
             verify(tagRepository).findByNameIn(request.tags());
-            verify(mentoringRepository).save(any(Mentoring.class));
+            verify(mentoringRepository).saveAndFlush(any(Mentoring.class));
+        }
+
+        @Test
+        @DisplayName("생성 성공 - 썸네일 포함")
+        void createMentoringWithImage() throws IOException {
+            // given
+            List<Tag> tags = TagFixture.createDefaultTags();
+            MockMultipartFile image = new MockMultipartFile(
+                "thumb",
+                "test.jpg",
+                "image/jpeg",
+                "test-image-content".getBytes()
+            );
+            String expectedImageUrl = "https://fivelogic-files-bucket.s3.amazonaws.com/images/mentoring/%d".formatted(mentoring1.getId());
+
+            when(tagRepository.findByNameIn(request.tags()))
+                .thenReturn(tags);
+            when(mentoringRepository.existsByMentorIdAndTitle(mentor1.getId(), request.title()))
+                .thenReturn(false);
+            when(mentoringRepository.saveAndFlush(any(Mentoring.class)))
+                .thenAnswer(invocation -> {
+                    Mentoring mentoring = invocation.getArgument(0);
+                    ReflectionTestUtils.setField(mentoring, "id", mentoring1.getId());
+                    return mentoring;
+                });
+            when(s3ImageUploader.upload(eq(image), anyString()))
+                .thenReturn(expectedImageUrl);
+
+            // when
+            MentoringResponse result = mentoringService.createMentoring(request, image, mentor1);
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.mentoring().title()).isEqualTo(request.title());
+            assertThat(result.mentoring().bio()).isEqualTo(request.bio());
+            assertThat(result.mentoring().tags()).isEqualTo(request.tags());
+            assertThat(result.mentoring().thumb()).isEqualTo(expectedImageUrl);
+
+            verify(mentoringRepository).existsByMentorIdAndTitle(mentor1.getId(), request.title());
+            verify(tagRepository).findByNameIn(request.tags());
+            verify(mentoringRepository).saveAndFlush(any(Mentoring.class));
+            verify(s3ImageUploader).upload(eq(image), eq("mentoring/1"));
         }
 
         @Test
@@ -220,7 +267,7 @@ class MentoringServiceTest {
                 .thenReturn(true);
 
             // when & then
-            assertThatThrownBy(() -> mentoringService.createMentoring(request, mentor1))
+            assertThatThrownBy(() -> mentoringService.createMentoring(request, null, mentor1))
                 .isInstanceOf(ServiceException.class)
                 .hasFieldOrPropertyWithValue("resultCode", MentoringErrorCode.ALREADY_EXISTS_MENTORING.getCode());
             verify(mentoringRepository).existsByMentorIdAndTitle(mentor1.getId(), request.title());

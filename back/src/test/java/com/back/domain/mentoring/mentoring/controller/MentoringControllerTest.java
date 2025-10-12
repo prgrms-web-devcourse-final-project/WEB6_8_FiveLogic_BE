@@ -20,11 +20,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -340,17 +342,22 @@ class MentoringControllerTest {
                     {
                         "title": "Spring Boot 멘토링",
                         "tags": ["Spring", "Java"],
-                        "bio": "Spring Boot를 활용한 백엔드 개발 입문",
-                        "thumb": "https://example.com/thumb.jpg"
+                        "bio": "Spring Boot를 활용한 백엔드 개발 입문"
                     }
                     """;
 
+        MockMultipartFile jsonPart = new MockMultipartFile(
+            "reqDto",
+            null,
+            MediaType.APPLICATION_JSON_VALUE,
+            req.getBytes(StandardCharsets.UTF_8)
+        );
+
         return mvc
             .perform(
-                post(MENTORING_URL)
+                multipart(MENTORING_URL)
+                    .file(jsonPart)
                     .cookie(new Cookie(TOKEN, token))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(req)
             )
             .andDo(print())
             .andExpect(handler().handlerType(MentoringController.class))

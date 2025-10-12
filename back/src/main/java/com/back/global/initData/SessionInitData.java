@@ -16,7 +16,6 @@ import com.back.domain.mentoring.slot.dto.response.MentorSlotResponse;
 import com.back.domain.mentoring.slot.service.MentorSlotService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.time.LocalDateTime;
@@ -45,7 +44,7 @@ public class SessionInitData {
 
             // 멘토링 생성
             MentoringRequest mentoringRequest = new MentoringRequest("Test Mentoring", Arrays.asList("Java", "Spring"), "This is a test mentoring.", null);
-            MentoringResponse mentoringResponse = mentoringService.createMentoring(mentoringRequest, mentor);
+            MentoringResponse mentoringResponse = mentoringService.createMentoring(mentoringRequest, null, mentor);
 
             // 멘토 슬롯 생성
             MentorSlotRequest mentorSlotRequest = new MentorSlotRequest(mentor.getId(), LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(1).plusHours(1));
