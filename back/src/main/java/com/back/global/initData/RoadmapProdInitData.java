@@ -66,7 +66,7 @@ public class RoadmapProdInitData {
             log.info(">>> Step 3: JobRoadmap 샘플 데이터 생성 완료");
         } catch (Exception e) {
             log.error("JobRoadmap 샘플 데이터 생성 실패", e);
-            throw e;
+            //throw e;
         }
 
         // 통합 로직 테스트
