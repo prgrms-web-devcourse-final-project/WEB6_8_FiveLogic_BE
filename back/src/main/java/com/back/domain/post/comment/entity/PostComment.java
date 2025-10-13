@@ -37,6 +37,10 @@ public class PostComment extends BaseEntity {
         return member.getName();
     }
 
+    public Long getAuthorId() {
+        return member.getId();
+    }
+
     @Builder
     public PostComment(Post post, String content, Member member, String role) {
         this.post = post;
