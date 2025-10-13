@@ -83,14 +83,14 @@ public class MentorRoadmapService {
     // 로드맵 ID로 멘토 로드맵 상세 조회
     @Transactional(readOnly = true)
     public MentorRoadmapResponse getById(Long id) {
-        // 로드맵과 노드들을 한 번에 조회 (성능 최적화)
+        // 로드맵과 노드들을 한 번에 조회
         MentorRoadmap mentorRoadmap = mentorRoadmapRepository.findByIdWithNodes(id)
                 .orElseThrow(() -> new ServiceException("404", "로드맵을 찾을 수 없습니다."));
 
         return MentorRoadmapResponse.from(mentorRoadmap);
     }
 
-    // 멘토 ID로 멘토 로드맵 상세 조회 (미래 API 확장성 대비)
+    // 멘토 ID로 멘토 로드맵 상세 조회
     @Transactional(readOnly = true)
     public MentorRoadmapResponse getByMentorId(Long mentorId) {
         // 멘토 ID로 로드맵과 노드들을 한 번에 조회
