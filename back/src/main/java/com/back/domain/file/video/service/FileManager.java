@@ -15,12 +15,19 @@ public class FileManager {
     private final VideoService videoService;
     private final S3Service s3Service;
 
-    public PresignedUrlResponse getUploadUrl() {
+    public PresignedUrlResponse getUploadUrl(String filename) {
         String uuid = UUID.randomUUID().toString();
+        String ext = extractExt(filename);
+        String objectKey = "videos/" + uuid + "." + ext;
         Integer expires = 5;
-        URL url = s3Service.generateUploadUrl("videos/"+uuid, expires);
+        URL url = s3Service.generateUploadUrl(objectKey, expires);
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(expires);
         return new PresignedUrlResponse(url, expiresAt);
+    }
+
+    private String extractExt(String filename) {
+        int pos = filename.lastIndexOf(".");
+        return filename.substring(pos + 1);
     }
 
     public PresignedUrlResponse getDownloadUrl(String objectKey) {
