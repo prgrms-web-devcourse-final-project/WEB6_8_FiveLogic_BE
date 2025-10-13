@@ -31,7 +31,7 @@ public class VideoController {
             uuid = matcher.group(1);
         }
 
-        UploadUrlGetResponse response = new UploadUrlGetResponse(uuid, uploadUrl.expiresAt());
+        UploadUrlGetResponse response = new UploadUrlGetResponse(uploadUrl.url().toString(), uuid, uploadUrl.expiresAt());
         return new RsData<>("200", "업로드용 URL 요청완료", response);
     }
 
