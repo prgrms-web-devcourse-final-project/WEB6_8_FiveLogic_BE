@@ -10,7 +10,8 @@ public record CommentAllResponse(
         Long id,
         String content,
         String authorName,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        Long memberId
 ) {
 
 
@@ -19,7 +20,8 @@ public record CommentAllResponse(
                 comment.getId(),
                 comment.getContent(),
                 comment.getAuthorName(),
-                comment.getCreateDate()
+                comment.getCreateDate(),
+                comment.getAuthorId()
         );
     }
 }
