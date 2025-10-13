@@ -61,7 +61,7 @@ public class MentorRoadmapService {
         // CASCADE로 노드들이 자동 저장됨 (추가 save() 호출 불필요)
         mentorRoadmap.addNodes(allNodes);
 
-        eventPublisher.publishEvent(new MentorRoadmapChangeEvent(mentor.getJobId()));
+        eventPublisher.publishEvent(new MentorRoadmapChangeEvent(mentor.getJob().getId()));
 
         log.info("멘토 로드맵 생성 완료 - 멘토 ID: {}, 로드맵 ID: {}, 노드 수: {} (cascade 활용)",
                  mentorId, mentorRoadmap.getId(), mentorRoadmap.getNodes().size());
@@ -134,7 +134,7 @@ public class MentorRoadmapService {
         log.info("멘토 로드맵 수정 완료 - 로드맵 ID: {}, 노드 수: {} (cascade 활용)",
                 mentorRoadmap.getId(), mentorRoadmap.getNodes().size());
 
-        eventPublisher.publishEvent(new MentorRoadmapChangeEvent(mentorRoadmap.getMentor().getJobId()));
+        eventPublisher.publishEvent(new MentorRoadmapChangeEvent(mentorRoadmap.getMentor().getJob().getId()));
 
         return new MentorRoadmapSaveResponse(
                 mentorRoadmap.getId(),
@@ -157,7 +157,7 @@ public class MentorRoadmapService {
             throw new ServiceException("403", "본인의 로드맵만 삭제할 수 있습니다.");
         }
 
-        Long jobId = mentorRoadmap.getMentor().getJobId();
+        Long jobId = mentorRoadmap.getMentor().getJob().getId();
 
         // 1. 관련 노드들을 먼저 직접 삭제
         roadmapNodeRepository.deleteByRoadmapIdAndRoadmapType(
