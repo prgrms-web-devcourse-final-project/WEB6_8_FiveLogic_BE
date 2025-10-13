@@ -2,6 +2,8 @@ package com.back.domain.roadmap.roadmap.repository;
 
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.roadmap.roadmap.entity.MentorRoadmap;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -54,4 +56,21 @@ public interface MentorRoadmapRepository extends JpaRepository<MentorRoadmap, Lo
     ORDER BY mr.id, n.stepOrder
     """)
     List<MentorRoadmap> findAllByMentorJobIdWithNodes(@Param("jobId") Long jobId);
+
+    /**
+     * 멘토 로드맵 목록 조회 (페이징, 키워드 검색)
+     * - 키워드 검색: 제목, 설명, 멘토 닉네임
+     * - Mentor와 Member를 FETCH JOIN하여 N+1 문제 방지
+     */
+    @Query("""
+        SELECT mr FROM MentorRoadmap mr
+        JOIN FETCH mr.mentor m
+        JOIN FETCH m.member mem
+        WHERE (:keyword IS NULL OR :keyword = ''
+            OR LOWER(mr.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(mr.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(mem.nickname) LIKE LOWER(CONCAT('%', :keyword, '%')))
+        ORDER BY mr.id DESC
+        """)
+    Page<MentorRoadmap> findAllWithKeyword(@Param("keyword") String keyword, Pageable pageable);
 }
