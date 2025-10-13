@@ -46,7 +46,7 @@ public class S3ServiceTest {
 
         when(mocked.url()).thenReturn(new URL("http://localhost:8080/upload"));
 
-        URL url = s3Service.generateUploadUrl(objectKey);
+        URL url = s3Service.generateUploadUrl(objectKey, "video/mp4");
 
         assertThat(url).isNotNull();
         assertThat(url.toString()).isEqualTo("http://localhost:8080/upload");
@@ -77,7 +77,7 @@ public class S3ServiceTest {
         when(presigner.presignPutObject(any(Consumer.class))).thenReturn(null);
 
         try {
-            s3Service.generateUploadUrl(objectKey);
+            s3Service.generateUploadUrl(objectKey, "video/mp4");
         } catch (Exception e) {
             assertThat(e).isInstanceOf(ServiceException.class);
         }

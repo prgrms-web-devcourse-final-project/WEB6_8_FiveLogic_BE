@@ -21,12 +21,13 @@ public class S3Service {
     @Value("${aws.s3.bucket}")
     private String bucket;
 
-    public URL generateUploadUrl(String objectKey, Integer expireMinutes) {
+    public URL generateUploadUrl(String objectKey, Integer expireMinutes, String contentType) {
         validateRequest(objectKey);
 
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(objectKey)
+                .contentType(contentType)
                 .build();
 
         PresignedPutObjectRequest presignedRequest =
@@ -41,8 +42,8 @@ public class S3Service {
         return presignedRequest.url();
     }
 
-    public URL generateUploadUrl(String objectKey) {
-        return generateUploadUrl(objectKey, 30);
+    public URL generateUploadUrl(String objectKey, String contentType) {
+        return generateUploadUrl(objectKey, 30, contentType);
     }
 
     public URL generateDownloadUrl(String objectKey, Integer expireMinutes) {
