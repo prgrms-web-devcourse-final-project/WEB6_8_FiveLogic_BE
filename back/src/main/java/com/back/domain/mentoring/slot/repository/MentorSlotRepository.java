@@ -21,6 +21,7 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
         SELECT new com.back.domain.mentoring.slot.dto.response.MentorSlotDto(
             ms.id,
             ms.mentor.id,
+            ms.mentor.member.id,
             ms.startDateTime,
             ms.endDateTime,
             ms.status,
@@ -45,6 +46,7 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
         SELECT new com.back.domain.mentoring.slot.dto.response.MentorSlotDto(
                 ms.id,
                 ms.mentor.id,
+                ms.mentor.member.id,
                 ms.startDateTime,
                 ms.endDateTime,
                 ms.status,

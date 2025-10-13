@@ -10,6 +10,8 @@ public record MentorSlotDto(
     Long mentorSlotId,
     @Schema(description = "멘토 ID")
     Long mentorId,
+    @Schema(description = "멘토 회원 ID")
+    Long mentorMemberId,
     @Schema(description = "시작 일시")
     LocalDateTime startDateTime,
     @Schema(description = "종료 일시")

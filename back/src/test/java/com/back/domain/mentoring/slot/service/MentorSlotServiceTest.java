@@ -88,23 +88,24 @@ class MentorSlotServiceTest {
             LocalDate  base = LocalDate.now().plusMonths(1);
             LocalDateTime startDate = base.atStartOfDay();
             LocalDateTime endDate = base.withDayOfMonth(base.lengthOfMonth()).atTime(23, 59);
+            Long memberId = mentor1.getMember().getId();
 
             MentorSlotDto slotDto1 = new MentorSlotDto(
-                1L, mentor1.getId(),
+                1L, mentor1.getId(), memberId,
                 mentorSlot1.getStartDateTime(),
                 mentorSlot1.getEndDateTime(),
                 MentorSlotStatus.AVAILABLE,
                 null
             );
             MentorSlotDto slotDto2 = new MentorSlotDto(
-                2L, mentor1.getId(),
+                2L, mentor1.getId(), memberId,
                 base.withDayOfMonth(2).atTime(10, 0),
                 base.withDayOfMonth(2).atTime(11, 0),
                 MentorSlotStatus.AVAILABLE,
                 null
             );
             MentorSlotDto slotDto3 = new MentorSlotDto(
-                3L, mentor1.getId(),
+                3L, mentor1.getId(), memberId,
                 base.withDayOfMonth(15).atTime(14, 0),
                 base.withDayOfMonth(15).atTime(15, 0),
                 MentorSlotStatus.AVAILABLE,
@@ -155,16 +156,17 @@ class MentorSlotServiceTest {
             LocalDate  base = LocalDate.now().plusMonths(1);
             LocalDateTime startDate = base.atStartOfDay();
             LocalDateTime endDate = base.withDayOfMonth(base.lengthOfMonth()).atTime(23, 59);
+            Long memberId = mentor1.getMember().getId();
 
             MentorSlotDto slotDto1 = new MentorSlotDto(
-                1L, mentor1.getId(),
+                1L, mentor1.getId(), memberId,
                 mentorSlot1.getStartDateTime(),
                 mentorSlot1.getEndDateTime(),
                 MentorSlotStatus.AVAILABLE,
                 null
             );
             MentorSlotDto slotDto2 = new MentorSlotDto(
-                2L, mentor1.getId(),
+                2L, mentor1.getId(), memberId,
                 base.withDayOfMonth(2).atTime(10, 0),
                 base.withDayOfMonth(2).atTime(11, 0),
                 MentorSlotStatus.AVAILABLE,
