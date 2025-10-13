@@ -23,7 +23,7 @@ public class FileManager {
         String objectKey = "videos/" + uuid + "." + ext;
         Integer expires = 5;
         URL url = s3Service.generateUploadUrl(objectKey, expires, contentType);
-        videoService.createVideo(uuid, "READY_TO_UPLOAD", objectKey, 0);
+        videoService.createVideo(uuid, "{\"status\":\"READY_TO_UPLOAD\"}", objectKey, 0);
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(expires);
         return new PresignedUrlResponse(url, expiresAt);
     }
