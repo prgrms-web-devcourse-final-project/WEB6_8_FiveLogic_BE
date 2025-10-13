@@ -208,7 +208,7 @@ public class MemberService {
     }
 
     public MenteeMyPageResponse getMenteeMyPage(Member currentUser) {
-        Mentee mentee = menteeRepository.findByMemberId(currentUser.getId())
+        Mentee mentee = menteeRepository.findByMemberIdWithMember(currentUser.getId())
                 .orElseThrow(() -> new ServiceException("404-2", "멘티 정보를 찾을 수 없습니다."));
 
         return MenteeMyPageResponse.from(currentUser, mentee);
@@ -228,7 +228,7 @@ public class MemberService {
 
         // Mentee 정보 업데이트 (interestedField)
         if (request.interestedField() != null) {
-            Mentee mentee = menteeRepository.findByMemberId(currentUser.getId())
+            Mentee mentee = menteeRepository.findByMemberIdWithMember(currentUser.getId())
                     .orElseThrow(() -> new ServiceException("404-2", "멘티 정보를 찾을 수 없습니다."));
 
             Job job = jobRepository.findByName(request.interestedField())
