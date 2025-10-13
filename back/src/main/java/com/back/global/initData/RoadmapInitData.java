@@ -68,6 +68,7 @@ public class RoadmapInitData {
         //testJobRoadmapIntegrationV2(); // V2 통합 로직 실행 및 트리 구조 출력
     }
 
+    @Transactional
     // --- Job 초기화 ---
     public void initJobData() {
 
