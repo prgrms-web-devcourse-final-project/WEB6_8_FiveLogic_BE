@@ -58,7 +58,7 @@ public class RoadmapProdInitData {
     public void runInitData() {
         initJobData();
         initTaskData();           // 보강된 Task 목록
-        initSampleJobRoadmap();   // 직업 로드맵 조회 API 테스트용 샘플 데이터
+        //initSampleJobRoadmap();   // 직업 로드맵 조회 API 테스트용 샘플 데이터
 
         // 통합 로직 테스트
         //initSampleMentorRoadmaps();    // 샘플 멘토 로드맵 10개 생성
