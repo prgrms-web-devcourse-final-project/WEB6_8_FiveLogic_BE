@@ -89,7 +89,7 @@ public class PostControllerTest {
                 .andDo(print());
 
         // 실제 생성된 게시글 조회 (실제 DB에서)
-        Post createdPost = postService.findById(4L);
+        Post createdPost = postService.findPostById(4L);
 
         resultActions
                 .andExpect(handler().handlerType(PostController.class))
@@ -336,7 +336,7 @@ public class PostControllerTest {
                 .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("removePost"))
                 .andExpect(jsonPath("$.resultCode").value("400"))
-                .andExpect(jsonPath("$.msg").value("삭제 권한이 없습니다."));
+                .andExpect(jsonPath("$.msg").value("변경 권한이 없습니다."));
     }
 
     @Test
@@ -396,7 +396,7 @@ public class PostControllerTest {
                 .andExpect(handler().handlerType(PostController.class))
                 .andExpect(handler().methodName("updatePost"))
                 .andExpect(jsonPath("$.resultCode").value("400"))
-                .andExpect(jsonPath("$.msg").value("수정 권한이 없습니다."));
+                .andExpect(jsonPath("$.msg").value("변경 권한이 없습니다."));
     }
 
     @Test

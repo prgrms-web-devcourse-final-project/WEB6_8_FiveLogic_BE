@@ -2,7 +2,6 @@ package com.back.domain.post.post.service;
 
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.post.post.dto.PostCreateRequest;
-import com.back.domain.post.post.dto.PostCreateResponse;
 import com.back.domain.post.post.dto.PostDto;
 import com.back.domain.post.post.dto.PostModifyRequest;
 import com.back.domain.post.post.entity.Post;
@@ -184,7 +183,7 @@ class PostServiceTest {
             // when & then
             assertThatThrownBy(() -> postService.removePost(postId, otherUser))
                     .isInstanceOf(ServiceException.class)
-                    .hasMessage("400 : 삭제 권한이 없습니다.");
+                    .hasMessage("400 : 변경 권한이 없습니다.");
 
             verify(postRepository, never()).delete(any(Post.class));
         }
@@ -247,7 +246,7 @@ class PostServiceTest {
             // when & then
             assertThatThrownBy(() -> postService.updatePost(postId, otherUser, updateRequest))
                     .isInstanceOf(ServiceException.class)
-                    .hasMessage("400 : 수정 권한이 없습니다.");
+                    .hasMessage("400 : 변경 권한이 없습니다.");
 
             verify(postRepository, never()).save(any(Post.class));
         }
@@ -408,7 +407,7 @@ class PostServiceTest {
             when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
             // when
-            Post result = postService.findById(postId);
+            Post result = postService.findPostById(postId);
 
             // then
             assertThat(result).isEqualTo(post);
@@ -424,7 +423,7 @@ class PostServiceTest {
             when(postRepository.findById(postId)).thenReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> postService.findById(postId))
+            assertThatThrownBy(() -> postService.findPostById(postId))
                     .isInstanceOf(ServiceException.class)
                     .hasMessage("400 : 해당 Id의 게시글이 없습니다.");
         }

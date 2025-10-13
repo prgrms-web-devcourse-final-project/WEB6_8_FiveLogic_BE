@@ -8,7 +8,6 @@ import com.back.domain.post.comment.dto.CommentModifyRequest;
 import com.back.domain.post.comment.entity.PostComment;
 import com.back.domain.post.comment.repository.PostCommentRepository;
 import com.back.domain.post.post.entity.Post;
-import com.back.domain.post.post.repository.PostRepository;
 import com.back.domain.post.post.service.PostService;
 import com.back.fixture.MemberFixture;
 import com.back.fixture.Post.PostFixture;
@@ -55,14 +54,14 @@ class PostCommentServiceTest {
 
             PostComment postComment = createComment(member, post, request.comment());
 
-            when(postService.findById(1L)).thenReturn(post);
+            when(postService.findPostById(1L)).thenReturn(post);
             when(postCommentRepository.save(any(PostComment.class))).thenReturn(postComment);
 
             // when
             postCommentService.createComment(member, 1L, request);
 
             // then
-            verify(postService).findById(1L);
+            verify(postService).findPostById(1L);
             verify(postCommentRepository).save(any(PostComment.class));
         }
 
@@ -74,7 +73,7 @@ class PostCommentServiceTest {
             Long postId = 999L;
             CommentCreateRequest request = new CommentCreateRequest("테스트 댓글");
 
-            when(postService.findById(postId)).thenThrow(new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+            when(postService.findPostById(postId)).thenThrow(new ServiceException("400", "해당 Id의 게시글이 없습니다."));
             // when & then
             assertThatThrownBy(() -> postCommentService.createComment(member, postId, request))
                     .isInstanceOf(ServiceException.class)

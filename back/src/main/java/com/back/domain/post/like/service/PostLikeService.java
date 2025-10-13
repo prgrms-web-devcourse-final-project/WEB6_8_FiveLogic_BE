@@ -6,11 +6,9 @@ import com.back.domain.post.like.repository.PostLikeRepository;
 import com.back.domain.post.post.dto.PostLikedResponse;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.service.PostService;
-import com.back.domain.post.rq.PostDetailFacade;
 import com.back.global.rq.Rq;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -24,7 +22,7 @@ public class PostLikeService {
     @Transactional
     public void likePost(long postId) {
         Member member = rq.getActor();
-        Post post = postService.findById(postId);
+        Post post = postService.findPostById(postId);
 
         // 기존 좋아요/싫어요 기록 조회
         Optional<PostLike> existingLike = postLikeRepository.findByMemberAndPost(member, post);
@@ -55,7 +53,7 @@ public class PostLikeService {
     @Transactional
     public void disLikePost(long postId) {
         Member member = rq.getActor();
-        Post post = postService.findById(postId);
+        Post post = postService.findPostById(postId);
 
         // 기존 좋아요/싫어요 기록 조회
         Optional<PostLike> existingLike = postLikeRepository.findByMemberAndPost(member, post);
@@ -85,7 +83,7 @@ public class PostLikeService {
 
     public String getPresentStatus(Long postId) {
         Member member = rq.getActor();
-        Post post = postService.findById(postId);
+        Post post = postService.findPostById(postId);
 
         Optional<PostLike> existingLike = postLikeRepository.findByMemberAndPost(member, post);
 

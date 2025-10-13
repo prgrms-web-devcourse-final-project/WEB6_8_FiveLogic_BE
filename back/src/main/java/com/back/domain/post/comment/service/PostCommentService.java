@@ -26,7 +26,7 @@ public class PostCommentService {
     @Transactional
     public void createComment(Member member, Long postId, CommentCreateRequest commentCreateRequest) {
         validateComment(commentCreateRequest.comment());
-        Post post = postService.findById(postId);
+        Post post = postService.findPostById(postId);
 
         PostComment postComment = PostComment.builder()
                 .post(post)
@@ -92,7 +92,7 @@ public class PostCommentService {
 
     @Transactional
     public  CommentAllResponse getAdoptedComment(Long postId) {
-        Post post = postService.findById(postId);
+        Post post = postService.findPostById(postId);
 
         validatePostType(post);
 
