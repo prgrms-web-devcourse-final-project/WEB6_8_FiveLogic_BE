@@ -235,7 +235,7 @@ public class MemberService {
     }
 
     public MentorMyPageResponse getMentorMyPage(Member currentUser) {
-        Mentor mentor = mentorRepository.findByMemberId(currentUser.getId())
+        Mentor mentor = mentorRepository.findByMemberIdWithMember(currentUser.getId())
                 .orElseThrow(() -> new ServiceException("404-3", "멘토 정보를 찾을 수 없습니다."));
 
         return MentorMyPageResponse.from(currentUser, mentor);
