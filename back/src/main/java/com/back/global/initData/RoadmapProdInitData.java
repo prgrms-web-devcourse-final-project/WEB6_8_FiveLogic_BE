@@ -143,7 +143,6 @@ public class RoadmapProdInitData {
     }
 
     // --- Task 초기화 (기존 + 기초 보강) ---
-    @Transactional
     public void initTaskData() {
         if (taskService.count() > 0) return;
 
