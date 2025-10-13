@@ -56,13 +56,22 @@ public class RoadmapProdInitData {
 
     @Transactional
     public void runInitData() {
+        log.info("RoadmapProdInitData 실행 시작");
         initJobData();
         initTaskData();           // 보강된 Task 목록
-        //initSampleJobRoadmap();   // 직업 로드맵 조회 API 테스트용 샘플 데이터
+
+        try {
+            log.info(">>> Step 3: JobRoadmap 샘플 데이터 생성 시작");
+            initSampleJobRoadmap();   // 직업 로드맵 조회 API 테스트용 샘플 데이터
+            log.info(">>> Step 3: JobRoadmap 샘플 데이터 생성 완료");
+        } catch (Exception e) {
+            log.error("JobRoadmap 샘플 데이터 생성 실패", e);
+            throw e;
+        }
 
         // 통합 로직 테스트
         //initSampleMentorRoadmaps();    // 샘플 멘토 로드맵 10개 생성
-
+        log.info("RoadmapProdInitData 실행 종료");
     }
 
     // --- Job 초기화 ---
@@ -285,26 +294,43 @@ public class RoadmapProdInitData {
     // --- 직업 로드맵 샘플 데이터 생성 (API 테스트용) ---
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void initSampleJobRoadmap() {
-        if (jobRoadmapRepository.count() > 0) return;
+        log.info("initSampleJobRoadmap 진입 성공");
+
+        long count = jobRoadmapRepository.count();
+        log.info(">>> initSampleJobRoadmap 시작 - 기존 JobRoadmap 개수: {}", count);
+
+        if (count > 0) {
+            log.info("이미 직업 로드맵 데이터가 있어 초기화 로직을 건너뜁니다");
+            return;
+        }
+
+        log.info(">>> Job 조회 시작");
 
         Job backendJob = jobRepository.findByName("백엔드 개발자")
                 .orElseThrow(() -> new RuntimeException("백엔드 개발자 직업을 찾을 수 없습니다."));
+        log.info(">>> 백엔드 개발자 직업 조회 완료: ID={}", backendJob.getId());
 
         Job frontendJob = jobRepository.findByName("프론트엔드 개발자")
                 .orElseThrow(() -> new RuntimeException("프론트엔드 개발자 직업을 찾을 수 없습니다."));
+        log.info(">>> 프론트 엔드 개발자 직업 조회 완료: ID={}", frontendJob.getId());
 
         Job mobileJob = jobRepository.findByName("모바일 앱 개발자")
                 .orElseThrow(() -> new RuntimeException("모바일 개발자 직업을 찾을 수 없습니다."));
+        log.info(">>> 모바일 앱 개발자 직업 조회 완료: ID={}", mobileJob.getId());
 
         Job dataJob = jobRepository.findByName("데이터 엔지니어")
                 .orElseThrow(() -> new RuntimeException("데이터 엔지니어 직업을 찾을 수 없습니다."));
+        log.info(">>> 데이터 엔지니어 직업 조회 완료: ID={}", dataJob.getId());
 
         Job aiJob = jobRepository.findByName("AI/ML 엔지니어")
                 .orElseThrow(() -> new RuntimeException("AI 엔지니어 직업을 찾을 수 없습니다."));
+        log.info(">>> AI/ML 엔지니어 직업 조회 완료: ID={}", aiJob.getId());
 
         // 조회용 멘토 및 직업 설정
         //Member member = memberService.joinMentor("testmentor@test.com", "멘토", "mentor", "1234", "백엔드 개발자", 6);
         //Mentor mentor = updateMentorJob(member, backendJob);
+
+        log.info("백엔드 개발자 로드맵 샘플 데이터 생성");
 
         // 백엔드 개발자 직업 로드맵 생성 (트리 구조로 구성)
         JobRoadmap backendRoadmap = JobRoadmap.builder()
