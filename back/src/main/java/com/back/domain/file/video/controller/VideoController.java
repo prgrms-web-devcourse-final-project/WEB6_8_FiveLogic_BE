@@ -19,8 +19,8 @@ public class VideoController {
     @GetMapping("/videos/upload")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "업로드용 URL 요청", description = "파일 업로드를 위한 Presigned URL을 발급받습니다.")
-    public RsData<UploadUrlGetResponse> getUploadUrl() {
-        PresignedUrlResponse uploadUrl = fileManager.getUploadUrl();
+    public RsData<UploadUrlGetResponse> getUploadUrl(@RequestParam String filename) {
+        PresignedUrlResponse uploadUrl = fileManager.getUploadUrl(filename);
         UploadUrlGetResponse response = new UploadUrlGetResponse(uploadUrl.url().toString(), uploadUrl.expiresAt());
         return new RsData<>("200", "업로드용 URL 요청완료", response);
     }
