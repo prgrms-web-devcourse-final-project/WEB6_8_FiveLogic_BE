@@ -286,28 +286,7 @@ public class RoadmapProdInitData {
     // --- 직업 로드맵 샘플 데이터 생성 (API 테스트용) ---
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void initSampleJobRoadmap() {
-        // 노드가 있는 완전한 JobRoadmap이 있는지 스마트 체크
-        List<JobRoadmap> existingRoadmaps = jobRoadmapRepository.findAll();
-
-        if (!existingRoadmaps.isEmpty()) {
-            boolean hasCompleteRoadmap = existingRoadmaps.stream()
-                    .anyMatch(jr -> jr.getNodes() != null && !jr.getNodes().isEmpty());
-
-            if (hasCompleteRoadmap) {
-                log.info("완전한 JobRoadmap이 이미 존재합니다. 초기화를 건너뜁니다.");
-                return;
-            }
-
-            // 노드 없는 불완전한 데이터 정리
-            log.warn("노드 없는 JobRoadmap 발견. 삭제 후 재생성합니다...");
-            log.warn("삭제할 JobRoadmap 개수: {}", existingRoadmaps.size());
-
-            // JobRoadmap만 삭제 - cascade로 관련 노드와 통계가 자동 삭제됨
-            // (노드가 없는 상태이므로 실제로는 JobRoadmap 엔티티만 삭제됨)
-            jobRoadmapRepository.deleteAll();
-
-            log.info("불완전한 JobRoadmap 데이터 삭제 완료");
-        }
+        if (jobRoadmapRepository.count() > 0) return;
 
         Job backendJob = jobRepository.findByName("백엔드 개발자")
                 .orElseThrow(() -> new RuntimeException("백엔드 개발자 직업을 찾을 수 없습니다."));
