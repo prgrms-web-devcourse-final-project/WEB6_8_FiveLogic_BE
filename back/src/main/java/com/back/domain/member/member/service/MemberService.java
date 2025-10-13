@@ -162,18 +162,23 @@ public class MemberService {
 
         Long mentorId = null;
         Long menteeId = null;
+        String job = null;
 
         if (actor.getRole() == Member.Role.MENTOR) {
-            mentorId = mentorRepository.findByMemberId(actor.getId())
-                    .map(Mentor::getId)
-                    .orElse(null);
+            Mentor mentor = mentorRepository.findByMemberIdWithMember(actor.getId()).orElse(null);
+            if (mentor != null) {
+                mentorId = mentor.getId();
+                job = mentor.getJob() != null ? mentor.getJob().getName() : null;
+            }
         } else if (actor.getRole() == Member.Role.MENTEE) {
-            menteeId = menteeRepository.findByMemberId(actor.getId())
-                    .map(Mentee::getId)
-                    .orElse(null);
+            Mentee mentee = menteeRepository.findByMemberId(actor.getId()).orElse(null);
+            if (mentee != null) {
+                menteeId = mentee.getId();
+                job = mentee.getJob() != null ? mentee.getJob().getName() : null;
+            }
         }
 
-        return MemberMeResponse.of(actor, mentorId, menteeId);
+        return MemberMeResponse.of(actor, mentorId, menteeId, job);
     }
 
     public Member refreshAccessToken(String refreshToken) {
