@@ -1,5 +1,6 @@
 package com.back.domain.file.video.controller;
 
+import com.back.domain.file.video.dto.DownLoadUrlGetResponse;
 import com.back.domain.file.video.dto.controller.UploadUrlGetResponse;
 import com.back.domain.file.video.dto.service.PresignedUrlResponse;
 import com.back.domain.file.video.service.FileManager;
@@ -21,15 +22,24 @@ public class VideoController {
     @Operation(summary = "업로드용 URL 요청", description = "파일 업로드를 위한 Presigned URL을 발급받습니다.")
     public RsData<UploadUrlGetResponse> getUploadUrl(@RequestParam String filename) {
         PresignedUrlResponse uploadUrl = fileManager.getUploadUrl(filename);
-        UploadUrlGetResponse response = new UploadUrlGetResponse(uploadUrl.url().toString(), uploadUrl.expiresAt());
+        String urlString = uploadUrl.url().toString();
+        String uuid = "";
+        var matcher = java.util.regex.Pattern.compile(
+                "([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})"
+        ).matcher(urlString);
+        if (matcher.find()) {
+            uuid = matcher.group(1);
+        }
+
+        UploadUrlGetResponse response = new UploadUrlGetResponse(uploadUrl.url().toString(), uuid, uploadUrl.expiresAt());
         return new RsData<>("200", "업로드용 URL 요청완료", response);
     }
 
     @GetMapping("/videos/download")
     @Operation(summary = "다운로드용 URL 요청", description = "파일 다운로드를 위한 Presigned URL을 발급받습니다.")
-    public RsData<UploadUrlGetResponse> getDownloadUrls(@RequestParam String objectKey) {
+    public RsData<DownLoadUrlGetResponse> getDownloadUrls(@RequestParam String objectKey) {
         PresignedUrlResponse downloadUrl = fileManager.getDownloadUrl(objectKey);
-        UploadUrlGetResponse response = new UploadUrlGetResponse(downloadUrl.url().toString(), downloadUrl.expiresAt());
+        DownLoadUrlGetResponse response = new DownLoadUrlGetResponse(downloadUrl.url().toString(), downloadUrl.expiresAt());
         return new RsData<>("200", "다운로드용 URL 요청완료", response);
     }
 }

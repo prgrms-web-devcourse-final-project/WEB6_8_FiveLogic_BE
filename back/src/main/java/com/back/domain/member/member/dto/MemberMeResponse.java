@@ -10,9 +10,10 @@ public record MemberMeResponse(
     String nickname,
     String role,
     Long mentorId,
-    Long menteeId
+    Long menteeId,
+    String job  // 직업명 추가
 ) {
-    public static MemberMeResponse of(Member member, Long mentorId, Long menteeId) {
+    public static MemberMeResponse of(Member member, Long mentorId, Long menteeId, String job) {
         return new MemberMeResponse(
             member.getId(),
             member.getPublicId(),
@@ -21,7 +22,8 @@ public record MemberMeResponse(
             member.getNickname(),
             member.getRole().name(),
             mentorId,
-            menteeId
+            menteeId,
+            job
         );
     }
 }
