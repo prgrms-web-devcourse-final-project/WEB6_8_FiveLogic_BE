@@ -155,6 +155,27 @@ public class MemberService {
         return actor;
     }
 
+    public MemberMeResponse getMemberMe(Member actor) {
+        if (actor == null) {
+            throw new ServiceException("401-1", "로그인이 필요합니다.");
+        }
+
+        Long mentorId = null;
+        Long menteeId = null;
+
+        if (actor.getRole() == Member.Role.MENTOR) {
+            mentorId = mentorRepository.findByMemberId(actor.getId())
+                    .map(Mentor::getId)
+                    .orElse(null);
+        } else if (actor.getRole() == Member.Role.MENTEE) {
+            menteeId = menteeRepository.findByMemberId(actor.getId())
+                    .map(Mentee::getId)
+                    .orElse(null);
+        }
+
+        return MemberMeResponse.of(actor, mentorId, menteeId);
+    }
+
     public Member refreshAccessToken(String refreshToken) {
         if (refreshToken.isBlank()) {
             throw new ServiceException("401-1", "Refresh token이 없습니다.");

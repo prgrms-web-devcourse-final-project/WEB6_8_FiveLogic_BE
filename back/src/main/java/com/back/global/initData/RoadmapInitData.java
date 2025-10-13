@@ -70,10 +70,10 @@ public class RoadmapInitData {
 
     // --- Job 초기화 ---
     public void initJobData() {
-        if (jobService.count() > 0) return;
 
         // 백엔드 개발자
-        Job job1 = jobService.create("백엔드 개발자", "서버 사이드 로직을 구현하고, 데이터베이스 및 API를 설계·운영하는 개발자입니다.");
+        Job job1 = jobRepository.findByName("백엔드 개발자")
+                .orElseGet(() -> jobService.create("백엔드 개발자", "서버 사이드 로직을 구현하고, 데이터베이스 및 API를 설계·운영하는 개발자입니다."));
         jobService.createAlias(job1, "백엔드");
         jobService.createAlias(job1, "BE 개발자");
         jobService.createAlias(job1, "Backend 개발자");
@@ -81,7 +81,8 @@ public class RoadmapInitData {
         jobService.createAlias(job1, "API 개발자");
 
         // 프론트엔드 개발자
-        Job job2 = jobService.create("프론트엔드 개발자", "웹 또는 앱의 사용자 인터페이스(UI)와 사용자 경험(UX)을 담당하며, 사용자가 직접 보는 화면을 구현하는 개발자입니다.");
+        Job job2 = jobRepository.findByName("프론트엔드 개발자")
+                .orElseGet(() -> jobService.create("프론트엔드 개발자", "웹 또는 앱의 사용자 인터페이스(UI)와 사용자 경험(UX)을 담당하며, 사용자가 직접 보는 화면을 구현하는 개발자입니다."));
         jobService.createAlias(job2, "프론트엔드");
         jobService.createAlias(job2, "FE 개발자");
         jobService.createAlias(job2, "Frontend 개발자");
@@ -90,58 +91,67 @@ public class RoadmapInitData {
         jobService.createAlias(job2, "클라이언트 개발자");
 
         // 모바일 앱 개발자
-        Job job3 = jobService.create(
-                "모바일 앱 개발자",
-                "스마트폰과 태블릿 환경에서 동작하는 iOS 또는 Android 애플리케이션을 개발하는 직군으로, 플랫폼별 네이티브 또는 크로스플랫폼 기술을 활용합니다."
-        );
+        Job job3 = jobRepository.findByName("모바일 앱 개발자")
+                .orElseGet(() -> jobService.create(
+                        "모바일 앱 개발자",
+                        "스마트폰과 태블릿 환경에서 동작하는 iOS 또는 Android 애플리케이션을 개발하는 직군으로, 플랫폼별 네이티브 또는 크로스플랫폼 기술을 활용합니다."
+                ));
 
         // 데이터 엔지니어
-        Job job4 = jobService.create(
-                "데이터 엔지니어",
-                "데이터를 수집·저장·처리할 수 있는 파이프라인을 설계하고 구축하는 전문가로, 데이터 분석과 AI 모델링의 기반을 마련합니다."
-        );
+        Job job4 = jobRepository.findByName("데이터 엔지니어")
+                .orElseGet(() -> jobService.create(
+                        "데이터 엔지니어",
+                        "데이터를 수집·저장·처리할 수 있는 파이프라인을 설계하고 구축하는 전문가로, 데이터 분석과 AI 모델링의 기반을 마련합니다."
+                ));
 
         // 데이터 분석가
-        Job job5 = jobService.create(
-                "데이터 분석가",
-                "데이터를 기반으로 비즈니스 인사이트를 도출하고, 통계 분석과 시각화를 통해 의사결정을 지원하는 직군입니다."
-        );
+        Job job5 = jobRepository.findByName("데이터 분석가")
+                .orElseGet(() -> jobService.create(
+                        "데이터 분석가",
+                        "데이터를 기반으로 비즈니스 인사이트를 도출하고, 통계 분석과 시각화를 통해 의사결정을 지원하는 직군입니다."
+                ));
 
         // AI / 머신러닝 엔지니어
-        Job job6 = jobService.create(
-                "AI/ML 엔지니어",
-                "머신러닝과 딥러닝 알고리즘을 활용해 예측 모델과 인공지능 서비스를 개발하는 직군으로, 데이터 처리와 모델 학습에 대한 이해가 필요합니다."
-        );
+        Job job6 = jobRepository.findByName("AI/ML 엔지니어")
+                .orElseGet(() -> jobService.create(
+                        "AI/ML 엔지니어",
+                        "머신러닝과 딥러닝 알고리즘을 활용해 예측 모델과 인공지능 서비스를 개발하는 직군으로, 데이터 처리와 모델 학습에 대한 이해가 필요합니다."
+                ));
 
         // DevOps 엔지니어
-        Job job7 = jobService.create(
-                "DevOps 엔지니어",
-                "개발(Development)과 운영(Operations)을 연결하여 CI/CD 파이프라인, 인프라 자동화, 배포 환경을 최적화하는 엔지니어입니다."
-        );
+        Job job7 = jobRepository.findByName("DevOps 엔지니어")
+                .orElseGet(() -> jobService.create(
+                        "DevOps 엔지니어",
+                        "개발(Development)과 운영(Operations)을 연결하여 CI/CD 파이프라인, 인프라 자동화, 배포 환경을 최적화하는 엔지니어입니다."
+                ));
 
         // 클라우드 엔지니어
-        Job job8 = jobService.create(
-                "클라우드 엔지니어",
-                "AWS, GCP, Azure 등 클라우드 환경에서 인프라를 설계·배포·운영하며, 서비스의 안정성과 확장성을 책임지는 직군입니다."
-        );
+        Job job8 = jobRepository.findByName("클라우드 엔지니어")
+                .orElseGet(() -> jobService.create(
+                        "클라우드 엔지니어",
+                        "AWS, GCP, Azure 등 클라우드 환경에서 인프라를 설계·배포·운영하며, 서비스의 안정성과 확장성을 책임지는 직군입니다."
+                ));
 
         // 사이버 보안 전문가
-        Job job9 = jobService.create(
-                "보안 엔지니어",
-                "시스템과 네트워크의 보안 취약점을 점검하고, 공격 방어 및 보안 정책을 설계하는 역할을 수행합니다."
-        );
+        Job job9 = jobRepository.findByName("보안 엔지니어")
+                .orElseGet(() -> jobService.create(
+                        "보안 엔지니어",
+                        "시스템과 네트워크의 보안 취약점을 점검하고, 공격 방어 및 보안 정책을 설계하는 역할을 수행합니다."
+                ));
 
         // 게임 서버/클라이언트 개발자
-        Job job10 = jobService.create(
-                "게임 개발자",
-                "게임 클라이언트 또는 서버를 개발하는 직군으로, 그래픽·물리 엔진·네트워크 프로그래밍 등 다양한 기술을 다룹니다."
-        );
+        Job job10 = jobRepository.findByName("게임 개발자")
+                .orElseGet(() -> jobService.create(
+                        "게임 개발자",
+                        "게임 클라이언트 또는 서버를 개발하는 직군으로, 그래픽·물리 엔진·네트워크 프로그래밍 등 다양한 기술을 다룹니다."
+                ));
 
         // QA / 테스트 엔지니어
-        Job job11 = jobService.create(
-                "QA 엔지니어",
-                "소프트웨어 품질을 보증하기 위해 테스트를 설계·자동화·수행하는 직군으로, 버그 탐지와 품질 관리 프로세스를 담당합니다."
-        );
+        Job job11 = jobRepository.findByName("QA 엔지니어")
+                .orElseGet(() -> jobService.create(
+                        "QA 엔지니어",
+                        "소프트웨어 품질을 보증하기 위해 테스트를 설계·자동화·수행하는 직군으로, 버그 탐지와 품질 관리 프로세스를 담당합니다."
+                ));
     }
 
     // --- Task 초기화 (기존 + 기초 보강) ---

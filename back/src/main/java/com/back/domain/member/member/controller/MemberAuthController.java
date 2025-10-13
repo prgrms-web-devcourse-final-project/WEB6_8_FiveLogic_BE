@@ -4,6 +4,7 @@ import com.back.domain.member.member.dto.MenteeSignupRequest;
 import com.back.domain.member.member.dto.MentorSignupVerifyRequest;
 import com.back.domain.member.member.dto.MentorVerificationRequest;
 import com.back.domain.member.member.dto.LoginRequest;
+import com.back.domain.member.member.dto.MemberMeResponse;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
 import com.back.global.rq.Rq;
@@ -87,9 +88,9 @@ public class MemberAuthController {
 
     @GetMapping("/me")
     @Operation(summary = "사용자 정보 조회")
-    public RsData<Member> me() {
-        Member actor = memberService.getCurrentUser(rq.getActor());
-        return new RsData<>("200-5", "사용자 정보 조회 성공", actor);
+    public RsData<MemberMeResponse> me() {
+        MemberMeResponse response = memberService.getMemberMe(rq.getActor());
+        return new RsData<>("200-5", "사용자 정보 조회 성공", response);
     }
 
     @PostMapping("/refresh")

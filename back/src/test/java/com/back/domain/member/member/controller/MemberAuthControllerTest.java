@@ -229,11 +229,11 @@ public class MemberAuthControllerTest {
     }
 
     @Test
-    @DisplayName("멘티 로그인 후 /auth/me로 정보 조회 - rq.getActor() role 확인")
+    @DisplayName("멘티 로그인 후 /auth/me로 정보 조회 - role 및 menteeId 확인")
     void t5() throws Exception {
         // 멘티 회원가입
         String email = "mentee@example.com";
-        memberService.joinMentee(email, "멘티사용자", "멘티닉네임", "password123", "Backend");
+        Member member = memberService.joinMentee(email, "멘티사용자", "멘티닉네임", "password123", "Backend");
 
         // 로그인하여 쿠키 받기
         ResultActions loginResult = mvc.perform(
@@ -250,7 +250,7 @@ public class MemberAuthControllerTest {
         // 로그인 응답에서 쿠키 추출
         Cookie accessToken = loginResult.andReturn().getResponse().getCookie("accessToken");
 
-        // /auth/me 호출하여 role 확인 (쿠키 포함)
+        // /auth/me 호출하여 role 및 menteeId 확인 (쿠키 포함)
         ResultActions result = mvc
                 .perform(get("/auth/me")
                         .cookie(accessToken))
@@ -258,7 +258,50 @@ public class MemberAuthControllerTest {
 
         result
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.data.role").value("MENTEE"));
+                .andExpect(jsonPath("$.data.role").value("MENTEE"))
+                .andExpect(jsonPath("$.data.memberId").value(member.getId()))
+                .andExpect(jsonPath("$.data.email").value(email))
+                .andExpect(jsonPath("$.data.nickname").value("멘티닉네임"))
+                .andExpect(jsonPath("$.data.mentorId").isEmpty())
+                .andExpect(jsonPath("$.data.menteeId").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("멘토 로그인 후 /auth/me로 정보 조회 - role 및 mentorId 확인")
+    void t5_1() throws Exception {
+        // 멘토 회원가입
+        String email = "mentor@example.com";
+        Member member = memberService.joinMentor(email, "멘토사용자", "멘토닉네임", "password123", "Backend", 5);
+
+        // 로그인하여 쿠키 받기
+        ResultActions loginResult = mvc.perform(
+                post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(String.format("""
+                                {
+                                    "email": "%s",
+                                    "password": "password123"
+                                }
+                                """, email))
+        );
+
+        // 로그인 응답에서 쿠키 추출
+        Cookie accessToken = loginResult.andReturn().getResponse().getCookie("accessToken");
+
+        // /auth/me 호출하여 role 및 mentorId 확인 (쿠키 포함)
+        ResultActions result = mvc
+                .perform(get("/auth/me")
+                        .cookie(accessToken))
+                .andDo(print());
+
+        result
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.data.role").value("MENTOR"))
+                .andExpect(jsonPath("$.data.memberId").value(member.getId()))
+                .andExpect(jsonPath("$.data.email").value(email))
+                .andExpect(jsonPath("$.data.nickname").value("멘토닉네임"))
+                .andExpect(jsonPath("$.data.mentorId").isNotEmpty())
+                .andExpect(jsonPath("$.data.menteeId").isEmpty());
     }
 
     @Test
