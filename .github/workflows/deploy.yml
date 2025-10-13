@@ -185,6 +185,8 @@ jobs:
 
             cd /home/ssm-user/WEB6_8_FiveLogic_BE || exit 1
 
+            git pull origin main
+
             echo "📥 Docker 이미지 다운로드 중..."
             docker pull ghcr.io/${OWNER_LC}/${IMAGE_REPOSITORY}:latest
 
