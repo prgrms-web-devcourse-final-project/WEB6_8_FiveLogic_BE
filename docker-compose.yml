@@ -29,7 +29,7 @@ services:
       - app-network
 
   spring-boot:
-    image: ghcr.io/prgms-web-devcourse-final-project/fivelogic:latest
+    image: ghcr.io/prgrms-web-devcourse-final-project/fivelogic:latest
     container_name: spring-boot
     depends_on:
       - kafka

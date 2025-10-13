@@ -176,14 +176,13 @@ jobs:
             source /etc/environment || true
 
             OWNER_LC="${{ github.repository_owner }}"
-            OWNER_LC="${OWNER_LC,,}"
             IMAGE_TAG='${{ needs.makeTagAndRelease.outputs.tag_name }}'
             IMAGE_REPOSITORY='${{ env.IMAGE_REPOSITORY }}'
 
             cd /home/ssm-user/WEB6_8_FiveLogic_BE || exit 1
 
             echo "📥 Docker 이미지 다운로드 중..."
-            docker pull ghcr.io/${OWNER_LC}/${IMAGE_REPOSITORY}:latest
+            docker pull ghcr.io/${OWNER_LC}/${IMAGE_REPOSITORY}:${IMAGE_TAG}
 
             echo "🛑 기존 컨테이너 중지 및 제거 중..."
             docker-compose down || true
