@@ -11,6 +11,9 @@ import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.member.mentor.repository.MentorRepository;
 import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -270,6 +273,14 @@ public class MemberService {
         mentorRepository.save(mentor);
     }
 
+
+    public MemberPagingResponse getAllMembersForAdmin(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Member> members = memberRepository.findAllIncludingDeleted(pageable);
+
+        Page<MemberListResponse> memberPage = members.map(MemberListResponse::from);
+        return MemberPagingResponse.from(memberPage);
+    }
 
     public MemberSearchResponse getMemberForAdmin(Long memberId) {
         Member member = memberRepository.findByIdIncludingDeleted(memberId)

@@ -1,5 +1,6 @@
 package com.back.domain.member.member.controller;
 
+import com.back.domain.member.member.dto.MemberPagingResponse;
 import com.back.domain.member.member.dto.MemberSearchResponse;
 import com.back.domain.member.member.dto.MentorUpdateRequest;
 import com.back.domain.member.member.dto.MenteeUpdateRequest;
@@ -20,6 +21,16 @@ public class AdmMemberController {
     private final MemberService memberService;
     private final Rq rq;
 
+
+    @GetMapping
+    @Operation(summary = "회원 목록 조회 (관리자) - 페이징, 페이지는 기본으로 10개씩 조회")
+    @PreAuthorize("hasRole('ADMIN')")
+    public RsData<MemberPagingResponse> getAllMembers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        MemberPagingResponse members = memberService.getAllMembersForAdmin(page, size);
+        return new RsData<>("200-18", "회원 목록 조회 성공", members);
+    }
 
     @GetMapping("/{memberId}")
     @Operation(summary = "회원 상세 조회 (관리자)")
