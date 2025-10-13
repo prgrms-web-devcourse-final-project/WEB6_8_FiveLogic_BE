@@ -63,7 +63,8 @@ public class MemberMyPageControllerTest {
                 .andExpect(jsonPath("$.msg").value("멘티 정보 조회 성공"))
                 .andExpect(jsonPath("$.data.email").value(email))
                 .andExpect(jsonPath("$.data.name").value("멘티유저"))
-                .andExpect(jsonPath("$.data.nickname").value("멘티닉네임"));
+                .andExpect(jsonPath("$.data.nickname").value("멘티닉네임"))
+                .andExpect(jsonPath("$.data.job").value("Backend")); // 희망직업 필드 확인
     }
 
     @Test
@@ -108,6 +109,19 @@ public class MemberMyPageControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultCode").value("200-10"))
                 .andExpect(jsonPath("$.msg").value("멘티 정보 수정 성공"));
+
+        // 수정 후 다시 조회하여 job이 변경되었는지 확인
+        ResultActions getResult = mvc
+                .perform(
+                        get("/members/me/mentee")
+                                .cookie(accessToken)
+                )
+                .andDo(print());
+
+        getResult
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.nickname").value("새로운닉네임"))
+                .andExpect(jsonPath("$.data.job").value("Mobile")); // job이 변경되었는지 확인
     }
 
     @Test
@@ -148,6 +162,7 @@ public class MemberMyPageControllerTest {
                 .andExpect(jsonPath("$.data.email").value(email))
                 .andExpect(jsonPath("$.data.name").value("멘토유저"))
                 .andExpect(jsonPath("$.data.nickname").value("멘토닉네임"))
+                .andExpect(jsonPath("$.data.job").value("Backend")) // 직업 필드 확인
                 .andExpect(jsonPath("$.data.careerYears").value(5));
     }
 
@@ -194,6 +209,20 @@ public class MemberMyPageControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultCode").value("200-12"))
                 .andExpect(jsonPath("$.msg").value("멘토 정보 수정 성공"));
+
+        // 수정 후 다시 조회하여 job과 careerYears가 변경되었는지 확인
+        ResultActions getResult = mvc
+                .perform(
+                        get("/members/me/mentor")
+                                .cookie(accessToken)
+                )
+                .andDo(print());
+
+        getResult
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.nickname").value("새로운멘토닉네임"))
+                .andExpect(jsonPath("$.data.job").value("Fullstack")) // job이 변경되었는지 확인
+                .andExpect(jsonPath("$.data.careerYears").value(7)); // careerYears가 변경되었는지 확인
     }
 
     @Test

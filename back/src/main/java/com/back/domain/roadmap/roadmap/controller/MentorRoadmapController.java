@@ -3,6 +3,8 @@ package com.back.domain.roadmap.roadmap.controller;
 import com.back.domain.member.member.service.MemberStorage;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.roadmap.roadmap.dto.request.MentorRoadmapSaveRequest;
+import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapListResponse;
+import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapPagingResponse;
 import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapSaveResponse;
 import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapResponse;
 import com.back.domain.roadmap.roadmap.service.MentorRoadmapService;
@@ -12,6 +14,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +26,54 @@ public class MentorRoadmapController {
     private final MentorRoadmapService mentorRoadmapService;
     private final MemberStorage memberStorage;
     private final Rq rq;
+
+    @Operation(
+            summary = "멘토 로드맵 목록 조회",
+            description = """
+                    ### 개요
+                    모든 멘토의 로드맵 목록을 페이징과 키워드 검색으로 조회합니다.
+
+                    ### 쿼리 파라미터
+                    - `page`: 페이지 번호 (0부터 시작, 기본값: 0)
+                    - `size`: 페이지 크기 (기본값: 10)
+                    - `keyword`: 검색 키워드 (선택, 제목/설명/멘토 닉네임으로 검색)
+
+                    ### 반환 정보
+                    각 멘토 로드맵의 요약 정보:
+                    - id: 로드맵 ID
+                    - title: 로드맵 제목
+                    - description: 로드맵 설명 (150자 제한)
+                    - mentorId: 멘토 ID
+                    - memberId: 회원 ID
+                    - mentorNickname: 멘토 닉네임
+
+                    ### 응답 형식
+                    - mentorRoadmaps: 멘토 로드맵 목록
+                    - currentPage: 현재 페이지 번호
+                    - totalPage: 전체 페이지 수
+                    - totalElements: 전체 개수
+                    - hasNext: 다음 페이지 존재 여부
+
+                    ### 응답 코드
+                    - **200**: 조회 성공
+
+                    ### 참고
+                    - 인증 불필요 (비회원도 조회 가능)
+                    - 키워드는 제목, 설명, 멘토 닉네임에 대해 부분 일치 검색 (대소문자 무시)
+                    - 최신순 정렬 (로드맵 ID 내림차순)
+                    """
+    )
+    @GetMapping
+    public RsData<MentorRoadmapPagingResponse> getAllMentorRoadmaps(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword
+    ) {
+        Page<MentorRoadmapListResponse> mentorRoadmapPage = mentorRoadmapService.getAllMentorRoadmaps(keyword, page, size);
+        MentorRoadmapPagingResponse response = MentorRoadmapPagingResponse.from(mentorRoadmapPage);
+
+        return new RsData<>("200", "멘토 로드맵 목록 조회 성공", response);
+    }
 
     @Operation(
             summary = "멘토 로드맵 생성",

@@ -21,9 +21,15 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
         SELECT new com.back.domain.mentoring.slot.dto.response.MentorSlotDto(
             ms.id,
             ms.mentor.id,
+            ms.mentor.member.id,
             ms.startDateTime,
             ms.endDateTime,
-            ms.status,
+            CASE
+                WHEN ms.startDateTime < CURRENT_TIMESTAMP
+                    AND ms.status = com.back.domain.mentoring.slot.constant.MentorSlotStatus.AVAILABLE
+                THEN com.back.domain.mentoring.slot.constant.MentorSlotStatus.EXPIRED
+                ELSE ms.status
+            END,
             r.id
         )
         FROM MentorSlot ms
@@ -45,6 +51,7 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
         SELECT new com.back.domain.mentoring.slot.dto.response.MentorSlotDto(
                 ms.id,
                 ms.mentor.id,
+                ms.mentor.member.id,
                 ms.startDateTime,
                 ms.endDateTime,
                 ms.status,
@@ -53,6 +60,7 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
         FROM MentorSlot ms
         WHERE ms.mentor.id = :mentorId
         AND ms.status = 'AVAILABLE'
+        AND ms.startDateTime >= CURRENT_TIMESTAMP
         AND ms.startDateTime < :end
         AND ms.endDateTime >= :start
         ORDER BY ms.startDateTime ASC

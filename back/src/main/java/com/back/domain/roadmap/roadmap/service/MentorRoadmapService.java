@@ -4,6 +4,7 @@ import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.member.mentor.repository.MentorRepository;
 import com.back.domain.roadmap.roadmap.dto.request.MentorRoadmapSaveRequest;
 import com.back.domain.roadmap.roadmap.dto.request.RoadmapNodeRequest;
+import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapListResponse;
 import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapResponse;
 import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapSaveResponse;
 import com.back.domain.roadmap.roadmap.entity.MentorRoadmap;
@@ -17,6 +18,9 @@ import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,7 +65,7 @@ public class MentorRoadmapService {
         // CASCADE로 노드들이 자동 저장됨 (추가 save() 호출 불필요)
         mentorRoadmap.addNodes(allNodes);
 
-        eventPublisher.publishEvent(new MentorRoadmapChangeEvent(mentor.getJobId()));
+        eventPublisher.publishEvent(new MentorRoadmapChangeEvent(mentor.getJob().getId()));
 
         log.info("멘토 로드맵 생성 완료 - 멘토 ID: {}, 로드맵 ID: {}, 노드 수: {} (cascade 활용)",
                  mentorId, mentorRoadmap.getId(), mentorRoadmap.getNodes().size());
@@ -79,14 +83,14 @@ public class MentorRoadmapService {
     // 로드맵 ID로 멘토 로드맵 상세 조회
     @Transactional(readOnly = true)
     public MentorRoadmapResponse getById(Long id) {
-        // 로드맵과 노드들을 한 번에 조회 (성능 최적화)
+        // 로드맵과 노드들을 한 번에 조회
         MentorRoadmap mentorRoadmap = mentorRoadmapRepository.findByIdWithNodes(id)
                 .orElseThrow(() -> new ServiceException("404", "로드맵을 찾을 수 없습니다."));
 
         return MentorRoadmapResponse.from(mentorRoadmap);
     }
 
-    // 멘토 ID로 멘토 로드맵 상세 조회 (미래 API 확장성 대비)
+    // 멘토 ID로 멘토 로드맵 상세 조회
     @Transactional(readOnly = true)
     public MentorRoadmapResponse getByMentorId(Long mentorId) {
         // 멘토 ID로 로드맵과 노드들을 한 번에 조회
@@ -94,6 +98,24 @@ public class MentorRoadmapService {
                 .orElseThrow(() -> new ServiceException("404", "해당 멘토의 로드맵을 찾을 수 없습니다."));
 
         return MentorRoadmapResponse.from(mentorRoadmap);
+    }
+
+    // 멘토 로드맵 목록 조회 (페이징, 키워드 검색)
+    @Transactional(readOnly = true)
+    public Page<MentorRoadmapListResponse> getAllMentorRoadmaps(String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<MentorRoadmap> mentorRoadmapPage = mentorRoadmapRepository.findAllWithKeyword(keyword, pageable);
+
+        // MentorRoadmap -> MentorRoadmapListResponse 변환
+        return mentorRoadmapPage.map(mr -> MentorRoadmapListResponse.of(
+                mr.getId(),
+                mr.getTitle(),
+                mr.getDescription(),
+                mr.getMentor().getId(),
+                mr.getMentor().getMember().getId(),
+                mr.getMentor().getMember().getNickname()
+        ));
     }
 
     // 멘토 로드맵 수정
@@ -134,7 +156,7 @@ public class MentorRoadmapService {
         log.info("멘토 로드맵 수정 완료 - 로드맵 ID: {}, 노드 수: {} (cascade 활용)",
                 mentorRoadmap.getId(), mentorRoadmap.getNodes().size());
 
-        eventPublisher.publishEvent(new MentorRoadmapChangeEvent(mentorRoadmap.getMentor().getJobId()));
+        eventPublisher.publishEvent(new MentorRoadmapChangeEvent(mentorRoadmap.getMentor().getJob().getId()));
 
         return new MentorRoadmapSaveResponse(
                 mentorRoadmap.getId(),
@@ -157,7 +179,7 @@ public class MentorRoadmapService {
             throw new ServiceException("403", "본인의 로드맵만 삭제할 수 있습니다.");
         }
 
-        Long jobId = mentorRoadmap.getMentor().getJobId();
+        Long jobId = mentorRoadmap.getMentor().getJob().getId();
 
         // 1. 관련 노드들을 먼저 직접 삭제
         roadmapNodeRepository.deleteByRoadmapIdAndRoadmapType(
