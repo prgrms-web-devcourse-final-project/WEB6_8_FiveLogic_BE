@@ -103,6 +103,8 @@ jobs:
           echo "AI_BASE_URL=${AI_BASE_URL}" >> "${{ env.BACKEND_DIR }}/.env"
           echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" >> "${{ env.BACKEND_DIR }}/.env"
           echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" >> "${{ env.BACKEND_DIR }}/.env"
+          echo "MAIL_USERNAME=${MAIL_USERNAME}" >> "${{ env.BACKEND_DIR }}/.env"
+          echo "MAIL_PASSWORD=${MAIL_PASSWORD}" >> "${{ env.BACKEND_DIR }}/.env"
 
       - name: Docker Buildx 설치
         uses: docker/setup-buildx-action@v3
