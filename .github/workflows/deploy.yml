@@ -93,6 +93,8 @@ jobs:
           AI_BASE_URL: ${{ secrets.AI_BASE_URL }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
         run: |
           mkdir -p "${{ env.BACKEND_DIR }}"
           printf "%s" "${DOT_ENV}" > "${{ env.BACKEND_DIR }}/.env"
@@ -101,6 +103,8 @@ jobs:
           echo "AI_BASE_URL=${AI_BASE_URL}" >> "${{ env.BACKEND_DIR }}/.env"
           echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" >> "${{ env.BACKEND_DIR }}/.env"
           echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" >> "${{ env.BACKEND_DIR }}/.env"
+          echo "MAIL_USERNAME=${MAIL_USERNAME}" >> "${{ env.BACKEND_DIR }}/.env"
+          echo "MAIL_PASSWORD=${MAIL_PASSWORD}" >> "${{ env.BACKEND_DIR }}/.env"
 
       - name: Docker Buildx 설치
         uses: docker/setup-buildx-action@v3
@@ -182,7 +186,7 @@ jobs:
             cd /home/ssm-user/WEB6_8_FiveLogic_BE || exit 1
 
             echo "📥 Docker 이미지 다운로드 중..."
-            docker pull ghcr.io/${OWNER_LC}/${IMAGE_REPOSITORY}:${IMAGE_TAG}
+            docker pull ghcr.io/${OWNER_LC}/${IMAGE_REPOSITORY}:latest
 
             echo "🛑 기존 컨테이너 중지 및 제거 중..."
             docker-compose down || true
