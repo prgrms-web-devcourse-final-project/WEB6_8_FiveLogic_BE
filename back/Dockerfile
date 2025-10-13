@@ -40,6 +40,8 @@ COPY --from=builder /app/.env .env
 
 # 환경변수 기본값
 ENV SPRING_PROFILES_ACTIVE=prod
+ENV AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+ENV AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
 
 # 헬스체크용 curl 설치
 RUN apk add --no-cache curl

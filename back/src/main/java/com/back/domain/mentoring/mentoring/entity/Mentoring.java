@@ -34,17 +34,15 @@ public class Mentoring extends BaseEntity {
     private double rating = 0.0;
 
     @Builder
-    public Mentoring(Mentor mentor, String title, String bio, String thumb) {
+    public Mentoring(Mentor mentor, String title, String bio) {
         this.mentor = mentor;
         this.title = title;
         this.bio = bio;
-        this.thumb = thumb;
     }
 
-    public void update(String title, String bio, List<Tag> tags, String thumb) {
+    public void update(String title, String bio, List<Tag> tags) {
         this.title = title;
         this.bio = bio;
-        this.thumb = thumb;
 
         updateTags(tags);
     }
@@ -57,6 +55,10 @@ public class Mentoring extends BaseEntity {
                 this.mentoringTags.add(new MentoringTag(this, tag))
             );
         }
+    }
+
+    public void updateThumb(String thumb) {
+        this.thumb = thumb;
     }
 
     public void updateRating(double averageRating) {

@@ -19,9 +19,10 @@ public class MentoringSessionController {
     private final MentoringSessionManager mentoringSessionManager;
     private final Rq rq;
 
-    @GetMapping("/{sessionId}/url")
+    @GetMapping("/url")
     @Operation(summary = "세션참여 URL 발급", description = "세션 참여를 위한 URL을 발급합니다.")
-    public RsData<GetSessionUrlResponse> getSessionUrl(@PathVariable Long sessionId) {
+    public RsData<GetSessionUrlResponse> getSessionUrl(@RequestParam Long sessionId) {
+
         GetSessionUrlResponse response = mentoringSessionManager.getSessionUrl(sessionId);
         return new RsData<>("200", "요청완료", response);
     }

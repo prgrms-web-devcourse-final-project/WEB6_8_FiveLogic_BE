@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/post/comment")
+@RequestMapping("/post")
 @RequiredArgsConstructor
 public class PostCommentController {
 
@@ -29,7 +29,7 @@ public class PostCommentController {
     private final PostCommentService postCommentService;
 
     @Operation(summary = "댓글 생성", description = "comment는 공백이나 Null이 될 수 없습니다. comment의 글자 수 제한은 없습니다.")
-    @PostMapping("/post/{post_id}")
+    @PostMapping("/{post_id}/comment")
     public RsData<Void> createComment(@PathVariable Long post_id,
                                       @Valid @RequestBody CommentCreateRequest commentCreateRequest
     ) {
@@ -47,7 +47,7 @@ public class PostCommentController {
     }
 
     @Operation(summary = "댓글 삭제", description = "commentId는 공백이나 Null이 될 수 없습니다.")
-    @DeleteMapping("/post/{post_id}/comment")
+    @DeleteMapping("/{post_id}/comment")
     public RsData<Void> removePostComment(@PathVariable @Positive Long post_id
             , @RequestBody @Valid CommentDeleteRequest commentDeleteRequest) {
         Member member = rq.getActor();
@@ -58,7 +58,7 @@ public class PostCommentController {
     }
 
     @Operation(summary = "댓글 수정", description = "commentId, content는 공백이나 Null이 될 수 없습니다. content의 글자 수 제한은 없습니다. ")
-    @PutMapping("/post/{post_id}/comment/")
+    @PutMapping("/{post_id}/comment")
     public RsData<Void> updatePostComment(@PathVariable Long post_id
             , @Valid @RequestBody CommentModifyRequest commentModifyRequest) {
         Member member = rq.getActor();
