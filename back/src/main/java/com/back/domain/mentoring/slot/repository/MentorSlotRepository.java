@@ -24,7 +24,12 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
             ms.mentor.member.id,
             ms.startDateTime,
             ms.endDateTime,
-            ms.status,
+            CASE
+                WHEN ms.startDateTime < CURRENT_TIMESTAMP
+                    AND ms.status = com.back.domain.mentoring.slot.constant.MentorSlotStatus.AVAILABLE
+                THEN com.back.domain.mentoring.slot.constant.MentorSlotStatus.EXPIRED
+                ELSE ms.status
+            END,
             r.id
         )
         FROM MentorSlot ms
