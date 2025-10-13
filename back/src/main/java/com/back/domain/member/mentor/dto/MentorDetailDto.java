@@ -13,6 +13,10 @@ public record MentorDetailDto(
     @Schema(description = "평점")
     Double rate,
     // TODO: Job id, name
+    @Schema(description = "직업 ID")
+    Long jobId,
+    @Schema(description = "직업")
+    String jobName,
     @Schema(description = "연차")
     Integer careerYears
 ) {
@@ -22,6 +26,8 @@ public record MentorDetailDto(
             mentor.getMember().getId(),
             mentor.getMember().getNickname(),
             mentor.getRate(),
+            mentor.getJob().getId(),
+            mentor.getJob().getName(),
             mentor.getCareerYears()
         );
     }
