@@ -56,9 +56,11 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findByIdAndMember(reservationId, member.getId())
             .orElseThrow(() -> new ServiceException(ReservationErrorCode.RESERVATION_NOT_ACCESSIBLE));
 
-        MentoringSession mentoringSession = mentoringSessionService.getMentoringSessionByReservation(reservation);
+        Optional<MentoringSession> mentoringSession = mentoringSessionService.findMentoringSessionByReservation(reservation);
 
-        return ReservationResponse.from(reservation, mentoringSession);
+        return mentoringSession
+            .map(session -> ReservationResponse.from(reservation, session))
+            .orElseGet(() -> ReservationResponse.from(reservation));
     }
 
     @Transactional
