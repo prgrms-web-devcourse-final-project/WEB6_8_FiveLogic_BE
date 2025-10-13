@@ -74,8 +74,7 @@ class PostCommentServiceTest {
             Long postId = 999L;
             CommentCreateRequest request = new CommentCreateRequest("테스트 댓글");
 
-            when(postService.findById(postId)).thenReturn(null);
-
+            when(postService.findById(postId)).thenThrow(new ServiceException("400", "해당 Id의 게시글이 없습니다."));
             // when & then
             assertThatThrownBy(() -> postCommentService.createComment(member, postId, request))
                     .isInstanceOf(ServiceException.class)
@@ -126,7 +125,7 @@ class PostCommentServiceTest {
             // when & then
             assertThatThrownBy(() -> postCommentService.getAllPostCommentResponse(postId))
                     .isInstanceOf(ServiceException.class)
-                    .hasMessage("400 : 해당 Id의 게시글이 없습니다.");
+                    .hasMessage("400 : 유효하지 않은 게시글 Id입니다.");
 
             verify(postCommentRepository, never()).findCommentsWithMemberByPostId(anyLong());
         }
@@ -170,14 +169,12 @@ class PostCommentServiceTest {
             Long commentId = 1L;
             CommentDeleteRequest request = new CommentDeleteRequest(commentId);
 
-
-            when(postService.existsById(postId)).thenReturn(true);
             when(postCommentRepository.findById(commentId)).thenReturn(Optional.of(comment));
 
             // when & then
             assertThatThrownBy(() -> postCommentService.removePostComment(postId, request, otherUser))
                     .isInstanceOf(ServiceException.class)
-                    .hasMessage("400 : 삭제 권한이 없습니다.");
+                    .hasMessage("400 : 변경 권한이 없습니다.");
 
             verify(postCommentRepository, never()).delete(any(PostComment.class));
         }
@@ -247,7 +244,7 @@ class PostCommentServiceTest {
             // when & then
             assertThatThrownBy(() -> postCommentService.updatePostComment(postId, request, otherUser))
                     .isInstanceOf(ServiceException.class)
-                    .hasMessage("400 : 수정 권한이 없습니다.");
+                    .hasMessage("400 : 변경 권한이 없습니다.");
         }
 
         @Test
