@@ -313,10 +313,31 @@ public class RoadmapProdInitData {
         backendRoadmap = jobRoadmapRepository.save(backendRoadmap);
 
         // 다른 직업 로드맵 생성 (간단한 버전)
-        createSimpleFrontendRoadmap(frontendJob);
-        createSimpleMobileRoadmap(mobileJob);
-        createSimpleDataEngineerRoadmap(dataJob);
-        createSimpleAiMlRoadmap(aiJob);
+        //createSimpleFrontendRoadmap(frontendJob);
+        //createSimpleMobileRoadmap(mobileJob);
+        //createSimpleDataEngineerRoadmap(dataJob);
+        //createSimpleAiMlRoadmap(aiJob);
+
+        // 다건 조회 확인용 다른 직업 로드맵 생성 (빈 로드맵)
+        JobRoadmap frontendRoadmap = JobRoadmap.builder()
+                .job(frontendJob)
+                .build();
+        jobRoadmapRepository.save(frontendRoadmap);
+
+        JobRoadmap mobileRoadmap = JobRoadmap.builder()
+                .job(mobileJob)
+                .build();
+        jobRoadmapRepository.save(mobileRoadmap);
+
+        JobRoadmap dataRoadmap = JobRoadmap.builder()
+                .job(dataJob)
+                .build();
+        jobRoadmapRepository.save(dataRoadmap);
+
+        JobRoadmap aiRoadmap = JobRoadmap.builder()
+                .job(aiJob)
+                .build();
+        jobRoadmapRepository.save(aiRoadmap);
 
         // Task 조회 (이미 생성된 Task들 사용)
         Task programmingFundamentals = taskRepository.findByNameIgnoreCase("Programming Fundamentals").orElse(null);
