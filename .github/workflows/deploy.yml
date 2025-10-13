@@ -93,6 +93,8 @@ jobs:
           AI_BASE_URL: ${{ secrets.AI_BASE_URL }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
         run: |
           mkdir -p "${{ env.BACKEND_DIR }}"
           printf "%s" "${DOT_ENV}" > "${{ env.BACKEND_DIR }}/.env"
