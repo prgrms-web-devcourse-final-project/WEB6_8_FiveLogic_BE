@@ -8,7 +8,7 @@ import com.back.domain.post.comment.dto.CommentModifyRequest;
 import com.back.domain.post.comment.entity.PostComment;
 import com.back.domain.post.comment.repository.PostCommentRepository;
 import com.back.domain.post.post.entity.Post;
-import com.back.domain.post.post.repository.PostRepository;
+import com.back.domain.post.post.service.PostService;
 import com.back.global.exception.ServiceException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -20,16 +20,13 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 public class PostCommentService {
-    private final PostRepository postRepository;
+    private final PostService postService;
     private final PostCommentRepository postCommentRepository;
 
     @Transactional
     public void createComment(Member member, Long postId, CommentCreateRequest commentCreateRequest) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
-
-        if ( commentCreateRequest.comment() == null || commentCreateRequest.comment().isEmpty()) {
-            throw new ServiceException("400", "댓글은 비어 있을 수 없습니다.");
-        }
+        validateComment(commentCreateRequest.comment());
+        Post post = postService.findById(postId);
 
         PostComment postComment = PostComment.builder()
                 .post(post)
@@ -49,7 +46,6 @@ public class PostCommentService {
         validatePostExists(postId);
 
         List<PostComment> listPostComment = postCommentRepository.findCommentsWithMemberByPostId(postId);
-
         return listPostComment.stream()
                 .map(CommentAllResponse::from)
                 .toList();
@@ -57,103 +53,106 @@ public class PostCommentService {
 
     @Transactional
     public void removePostComment(Long postId, CommentDeleteRequest commentDeleteRequest, Member member) {
-        validatePostExists(postId);
-
-        PostComment postComment = getPostCommentById(commentDeleteRequest.commentId());
+        PostComment postComment = findCommentById(commentDeleteRequest.commentId());
         Member author = postComment.getMember();
 
-
-        if(!Objects.equals(member.getId(), author.getId())) {
-            throw new ServiceException("400", "삭제 권한이 없습니다.");
-        }
-
-//        if(postComment.getIsAdopted()) {
-//            throw new ServiceException("400", "채택된 댓글은 삭제할 수 없습니다.");
-//        }
+        validateAuthorized(member,author);
+        validatePostExists(postId);
 
         postCommentRepository.delete(postComment);
-
     }
 
     @Transactional
     public void updatePostComment(Long postId, CommentModifyRequest commentModifyRequest, Member member) {
         validatePostExists(postId);
 
-        PostComment postComment = getPostCommentById(commentModifyRequest.commentId());
+        PostComment postComment = findCommentById(commentModifyRequest.commentId());
         Member author = postComment.getMember();
 
-
-        if(!Objects.equals(member.getId(), author.getId())) {
-            throw new ServiceException("400", "수정 권한이 없습니다.");
-        }
-
-        if ( commentModifyRequest.content() == null || commentModifyRequest.content().isEmpty()) {
-            throw new ServiceException("400", "댓글은 비어 있을 수 없습니다.");
-        }
+        validateAuthorized(member, author);
+        validateComment(commentModifyRequest.content());
 
         postComment.updateContent(commentModifyRequest.content());
     }
 
-
-
-    private void validatePostExists(Long postId) {
-        if(postId == null || postId <= 0) {
-            throw new ServiceException("400", "유효하지 않은 게시글 Id입니다.");
-        }
-
-        if (!postRepository.existsById(postId)) {
-            throw new ServiceException("400", "해당 Id의 게시글이 없습니다.");
-        }
-
-
-    }
-
-    private PostComment getPostCommentById(Long commentId) {
-        return postCommentRepository.findById(commentId).orElseThrow(() -> new ServiceException("400", "해당 Id의 댓글이 없습니다."));
-    }
-
     @Transactional
     public void adoptComment(Long commentId, Member member) {
-        PostComment postComment = postCommentRepository.findById(commentId)
-                .orElseThrow(() -> new ServiceException("400", "해당 Id의 댓글이 없습니다."));
+        PostComment postComment = findCommentById(commentId);
 
         Post post = postComment.getPost();
 
-        if (!post.isAuthor(member)) {
-            throw new ServiceException("400", "채택 권한이 없습니다.");
-        }
-
-        if (post.getPostType() != Post.PostType.QUESTIONPOST) {
-            throw new ServiceException("400", "질문 게시글에만 댓글 채택이 가능합니다.");
-        }
-
-        if (postComment.getIsAdopted()) {
-            throw new ServiceException("400", "이미 채택된 댓글입니다.");
-        }
-
-        // 이미 채택된 댓글이 있는지 확인
-        boolean alreadyAdopted = postCommentRepository.existsByPostAndIsAdoptedTrue(post);
-        if (alreadyAdopted) {
-            throw new ServiceException("400", "이미 채택된 댓글이 있습니다.");
-        }
+        validateIsPostAuthor(post, member);
+        validatePostType(post);
+        validateAlreadyAdoptedComment(postComment);
+        validateAlreadyExistsAdoptedComment(post);
 
         postComment.adoptComment();
-
         post.updateResolveStatus(true);
     }
 
     @Transactional
     public  CommentAllResponse getAdoptedComment(Long postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+        Post post = postService.findById(postId);
 
+        validatePostType(post);
+
+        PostComment postComment = validateAdoptedComment(post);
+        return CommentAllResponse.from(postComment);
+    }
+
+
+
+
+
+    // ========== 헬퍼 메소드들 ========== //
+    private void validateIsPostAuthor(Post post, Member member){
+        if (!post.isAuthor(member)) {
+            throw new ServiceException("400", "채택 권한이 없습니다.");
+        }
+    }
+
+    private void validateAlreadyAdoptedComment(PostComment postComment){
+        if (postComment.getIsAdopted()) {
+            throw new ServiceException("400", "이미 채택된 댓글입니다.");
+        }
+    }
+
+    private void validateAlreadyExistsAdoptedComment(Post post) {
+        if (postCommentRepository.existsByPostAndIsAdoptedTrue(post)) {
+            throw new ServiceException("400", "이미 채택된 댓글이 있습니다.");
+        }
+    }
+
+    private void validateAuthorized(Member member, Member author) {
+        if(!Objects.equals(member.getId(), author.getId())) {
+            throw new ServiceException("400", "변경 권한이 없습니다.");
+        }
+    }
+
+    private PostComment validateAdoptedComment(Post post) {
+        return postCommentRepository.findByPostAndIsAdoptedTrue(post)
+                .orElseThrow(() -> new ServiceException("400", "채택된 댓글이 없습니다."));
+    }
+
+    private void validatePostType(Post post) {
         if (post.getPostType() != Post.PostType.QUESTIONPOST) {
             throw new ServiceException("400", "질문 게시글만 채택된 댓글을 가질 수 있습니다.");
         }
+    }
 
-        PostComment postComment = postCommentRepository.findByPostAndIsAdoptedTrue(post)
-                .orElseThrow(() -> new ServiceException("400", "채택된 댓글이 없습니다."));
+    private void validateComment(String comment) {
+        if (comment == null || comment.isEmpty()) {
+            throw new ServiceException("400", "댓글은 비어 있을 수 없습니다.");
+        }
+    }
 
-        return CommentAllResponse.from(postComment);
+    private void validatePostExists(Long postId) {
+        if (!postService.existsById(postId)) {
+            throw new ServiceException("400", "유효하지 않은 게시글 Id입니다.");
+        }
+    }
+
+    private PostComment findCommentById(Long commentId) {
+        return postCommentRepository.findById(commentId).orElseThrow(() -> new ServiceException("400", "해당 Id의 댓글이 없습니다."));
     }
 }

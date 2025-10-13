@@ -9,7 +9,9 @@ import com.back.domain.post.comment.entity.PostComment;
 import com.back.domain.post.comment.repository.PostCommentRepository;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.repository.PostRepository;
+import com.back.domain.post.post.service.PostService;
 import com.back.fixture.MemberFixture;
+import com.back.fixture.Post.PostFixture;
 import com.back.global.exception.ServiceException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -31,7 +33,7 @@ import static org.mockito.Mockito.*;
 class PostCommentServiceTest {
 
     @Mock
-    private PostRepository postRepository;
+    private PostService postService;
 
     @Mock
     private PostCommentRepository postCommentRepository;
@@ -48,18 +50,19 @@ class PostCommentServiceTest {
         void createComment_success() {
             // given
             Member member = MemberFixture.create(1L, "user@test.com", "User", "password", Member.Role.MENTEE);
-            Post post = createDefaultPost(member);
-            Long postId = 1L;
+            Post post = PostFixture.createInformationPost(member,1L);
             CommentCreateRequest request = new CommentCreateRequest("테스트 댓글");
 
-            when(postRepository.findById(postId)).thenReturn(Optional.of(post));
-            when(postCommentRepository.save(any(PostComment.class))).thenReturn(any(PostComment.class));
+            PostComment postComment = createComment(member, post, request.comment());
+
+            when(postService.findById(1L)).thenReturn(post);
+            when(postCommentRepository.save(any(PostComment.class))).thenReturn(postComment);
 
             // when
-            postCommentService.createComment(member, postId, request);
+            postCommentService.createComment(member, 1L, request);
 
             // then
-            verify(postRepository).findById(postId);
+            verify(postService).findById(1L);
             verify(postCommentRepository).save(any(PostComment.class));
         }
 
@@ -71,7 +74,7 @@ class PostCommentServiceTest {
             Long postId = 999L;
             CommentCreateRequest request = new CommentCreateRequest("테스트 댓글");
 
-            when(postRepository.findById(postId)).thenReturn(Optional.empty());
+            when(postService.findById(postId)).thenReturn(null);
 
             // when & then
             assertThatThrownBy(() -> postCommentService.createComment(member, postId, request))
@@ -100,7 +103,7 @@ class PostCommentServiceTest {
                     createComment(member2, post, "두 번째 댓글")
             );
 
-            when(postRepository.existsById(postId)).thenReturn(true);
+            when(postService.existsById(postId)).thenReturn(true);
             when(postCommentRepository.findCommentsWithMemberByPostId(postId)).thenReturn(comments);
 
             // when
@@ -108,7 +111,7 @@ class PostCommentServiceTest {
 
             // then
             assertThat(result).hasSize(2);
-            verify(postRepository).existsById(postId);
+            verify(postService).existsById(postId);
             verify(postCommentRepository).findCommentsWithMemberByPostId(postId);
         }
 
@@ -118,7 +121,7 @@ class PostCommentServiceTest {
             // given
             Long postId = 999L;
 
-            when(postRepository.existsById(postId)).thenReturn(false);
+            when(postService.existsById(postId)).thenReturn(false);
 
             // when & then
             assertThatThrownBy(() -> postCommentService.getAllPostCommentResponse(postId))
@@ -145,7 +148,7 @@ class PostCommentServiceTest {
             CommentDeleteRequest request = new CommentDeleteRequest(commentId);
 
 
-            when(postRepository.existsById(postId)).thenReturn(true);
+            when(postService.existsById(postId)).thenReturn(true);
             when(postCommentRepository.findById(commentId)).thenReturn(Optional.of(comment));
 
             // when
@@ -168,7 +171,7 @@ class PostCommentServiceTest {
             CommentDeleteRequest request = new CommentDeleteRequest(commentId);
 
 
-            when(postRepository.existsById(postId)).thenReturn(true);
+            when(postService.existsById(postId)).thenReturn(true);
             when(postCommentRepository.findById(commentId)).thenReturn(Optional.of(comment));
 
             // when & then
@@ -184,11 +187,11 @@ class PostCommentServiceTest {
         void removePostComment_commentNotExists_failure() {
             // given
             Member member = MemberFixture.createDefault();
+
             Long postId = 1L;
             Long commentId = 999L;
             CommentDeleteRequest request = new CommentDeleteRequest(commentId);
 
-            when(postRepository.existsById(postId)).thenReturn(true);
             when(postCommentRepository.findById(commentId)).thenReturn(Optional.empty());
 
             // when & then
@@ -215,7 +218,7 @@ class PostCommentServiceTest {
             Long commentId = 1L;
             CommentModifyRequest request = new CommentModifyRequest(commentId,"수정된 댓글");
 
-            when(postRepository.existsById(postId)).thenReturn(true);
+            when(postService.existsById(postId)).thenReturn(true);
             when(postCommentRepository.findById(commentId)).thenReturn(Optional.of(comment));
 
             // when
@@ -238,7 +241,7 @@ class PostCommentServiceTest {
 
             CommentModifyRequest request = new CommentModifyRequest(commentId, "400 : 수정된 댓글");
 
-            when(postRepository.existsById(postId)).thenReturn(true);
+            when(postService.existsById(postId)).thenReturn(true);
             when(postCommentRepository.findById(commentId)).thenReturn(Optional.of(comment));
 
             // when & then
@@ -260,7 +263,7 @@ class PostCommentServiceTest {
             CommentModifyRequest request = new CommentModifyRequest(commentId, "");
 
 
-            when(postRepository.existsById(postId)).thenReturn(true);
+            when(postService.existsById(postId)).thenReturn(true);
             when(postCommentRepository.findById(commentId)).thenReturn(Optional.of(comment));
 
             // when & then
@@ -274,13 +277,15 @@ class PostCommentServiceTest {
         void updatePostComment_nullContent_failure() {
             // given
             Member author = MemberFixture.create(1L, "author@test.com", "Author", "password", Member.Role.MENTEE);
-            Post post = createDefaultPost(author);
+            Post post = PostFixture.createInformationPost(author,1L);
+
+
             PostComment comment = createComment(author, post, "원본 댓글");
             Long postId = 1L;
             Long commentId = 1L;
             CommentModifyRequest request = new CommentModifyRequest(commentId, null);
 
-            when(postRepository.existsById(postId)).thenReturn(true);
+            when(postService.existsById(postId)).thenReturn(true);
             when(postCommentRepository.findById(commentId)).thenReturn(Optional.of(comment));
 
             // when & then
@@ -349,7 +354,7 @@ class PostCommentServiceTest {
             // when & then
             assertThatThrownBy(() -> postCommentService.adoptComment(commentId, postAuthor))
                     .isInstanceOf(ServiceException.class)
-                    .hasMessage("400 : 질문 게시글에만 댓글 채택이 가능합니다.");
+                    .hasMessage("400 : 질문 게시글만 채택된 댓글을 가질 수 있습니다.");
         }
 
         @Test

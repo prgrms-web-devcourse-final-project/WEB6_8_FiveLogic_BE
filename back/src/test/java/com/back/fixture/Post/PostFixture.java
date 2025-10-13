@@ -2,6 +2,7 @@ package com.back.fixture.Post;
 
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.post.post.entity.Post;
+import org.springframework.test.util.ReflectionTestUtils;
 
 public class PostFixture {
     private static Post.PostType questionPost = Post.PostType.QUESTIONPOST;
@@ -39,12 +40,16 @@ public class PostFixture {
         return post;
     }
 
-    public static Post createInformationPost(Member member) {
-        return Post.builder()
+    public static Post createInformationPost(Member member, Long id) {
+        Post post = Post.builder()
                 .postType(InformationPost)
                 .title(title)
                 .content(content)
                 .member(member)
                 .build();
+
+        ReflectionTestUtils.setField(post, "id", id);
+
+        return post;
     }
 }

@@ -209,7 +209,7 @@ public class PostCommentControllerTest {
                 .andExpect(handler().handlerType(PostCommentController.class))
                 .andExpect(handler().methodName("removePostComment"))
                 .andExpect(jsonPath("$.resultCode").value("400"))
-                .andExpect(jsonPath("$.msg").value("삭제 권한이 없습니다."));
+                .andExpect(jsonPath("$.msg").value("변경 권한이 없습니다."));
     }
 
     @Test
@@ -270,7 +270,7 @@ public class PostCommentControllerTest {
                 .andExpect(handler().handlerType(PostCommentController.class))
                 .andExpect(handler().methodName("updatePostComment"))
                 .andExpect(jsonPath("$.resultCode").value("400"))
-                .andExpect(jsonPath("$.msg").value("수정 권한이 없습니다."));
+                .andExpect(jsonPath("$.msg").value("변경 권한이 없습니다."));
     }
 
     @Test
