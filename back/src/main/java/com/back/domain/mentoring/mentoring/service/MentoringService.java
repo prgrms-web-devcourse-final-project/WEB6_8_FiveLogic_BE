@@ -8,6 +8,7 @@ import com.back.domain.mentoring.mentoring.dto.request.MentoringRequest;
 import com.back.domain.mentoring.mentoring.dto.response.MentoringResponse;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.entity.Tag;
+import com.back.domain.mentoring.mentoring.error.ImageErrorCode;
 import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
 import com.back.domain.mentoring.mentoring.repository.TagRepository;
@@ -18,7 +19,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +33,7 @@ public class MentoringService {
     private final MentoringRepository mentoringRepository;
     private final MentoringStorage mentoringStorage;
     private final TagRepository tagRepository;
+    private final S3ImageUploader s3ImageUploader;
 
     @Transactional(readOnly = true)
     public Page<MentoringWithTagsDto> getMentorings(String keyword, int page, int size) {
@@ -58,20 +62,21 @@ public class MentoringService {
     }
 
     @Transactional
-    public MentoringResponse createMentoring(MentoringRequest reqDto, Mentor mentor) {
+    public MentoringResponse createMentoring(MentoringRequest reqDto, MultipartFile thumb, Mentor mentor) {
         validateMentoringTitle(mentor.getId(), reqDto.title());
 
         Mentoring mentoring = Mentoring.builder()
             .mentor(mentor)
             .title(reqDto.title())
             .bio(reqDto.bio())
-            .thumb(reqDto.thumb())
             .build();
 
         List<Tag> tags = getOrCreateTags(reqDto.tags());
         mentoring.updateTags(tags);
 
-        mentoringRepository.save(mentoring);
+        mentoringRepository.saveAndFlush(mentoring);
+
+        uploadThumb(thumb, mentoring);
 
         return new MentoringResponse(
             MentoringDetailDto.from(mentoring),
@@ -80,7 +85,7 @@ public class MentoringService {
     }
 
     @Transactional
-    public MentoringResponse updateMentoring(Long mentoringId, MentoringRequest reqDto, Mentor mentor) {
+    public MentoringResponse updateMentoring(Long mentoringId, MentoringRequest reqDto, MultipartFile thumb, Mentor mentor) {
         Mentoring mentoring = mentoringStorage.findMentoring(mentoringId);
 
         validateOwner(mentoring, mentor);
@@ -88,7 +93,8 @@ public class MentoringService {
 
         List<Tag> tags = getOrCreateTags(reqDto.tags());
 
-        mentoring.update(reqDto.title(), reqDto.bio(), tags, reqDto.thumb());
+        mentoring.update(reqDto.title(), reqDto.bio(), tags);
+        uploadThumb(thumb, mentoring);
 
         return new MentoringResponse(
             MentoringDetailDto.from(mentoring),
@@ -144,6 +150,23 @@ public class MentoringService {
             tagRepository.saveAll(newTags);
         }
         return newTags;
+    }
+
+
+    // ===== 썸네일 =====
+
+    private void uploadThumb(MultipartFile thumb, Mentoring mentoring) {
+        if (thumb != null && !thumb.isEmpty()) {
+            String imageUrl = null;
+            try {
+                String path = "mentoring/" + mentoring.getId();
+                imageUrl = s3ImageUploader.upload(thumb, path);
+            } catch (IOException e) {
+                throw new ServiceException(ImageErrorCode.IMAGE_UPLOAD_FAILED);
+            }
+
+            mentoring.updateThumb(imageUrl);
+        }
     }
 
 

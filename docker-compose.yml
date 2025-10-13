@@ -37,6 +37,9 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
+    env_file:
+      - ./back/.env
+
     networks:
       - app-network
     restart: unless-stopped

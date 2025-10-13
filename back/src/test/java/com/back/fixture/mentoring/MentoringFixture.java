@@ -19,9 +19,10 @@ public class MentoringFixture {
             .mentor(mentor)
             .title(DEFAULT_TITLE)
             .bio(DEFAULT_BIO)
-            .thumb(DEFAULT_THUMB)
             .build();
         mentoring.updateTags(DEFAULT_TAGS);
+        mentoring.updateThumb(DEFAULT_THUMB);
+
         return mentoring;
     }
 
@@ -30,9 +31,9 @@ public class MentoringFixture {
             .mentor(mentor)
             .title(DEFAULT_TITLE)
             .bio(DEFAULT_BIO)
-            .thumb(DEFAULT_THUMB)
             .build();
         mentoring.updateTags(DEFAULT_TAGS);
+        mentoring.updateThumb(DEFAULT_THUMB);
 
         ReflectionTestUtils.setField(mentoring, "id", id);
         return mentoring;
@@ -43,9 +44,9 @@ public class MentoringFixture {
             .mentor(mentor)
             .title(DEFAULT_TITLE)
             .bio(DEFAULT_BIO)
-            .thumb(DEFAULT_THUMB)
             .build();
         mentoring.updateTags(DEFAULT_TAGS);
+        mentoring.updateThumb(DEFAULT_THUMB);
 
         if (id != null) {
             ReflectionTestUtils.setField(mentoring, "id", id);

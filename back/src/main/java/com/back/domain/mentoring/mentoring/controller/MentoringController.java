@@ -10,12 +10,16 @@ import com.back.domain.mentoring.mentoring.service.MentoringService;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -73,14 +77,16 @@ public class MentoringController {
         );
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('MENTOR')")
     @Operation(summary = "멘토링 생성", description = "멘토링을 생성합니다. 로그인한 멘토만 생성할 수 있습니다.")
     public RsData<MentoringResponse> createMentoring(
-        @RequestBody @Valid MentoringRequest reqDto
+        @Parameter(content = @Content(mediaType = "application/json"))
+        @RequestPart(value = "reqDto") @Valid MentoringRequest reqDto,
+        @RequestPart(value = "thumb", required = false) MultipartFile thumb
     ) {
         Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
-        MentoringResponse resDto = mentoringService.createMentoring(reqDto, mentor);
+        MentoringResponse resDto = mentoringService.createMentoring(reqDto, thumb, mentor);
 
         return new RsData<>(
             "201",
@@ -89,14 +95,17 @@ public class MentoringController {
         );
     }
 
-    @PutMapping("/{mentoringId}")
+    @PutMapping(value = "/{mentoringId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('MENTOR')")
     @Operation(summary = "멘토링 수정", description = "멘토링을 수정합니다. 멘토링 작성자만 접근할 수 있습니다.")
     public RsData<MentoringResponse> updateMentoring(
         @PathVariable Long mentoringId,
-        @RequestBody @Valid MentoringRequest reqDto
+        @Parameter(content = @Content(mediaType = "application/json"))
+        @RequestPart(value = "reqDto") @Valid MentoringRequest reqDto,
+        @RequestPart(value = "thumb", required = false) MultipartFile thumb
     ) {
         Mentor mentor = memberStorage.findMentorByMember(rq.getActor());
-        MentoringResponse resDto = mentoringService.updateMentoring(mentoringId, reqDto, mentor);
+        MentoringResponse resDto = mentoringService.updateMentoring(mentoringId, reqDto, thumb, mentor);
 
         return new RsData<>(
             "200",
@@ -106,6 +115,7 @@ public class MentoringController {
     }
 
     @DeleteMapping("/{mentoringId}")
+    @PreAuthorize("hasRole('MENTOR')")
     @Operation(summary = "멘토링 삭제", description = "멘토링을 삭제합니다. 멘토링 작성자만 접근할 수 있습니다.")
     public RsData<Void> deleteMentoring(
         @PathVariable Long mentoringId
