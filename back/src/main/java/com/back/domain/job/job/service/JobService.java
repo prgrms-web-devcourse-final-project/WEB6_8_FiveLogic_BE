@@ -19,7 +19,6 @@ public class JobService {
         return jobRepository.count();
     }
 
-    @Transactional
     public Job create(String name, String description) {
         Job job = new Job(name, description);
         return jobRepository.save(job);
