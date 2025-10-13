@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 public record UploadUrlGetResponse(
         String url,
+        String uuid,
         LocalDateTime expiresAt
 ) {
 }

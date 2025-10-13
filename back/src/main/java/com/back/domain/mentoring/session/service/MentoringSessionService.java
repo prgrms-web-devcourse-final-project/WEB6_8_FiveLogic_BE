@@ -8,6 +8,8 @@ import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class MentoringSessionService {
@@ -26,6 +28,10 @@ public class MentoringSessionService {
     public MentoringSession getMentoringSessionByReservation(Reservation reservation) {
         return mentoringSessionRepository.findByReservation((reservation))
                 .orElseThrow(() -> new ServiceException("404", "해당 예약의 세션이 없습니다."));
+    }
+
+    public Optional<MentoringSession> findMentoringSessionByReservation(Reservation reservation) {
+        return mentoringSessionRepository.findByReservation((reservation));
     }
 
     public MentoringSession getMentoringSessionByMentoring(Mentoring mentoring) {

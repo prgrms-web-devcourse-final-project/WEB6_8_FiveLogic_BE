@@ -37,7 +37,7 @@ public class NewsController {
         }
         Video video = videoService.getNewsByUuid(request.videoUuid());
         News news = newsService.createNews(member, request.title(), video, request.content());
-        NewsCreateResponse response = new NewsCreateResponse(news.getTitle(), news.getVideo().getUuid(), news.getContent(), member.getName());
+        NewsCreateResponse response = new NewsCreateResponse(news.getId(), news.getTitle(), news.getVideo().getUuid(), news.getContent(), member.getName());
         return new RsData<>("201", "뉴스가 생성되었습니다.", response);
     }
 
