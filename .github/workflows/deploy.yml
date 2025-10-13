@@ -180,7 +180,6 @@ jobs:
             source /etc/environment || true
 
             OWNER_LC="${{ github.repository_owner }}"
-            OWNER_LC="${OWNER_LC,,}"
             IMAGE_TAG='${{ needs.makeTagAndRelease.outputs.tag_name }}'
             IMAGE_REPOSITORY='${{ env.IMAGE_REPOSITORY }}'
 
