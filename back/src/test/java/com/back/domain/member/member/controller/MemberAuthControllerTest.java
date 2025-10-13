@@ -4,6 +4,8 @@ package com.back.domain.member.member.controller;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
 import com.back.domain.member.member.verification.EmailVerificationService;
+import com.back.domain.member.mentee.entity.Mentee;
+import com.back.domain.member.mentee.repository.MenteeRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,33 +37,50 @@ public class MemberAuthControllerTest {
     @Autowired
     private EmailVerificationService emailVerificationService;
 
+    @Autowired
+    private MenteeRepository menteeRepository;
+
     @Test
-    @DisplayName("멘티 회원가입")
+    @DisplayName("멘티 회원가입 - Job이 정상적으로 저장되는지 확인")
     void t1() throws Exception {
+        String email = "user1@example.com";
+        String interestedField = "Backend";
+
         ResultActions resultActions = mvc
                 .perform(
                         post("/auth/signup/mentee")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
+                                .content(String.format("""
                                         {
-                                            "email": "user1@example.com",
+                                            "email": "%s",
                                             "password": "password123",
                                             "name": "사용자1",
                                             "nickname": "유저1",
-                                            "interestedField": "Backend"
+                                            "interestedField": "%s"
                                         }
-                                        """.stripIndent())
+                                        """, email, interestedField).stripIndent())
 
                 )
                 .andDo(print());
-        Member member = memberService.findByEmail("user1@example.com").get();
 
+        // 회원가입 성공 확인
         resultActions
                 .andExpect(handler().handlerType(MemberAuthController.class))
                 .andExpect(handler().methodName("signupMentee"))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.resultCode").value("200-1"))
                 .andExpect(jsonPath("$.msg").value("멘티 회원가입 성공"));
+
+        // Member와 Mentee가 정상적으로 생성되었는지 확인
+        Member member = memberService.findByEmail(email).get();
+        assertThat(member).isNotNull();
+        assertThat(member.getRole()).isEqualTo(Member.Role.MENTEE);
+
+        // Mentee에 Job이 정상적으로 들어갔는지 확인
+        Mentee mentee = menteeRepository.findByMemberId(member.getId()).get();
+        assertThat(mentee).isNotNull();
+        assertThat(mentee.getJob()).isNotNull();
+        assertThat(mentee.getJob().getName()).isEqualTo(interestedField);
     }
 
     @Test
