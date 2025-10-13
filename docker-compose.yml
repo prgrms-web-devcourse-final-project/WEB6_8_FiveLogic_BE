@@ -38,7 +38,8 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
     env_file:
-      - .env
+      - ./back/.env
+
     networks:
       - app-network
     restart: unless-stopped
