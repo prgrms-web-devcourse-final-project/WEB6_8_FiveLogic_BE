@@ -38,7 +38,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
     env_file:
-      - /home/ssm-user/WEB6_8_FiveLogic_BE/.env
+      - /home/ssm-user/WEB6_8_FiveLogic_BE/back/.env
     networks:
       - app-network
     restart: unless-stopped
