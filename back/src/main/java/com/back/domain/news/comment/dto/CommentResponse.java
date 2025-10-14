@@ -10,6 +10,7 @@ public class CommentResponse {
     private final Long id;
     private final String content;
     private final String author;
+    private final Long memberId;
     private final LocalDateTime createdDate;
     private final LocalDateTime modifiedDate;
 
@@ -17,6 +18,7 @@ public class CommentResponse {
         this.id = newsComment.getId();
         this.content = newsComment.getContent();
         this.author = newsComment.getMember().getName();
+        this.memberId = newsComment.getMember().getId();
         this.createdDate = newsComment.getCreateDate();
         this.modifiedDate = newsComment.getModifyDate();
     }
