@@ -37,6 +37,7 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
+      - TZ=Asia/Seoul
     env_file:
       - /home/ssm-user/WEB6_8_FiveLogic_BE/.env
     networks:
