@@ -79,7 +79,7 @@ public class JobRoadmapController {
                     ### 반환 정보
 
                     **로드맵 기본 정보:**
-                    - id, jobId, jobName: 직업 정보
+                    - id, jobId, jobName, jobDescription: 직업 정보
                     - totalNodeCount: 전체 노드 개수
                     - createdDate, modifiedDate: 생성/수정일
 

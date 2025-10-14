@@ -165,18 +165,23 @@ public class MemberService {
 
         Long mentorId = null;
         Long menteeId = null;
+        String job = null;
 
         if (actor.getRole() == Member.Role.MENTOR) {
-            mentorId = mentorRepository.findByMemberId(actor.getId())
-                    .map(Mentor::getId)
-                    .orElse(null);
+            Mentor mentor = mentorRepository.findByMemberIdWithMember(actor.getId()).orElse(null);
+            if (mentor != null) {
+                mentorId = mentor.getId();
+                job = mentor.getJob() != null ? mentor.getJob().getName() : null;
+            }
         } else if (actor.getRole() == Member.Role.MENTEE) {
-            menteeId = menteeRepository.findByMemberId(actor.getId())
-                    .map(Mentee::getId)
-                    .orElse(null);
+            Mentee mentee = menteeRepository.findByMemberId(actor.getId()).orElse(null);
+            if (mentee != null) {
+                menteeId = mentee.getId();
+                job = mentee.getJob() != null ? mentee.getJob().getName() : null;
+            }
         }
 
-        return MemberMeResponse.of(actor, mentorId, menteeId);
+        return MemberMeResponse.of(actor, mentorId, menteeId, job);
     }
 
     public Member refreshAccessToken(String refreshToken) {
@@ -206,7 +211,7 @@ public class MemberService {
     }
 
     public MenteeMyPageResponse getMenteeMyPage(Member currentUser) {
-        Mentee mentee = menteeRepository.findByMemberId(currentUser.getId())
+        Mentee mentee = menteeRepository.findByMemberIdWithMember(currentUser.getId())
                 .orElseThrow(() -> new ServiceException("404-2", "멘티 정보를 찾을 수 없습니다."));
 
         return MenteeMyPageResponse.from(currentUser, mentee);
@@ -226,7 +231,7 @@ public class MemberService {
 
         // Mentee 정보 업데이트 (interestedField)
         if (request.interestedField() != null) {
-            Mentee mentee = menteeRepository.findByMemberId(currentUser.getId())
+            Mentee mentee = menteeRepository.findByMemberIdWithMember(currentUser.getId())
                     .orElseThrow(() -> new ServiceException("404-2", "멘티 정보를 찾을 수 없습니다."));
 
             Job job = jobRepository.findByName(request.interestedField())
@@ -238,7 +243,7 @@ public class MemberService {
     }
 
     public MentorMyPageResponse getMentorMyPage(Member currentUser) {
-        Mentor mentor = mentorRepository.findByMemberId(currentUser.getId())
+        Mentor mentor = mentorRepository.findByMemberIdWithMember(currentUser.getId())
                 .orElseThrow(() -> new ServiceException("404-3", "멘토 정보를 찾을 수 없습니다."));
 
         return MentorMyPageResponse.from(currentUser, mentor);

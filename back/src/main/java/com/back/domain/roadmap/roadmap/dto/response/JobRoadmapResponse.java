@@ -14,6 +14,7 @@ public record JobRoadmapResponse(
     Long id,
     Long jobId,
     String jobName,
+    String jobDescription,
     List<JobRoadmapNodeResponse> nodes,
     int totalNodeCount,
     LocalDateTime createdDate,
@@ -21,7 +22,7 @@ public record JobRoadmapResponse(
 ) {
 
     // 정적 팩터리 메서드 - JobRoadmap과 Job 정보, 통계 정보로부터 Response DTO 생성
-    public static JobRoadmapResponse from(JobRoadmap jobRoadmap, String jobName, Map<Long, JobRoadmapNodeStat> statMap) {
+    public static JobRoadmapResponse from(JobRoadmap jobRoadmap, String jobName, String jobDescription, Map<Long, JobRoadmapNodeStat> statMap) {
         // 부모-자식 관계 맵 생성
         Map<Long, List<RoadmapNode>> childrenMap = jobRoadmap.getNodes().stream()
                 .filter(node -> node.getParent() != null)
@@ -47,6 +48,7 @@ public record JobRoadmapResponse(
             jobRoadmap.getId(),
             jobRoadmap.getJob().getId(),
             jobName,
+            jobDescription,
             nodes,
             jobRoadmap.getNodes().size(),
             jobRoadmap.getCreateDate(),
