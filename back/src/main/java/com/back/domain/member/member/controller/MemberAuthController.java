@@ -1,10 +1,6 @@
 package com.back.domain.member.member.controller;
 
-import com.back.domain.member.member.dto.MenteeSignupRequest;
-import com.back.domain.member.member.dto.MentorSignupVerifyRequest;
-import com.back.domain.member.member.dto.MentorVerificationRequest;
-import com.back.domain.member.member.dto.LoginRequest;
-import com.back.domain.member.member.dto.MemberMeResponse;
+import com.back.domain.member.member.dto.*;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
 import com.back.global.rq.Rq;
@@ -117,6 +113,16 @@ public class MemberAuthController {
         rq.deleteCookie("refreshToken");
 
         return new RsData<>("200-7", "회원 탈퇴가 완료되었습니다.");
+    }
+
+    @GetMapping("/mentors")
+    @Operation(summary = "모든 멘토 조회")
+    public RsData<MentorPagingResponse> getAllMentors(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        MentorPagingResponse response = memberService.getAllMentors(page, size);
+        return new RsData<>("200-8", "멘토 목록 조회 성공", response);
     }
 
 }
