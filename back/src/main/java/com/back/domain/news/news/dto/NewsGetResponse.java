@@ -5,6 +5,7 @@ import com.back.domain.news.news.entity.News;
 import java.time.LocalDateTime;
 
 public record NewsGetResponse(
+        Long id,
         String title,
         String videoUuid,
         String content,
@@ -14,6 +15,7 @@ public record NewsGetResponse(
 ) {
     public NewsGetResponse(News news) {
         this(
+                news.getId(),
                 news.getTitle(),
                 news.getVideo().getUuid(),
                 news.getContent(),
