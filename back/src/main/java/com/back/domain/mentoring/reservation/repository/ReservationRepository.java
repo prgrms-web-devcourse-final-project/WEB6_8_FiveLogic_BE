@@ -33,9 +33,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         SELECT r
         FROM Reservation r
         WHERE r.mentor.member.id = :memberId
+        AND (:status IS NULL OR r.status = :status)
         """)
     Page<Reservation> findAllByMentorMember(
         @Param("memberId") Long memberId,
+        @Param("status") ReservationStatus status,
         Pageable pageable
     );
 
@@ -43,9 +45,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         SELECT r
         FROM Reservation r
         WHERE r.mentee.member = :member
+        AND (:status IS NULL OR r.status = :status)
         """)
     Page<Reservation> findAllByMenteeMember(
         @Param("member") Member member,
+        @Param("status") ReservationStatus status,
         Pageable pageable
     );
 

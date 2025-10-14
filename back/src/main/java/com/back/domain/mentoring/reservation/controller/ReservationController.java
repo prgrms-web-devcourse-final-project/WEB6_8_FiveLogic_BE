@@ -4,6 +4,7 @@ import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberStorage;
 import com.back.domain.member.mentee.entity.Mentee;
 import com.back.domain.member.mentor.entity.Mentor;
+import com.back.domain.mentoring.reservation.constant.ReservationStatus;
 import com.back.domain.mentoring.reservation.dto.ReservationDto;
 import com.back.domain.mentoring.reservation.dto.request.ReservationRequest;
 import com.back.domain.mentoring.reservation.dto.response.ReservationPagingResponse;
@@ -33,10 +34,11 @@ public class ReservationController {
     @Operation(summary = "나의 예약 목록 조회", description = "본인의 예약 목록을 조회합니다. 로그인 후 조회할 수 있습니다.")
     public RsData<ReservationPagingResponse> getReservations(
         @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(required = false)ReservationStatus status
     ) {
         Member member = rq.getActor();
-        Page<ReservationDto> reservationPage = reservationService.getReservations(member, page, size);
+        Page<ReservationDto> reservationPage = reservationService.getReservations(member, page, size, status);
         ReservationPagingResponse resDto = ReservationPagingResponse.from(reservationPage);
 
         return new RsData<>(
