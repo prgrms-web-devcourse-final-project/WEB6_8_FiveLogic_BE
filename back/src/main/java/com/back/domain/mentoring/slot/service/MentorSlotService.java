@@ -12,6 +12,8 @@ import com.back.domain.mentoring.slot.error.MentorSlotErrorCode;
 import com.back.domain.mentoring.slot.repository.MentorSlotRepository;
 import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MentorSlotService {
 
     private final MentorSlotRepository mentorSlotRepository;
@@ -144,6 +147,24 @@ public class MentorSlotService {
      */
     private LocalDate findNextOrSameDayOfWeek(LocalDate startDate, DayOfWeek targetDay) {
         return startDate.with(TemporalAdjusters.nextOrSame(targetDay));
+    }
+
+
+    // ===== 스케줄러 =====
+
+    /**
+     * 매 시간 30분에 지난 슬롯 만기 처리
+     * - AVAILABLE -> EXPIRED
+     */
+    @Scheduled(cron = "0 */30 * * * *")
+    @Transactional
+    public void expirePassedSlots() {
+        LocalDateTime now = LocalDateTime.now();
+
+        int updateCount = mentorSlotRepository.expirePassedSlots(now);
+        if (updateCount > 0) {
+            log.info("만료된 슬롯 {}개 업데이트 완료 at {}", now, updateCount);
+        }
     }
 
 
