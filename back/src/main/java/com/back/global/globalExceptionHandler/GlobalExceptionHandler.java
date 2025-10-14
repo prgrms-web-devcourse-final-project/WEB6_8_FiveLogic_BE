@@ -12,6 +12,7 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -104,6 +105,18 @@ public class GlobalExceptionHandler {
                                 "NotBlank",
                                 ex.getLocalizedMessage()
                         )
+                ),
+                BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<RsData<Void>> handle(MissingServletRequestParameterException ex) {
+        String message = String.format("필수 파라미터 '%s'(이)가 누락되었습니다.", ex.getParameterName());
+        return new ResponseEntity<>(
+                new RsData<>(
+                        "400-1",
+                        message
                 ),
                 BAD_REQUEST
         );
