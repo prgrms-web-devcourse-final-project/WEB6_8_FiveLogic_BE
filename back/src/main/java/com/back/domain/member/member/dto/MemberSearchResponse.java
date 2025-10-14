@@ -21,6 +21,13 @@ public record MemberSearchResponse(
         Long menteeId         // 멘티 ID (멘티인 경우에만 값이 있음)
 ) {
     public static MemberSearchResponse from(Member member, Mentor mentor, Mentee mentee) {
+        String jobName = null;
+        if (mentor != null && mentor.getJob() != null) {
+            jobName = mentor.getJob().getName();
+        } else if (mentee != null && mentee.getJob() != null) {
+            jobName = mentee.getJob().getName();
+        }
+
         return new MemberSearchResponse(
                 member.getId(),
                 member.getEmail(),
@@ -30,7 +37,7 @@ public record MemberSearchResponse(
                 member.getIsDeleted(),
                 member.getCreateDate(),
                 member.getModifyDate(),
-                mentor != null ? mentor.getJob().getName() : (mentee != null ? mentee.getJob().getName() : null),
+                jobName,
                 mentor != null ? mentor.getCareerYears() : null,
                 mentor != null ? mentor.getId() : null,
                 mentee != null ? mentee.getId() : null
