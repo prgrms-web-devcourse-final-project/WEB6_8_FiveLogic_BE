@@ -19,6 +19,6 @@ public interface MenteeRepository extends JpaRepository<Mentee, Long> {
     Optional<Mentee> findById(@Param("id") Long id);
 
     // 삭제된 멘티 포함 조회 (관리자용)
-    @Query("SELECT m FROM Mentee m WHERE m.member.id = :memberId")
+    @Query("SELECT m FROM Mentee m LEFT JOIN FETCH m.job WHERE m.member.id = :memberId")
     Optional<Mentee> findByMemberIdIncludingDeleted(@Param("memberId") Long memberId);
 }
