@@ -85,6 +85,7 @@ class NewsCommentServiceTest {
         String updatedContent = "수정된 댓글입니다.";
 
         when(newsCommentRepository.findById(commentId)).thenReturn(Optional.of(existingNewsComment));
+        when(newsCommentRepository.save(any(NewsComment.class))).thenReturn(existingNewsComment);
 
         // when
         NewsComment result = newsCommentService.updateComment(member, news, commentId, updatedContent);
