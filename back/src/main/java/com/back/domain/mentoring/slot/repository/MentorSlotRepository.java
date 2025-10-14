@@ -56,7 +56,7 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
         FROM MentorSlot ms
         WHERE ms.mentor.id = :mentorId
         AND ms.status = 'AVAILABLE'
-        AND ms.startDateTime >= CURRENT_TIMESTAMP
+        AND ms.startDateTime >= :now
         AND ms.startDateTime < :end
         AND ms.endDateTime >= :start
         ORDER BY ms.startDateTime ASC
@@ -64,7 +64,8 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
     List<MentorSlotDto> findAvailableSlots(
         @Param("mentorId") Long mentorId,
         @Param("start") LocalDateTime start,
-        @Param("end") LocalDateTime end
+        @Param("end") LocalDateTime end,
+        @Param("now") LocalDateTime now
     );
 
     @Query("""

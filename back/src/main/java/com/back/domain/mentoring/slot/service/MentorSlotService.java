@@ -43,7 +43,8 @@ public class MentorSlotService {
     public List<MentorSlotDto> getAvailableMentorSlots(Long mentorId, LocalDateTime startDate, LocalDateTime endDate) {
         DateTimeValidator.validateTime(startDate, endDate);
 
-        return mentorSlotRepository.findAvailableSlots(mentorId, startDate, endDate);
+        LocalDateTime now = LocalDateTime.now();
+        return mentorSlotRepository.findAvailableSlots(mentorId, startDate, endDate, now);
     }
 
     @Transactional(readOnly = true)
@@ -163,7 +164,7 @@ public class MentorSlotService {
 
         int updateCount = mentorSlotRepository.expirePassedSlots(now);
         if (updateCount > 0) {
-            log.info("만료된 슬롯 {}개 업데이트 완료 at {}", now, updateCount);
+            log.info("만료된 슬롯 {}개 업데이트 완료 at {}", updateCount, now);
         }
     }
 
