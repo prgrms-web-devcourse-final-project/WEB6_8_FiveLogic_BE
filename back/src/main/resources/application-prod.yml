@@ -1,7 +1,4 @@
 spring:
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
   datasource:
     url: jdbc:mysql://devcos-team10-mysql.czvbgr7hie3i.ap-northeast-2.rds.amazonaws.com:3306/fivelogic?useSSL=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: ${DB_USERNAME}
