@@ -282,7 +282,9 @@ public class MemberAuthControllerTest {
                 .andExpect(jsonPath("$.data.email").value(email))
                 .andExpect(jsonPath("$.data.nickname").value("멘티닉네임"))
                 .andExpect(jsonPath("$.data.mentorId").isEmpty())
-                .andExpect(jsonPath("$.data.menteeId").isNotEmpty());
+                .andExpect(jsonPath("$.data.menteeId").isNotEmpty())
+                .andExpect(jsonPath("$.data.job").isNotEmpty());
+
     }
 
     @Test
@@ -320,7 +322,9 @@ public class MemberAuthControllerTest {
                 .andExpect(jsonPath("$.data.email").value(email))
                 .andExpect(jsonPath("$.data.nickname").value("멘토닉네임"))
                 .andExpect(jsonPath("$.data.mentorId").isNotEmpty())
-                .andExpect(jsonPath("$.data.menteeId").isEmpty());
+                .andExpect(jsonPath("$.data.menteeId").isEmpty())
+                .andExpect(jsonPath("$.data.job").isNotEmpty());
+
     }
 
     @Test
