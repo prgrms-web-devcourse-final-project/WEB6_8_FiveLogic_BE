@@ -101,6 +101,7 @@ class ReservationServiceTest {
 
             when(reservationRepository.findAllByMentorMember(
                 eq(mentor.getMember().getId()),
+                isNull(),
                 any(Pageable.class)
             )).thenReturn(reservationPage);
 
@@ -108,7 +109,8 @@ class ReservationServiceTest {
             Page<ReservationDto> result = reservationService.getReservations(
                 mentor.getMember(),
                 page,
-                size
+                size,
+                null
             );
 
             // then
@@ -118,6 +120,7 @@ class ReservationServiceTest {
             assertThat(result.getTotalPages()).isEqualTo(2);
             verify(reservationRepository).findAllByMentorMember(
                 eq(mentor.getMember().getId()),
+                isNull(),
                 any(Pageable.class)
             );
         }

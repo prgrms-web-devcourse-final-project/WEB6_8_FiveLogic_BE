@@ -39,7 +39,7 @@ public class ReservationService {
     private final MentoringSessionService mentoringSessionService;
 
     @Transactional(readOnly = true)
-    public Page<ReservationDto> getReservations(Member member, int page, int size) {
+    public Page<ReservationDto> getReservations(Member member, int page, int size, ReservationStatus status) {
         Pageable pageable = PageRequest.of(
             page,
             size,
@@ -49,9 +49,9 @@ public class ReservationService {
         Page<Reservation> reservations;
 
         if (member.getRole() == Member.Role.MENTOR) {
-            reservations = reservationRepository.findAllByMentorMember(member.getId(), pageable);
+            reservations = reservationRepository.findAllByMentorMember(member.getId(), status, pageable);
         } else {
-            reservations = reservationRepository.findAllByMenteeMember(member, pageable);
+            reservations = reservationRepository.findAllByMenteeMember(member, status, pageable);
         }
         return reservations.map(ReservationDto::from);
     }
