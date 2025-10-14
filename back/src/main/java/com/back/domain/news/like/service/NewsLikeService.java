@@ -33,4 +33,10 @@ public class NewsLikeService {
                 .orElseThrow(() -> new ServiceException("404", "해당 뉴스를 찾을 수 없습니다."));
         return newsLikeRepository.countByNews(news);
     }
+
+    public boolean hasUserLikedNews(Member member, Long newsId) {
+        News news = newsRepository.findById(newsId)
+                .orElseThrow(() -> new ServiceException("404", "해당 뉴스를 찾을 수 없습니다."));
+        return newsLikeRepository.findByMemberAndNews(member, news).isPresent();
+    }
 }
