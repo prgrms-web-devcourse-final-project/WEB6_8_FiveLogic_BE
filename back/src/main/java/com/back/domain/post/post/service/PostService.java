@@ -30,7 +30,7 @@ public class PostService {
     }
 
     @Transactional
-    public Post createPost(PostCreateRequest postCreateRequest, Member member) {
+    public PostCreateResponse createPost(PostCreateRequest postCreateRequest, Member member) {
         String postTypeStr = postCreateRequest.postType();
         Post.validPostType(postTypeStr);
         Post.PostType postType = Post.PostType.valueOf(postTypeStr);
@@ -59,22 +59,22 @@ public class PostService {
 
         postRepository.save(post);
 
-        return post;
+        return PostCreateResponse.from(post);
     }
 
 
     @Transactional
     public void removePost(Long postId, Member member) {
-        Post post = findById(postId);
-        if (!post.isAuthor(member)) throw new ServiceException("400", "삭제 권한이 없습니다.");
+        Post post = findPostById(postId);
+        validateModifyAuthorization(post, member);
 
         postRepository.delete(post);
     }
 
     @Transactional
     public void updatePost(long postId, Member member, @Valid PostModifyRequest postModifyRequest) {
-        Post post = findById(postId);
-        if (!post.isAuthor(member)) throw new ServiceException("400", "수정 권한이 없습니다.");
+        Post post = findPostById(postId);
+        validateModifyAuthorization(post, member);
 
         if ( postModifyRequest.title() == null || postModifyRequest.title().isBlank()) {
             throw new ServiceException("400", "제목을 입력해주세요.");
@@ -104,14 +104,9 @@ public class PostService {
         return postRepository.searchPosts(keyword, pageable, postType).map(PostDto::from);
     }
 
-    public Post findById(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
-        return post;
-    }
-
     @Transactional
     public PostSingleResponse makePostSingleResponse(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+        Post post = findPostById(postId);
 
         PostSingleResponse postSingleResponse = PostSingleResponse.from(post);
         return postSingleResponse;
@@ -121,6 +116,18 @@ public class PostService {
         return postRepository.findAllWithMember().stream()
                 .map(PostAllResponse::from)
                 .toList();
+    }
+
+    public boolean existsById(Long postId) {
+        return postRepository.existsById(postId);
+    }
+
+    public Post findPostById(Long postId) {
+        return postRepository.findById(postId).orElseThrow(() -> new ServiceException("400", "해당 Id의 게시글이 없습니다."));
+    }
+
+    private void validateModifyAuthorization(Post post, Member member) {
+        if (!post.isAuthor(member)) throw new ServiceException("400", "변경 권한이 없습니다.");
     }
 
 }
