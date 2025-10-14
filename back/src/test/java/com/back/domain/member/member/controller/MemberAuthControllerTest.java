@@ -567,4 +567,78 @@ public class MemberAuthControllerTest {
 
     // TODO: 마이페이지 관련 테스트들은 MemberMyPageControllerTest로 이동됨
 
+    @Test
+    @DisplayName("모든 멘토 조회 - 페이징 처리")
+    void t14() throws Exception {
+        // 여러 멘토 생성
+        memberService.joinMentor("mentor1@example.com", "멘토1", "멘토닉네임1", "password123", "Backend", 5);
+        memberService.joinMentor("mentor2@example.com", "멘토2", "멘토닉네임2", "password123", "Frontend", 3);
+        memberService.joinMentor("mentor3@example.com", "멘토3", "멘토닉네임3", "password123", "DevOps", 7);
+
+        // 멘토 목록 조회
+        ResultActions result = mvc
+                .perform(
+                        get("/auth/mentors")
+                                .param("page", "0")
+                                .param("size", "10")
+                )
+                .andDo(print());
+
+        result
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.resultCode").value("200-8"))
+                .andExpect(jsonPath("$.msg").value("멘토 목록 조회 성공"))
+                .andExpect(jsonPath("$.data.mentors").isArray())
+                .andExpect(jsonPath("$.data.mentors.length()").value(4))
+                .andExpect(jsonPath("$.data.currentPage").value(0))
+                .andExpect(jsonPath("$.data.totalElements").value(4))
+                .andExpect(jsonPath("$.data.hasNext").value(false));
+    }
+
+    @Test
+    @DisplayName("모든 멘토 조회 - 페이지 크기 조정")
+    void t16() throws Exception {
+        // 5명의 멘토 생성
+        for (int i = 1; i <= 5; i++) {
+            memberService.joinMentor("mentor" + i + "@example.com", "멘토" + i, "멘토닉네임" + i, "password123", "Backend", i);
+        }
+
+        // 페이지 크기를 2로 설정하여 첫 페이지 조회
+        ResultActions result = mvc
+                .perform(
+                        get("/auth/mentors")
+                                .param("page", "0")
+                                .param("size", "2")
+                )
+                .andDo(print());
+
+        result
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.data.mentors.length()").value(2))
+                .andExpect(jsonPath("$.data.totalElements").value(6))
+                .andExpect(jsonPath("$.data.totalPage").value(3))
+                .andExpect(jsonPath("$.data.hasNext").value(true));
+    }
+
+    @Test
+    @DisplayName("모든 멘토 조회 - 멘토 정보 확인")
+    void t17() throws Exception {
+        // 멘토 생성
+        memberService.joinMentor("detailmentor@example.com", "상세멘토", "상세닉네임", "password123", "Backend", 10);
+
+        // 멘토 목록 조회
+        ResultActions result = mvc
+                .perform(get("/auth/mentors"))
+                .andDo(print());
+
+        result
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.data.mentors[0].name").value("상세멘토"))
+                .andExpect(jsonPath("$.data.mentors[0].nickname").value("상세닉네임"))
+                .andExpect(jsonPath("$.data.mentors[0].job").value("Backend"))
+                .andExpect(jsonPath("$.data.mentors[0].careerYears").value(10))
+                .andExpect(jsonPath("$.data.mentors[0].mentorId").isNotEmpty())
+                .andExpect(jsonPath("$.data.mentors[0].memberId").isNotEmpty());
+    }
+
 }

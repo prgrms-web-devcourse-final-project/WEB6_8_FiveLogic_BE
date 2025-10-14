@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -387,6 +388,23 @@ public class MemberService {
         if (memberRepository.findByNickname(nickname).isPresent()) {
             throw new ServiceException("400-3", "이미 존재하는 닉네임입니다.");
         }
+    }
+
+    public MentorPagingResponse getAllMentors(int page, int size) {
+        List<Mentor> allMentors = mentorRepository.findAllActiveWithMemberAndJob();
+
+        int start = page * size;
+        int end = Math.min(start + size, allMentors.size());
+        List<Mentor> pagedMentors = allMentors.subList(start, end);
+
+        Page<Mentor> mentorPage = new org.springframework.data.domain.PageImpl<>(
+                pagedMentors,
+                PageRequest.of(page, size),
+                allMentors.size()
+        );
+
+        Page<MentorListResponse> responsePage = mentorPage.map(MentorListResponse::from);
+        return MentorPagingResponse.from(responsePage);
     }
 
 }
