@@ -174,17 +174,25 @@ class MentorSlotServiceTest {
             );
 
             List<MentorSlotDto> availableSlots = List.of(slotDto1, slotDto2);
-            LocalDateTime now = LocalDateTime.now();
 
-            when(mentorSlotRepository.findAvailableSlots(mentor1.getId(), startDate, endDate, now))
-                .thenReturn(availableSlots);
+            when(mentorSlotRepository.findAvailableSlots(
+                eq(mentor1.getId()),
+                eq(startDate),
+                eq(endDate),
+                any(LocalDateTime.class)
+            )).thenReturn(availableSlots);
 
             // when
             List<MentorSlotDto> result = mentorSlotService.getAvailableMentorSlots(mentor1.getId(), startDate, endDate);
 
             // then
             assertThat(result).hasSize(2);
-            verify(mentorSlotRepository).findAvailableSlots(mentor1.getId(), startDate, endDate, now);
+            verify(mentorSlotRepository).findAvailableSlots(
+                eq(mentor1.getId()),
+                eq(startDate),
+                eq(endDate),
+                any(LocalDateTime.class)
+            );
         }
     }
 
