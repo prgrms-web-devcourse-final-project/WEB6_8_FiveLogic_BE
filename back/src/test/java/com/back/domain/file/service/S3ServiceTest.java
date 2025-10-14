@@ -38,7 +38,6 @@ public class S3ServiceTest {
     @Test
     @DisplayName("S3 업로드 URL 생성")
     void generateUploadUrlTest() throws MalformedURLException {
-        String bucket = "test-bucket";
         String objectKey = "test-video.mp4";
 
         PresignedPutObjectRequest mocked = mock(PresignedPutObjectRequest.class);
@@ -47,7 +46,7 @@ public class S3ServiceTest {
 
         when(mocked.url()).thenReturn(new URL("http://localhost:8080/upload"));
 
-        URL url = s3Service.generateUploadUrl(bucket, objectKey);
+        URL url = s3Service.generateUploadUrl(objectKey, "video/mp4");
 
         assertThat(url).isNotNull();
         assertThat(url.toString()).isEqualTo("http://localhost:8080/upload");
@@ -56,7 +55,6 @@ public class S3ServiceTest {
     @Test
     @DisplayName("S3 다운로드 URL 생성")
     void generateDownloadUrlTest() throws MalformedURLException {
-        String bucket = "test-bucket";
         String objectKey = "test-video.mp4";
 
         var mocked = mock(software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest.class);
@@ -65,7 +63,7 @@ public class S3ServiceTest {
 
         when(mocked.url()).thenReturn(new URL("http://localhost:8080/download"));
 
-        URL url = s3Service.generateDownloadUrl(bucket, objectKey);
+        URL url = s3Service.generateDownloadUrl(objectKey);
 
         assertThat(url).isNotNull();
         assertThat(url.toString()).isEqualTo("http://localhost:8080/download");
@@ -74,13 +72,12 @@ public class S3ServiceTest {
     @Test
     @DisplayName("업로드 URL 요청의 결과가 null일 경우 예외 발생")
     void generateUploadUrl_PresignRequestNull_Test() {
-        String bucket = "test-bucket";
         String objectKey = "test-video.mp4";
 
         when(presigner.presignPutObject(any(Consumer.class))).thenReturn(null);
 
         try {
-            s3Service.generateUploadUrl(bucket, objectKey);
+            s3Service.generateUploadUrl(objectKey, "video/mp4");
         } catch (Exception e) {
             assertThat(e).isInstanceOf(ServiceException.class);
         }
@@ -89,13 +86,12 @@ public class S3ServiceTest {
     @Test
     @DisplayName("다운로드 URL 요청의 결과가 null일 경우 예외 발생")
     void generateDownloadUrl_PresignRequestNull_Test() {
-        String bucket = "test-bucket";
         String objectKey = "test-video.mp4";
 
         when(presigner.presignGetObject(any(Consumer.class))).thenReturn(null);
 
         try {
-            s3Service.generateDownloadUrl(bucket, objectKey);
+            s3Service.generateDownloadUrl(objectKey);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(ServiceException.class);
         }
@@ -105,26 +101,24 @@ public class S3ServiceTest {
     @Test
     @DisplayName("isExist() - 객체 존재 시 예외를 던지지 않고 정상 완료")
     void isExist_objectExists_shouldNotThrowException() {
-        String bucket = "test-bucket";
         String objectKey = "existing.mp4";
 
         HeadObjectResponse mockResponse = mock(HeadObjectResponse.class);
         when(s3Client.headObject(any(HeadObjectRequest.class))).thenReturn(mockResponse);
 
-        assertDoesNotThrow(() -> s3Service.isExist(bucket, objectKey));
+        assertDoesNotThrow(() -> s3Service.isExist(objectKey));
     }
 
     @Test
     @DisplayName("isExist() - 객체 존재하지 않으면 ObjectNotFoundException을 던짐")
     void isExist_objectNotExists_shouldThrowObjectNotFoundException() {
-        String bucket = "test-bucket";
         String objectKey = "non-existing.mp4";
 
         doThrow(S3Exception.builder().statusCode(404).build())
                 .when(s3Client).headObject(any(HeadObjectRequest.class));
 
         assertThrows(ServiceException.class, () ->
-                s3Service.isExist(bucket, objectKey)
+                s3Service.isExist(objectKey)
         );
     }
 
@@ -132,14 +126,14 @@ public class S3ServiceTest {
     @DisplayName("bucket이나 objectKey가 null 혹은 공백인 요청은 예외를 반환한다")
     void validateRequest_InvalidInput_Test() {
         try {
-            s3Service.validateRequest(null, "file.mp4");
+            s3Service.validateRequest("file.mp4");
         } catch (Exception e) {
             assertThat(e).isInstanceOf(ServiceException.class);
             assertThat(e.getMessage()).isEqualTo("400 : 버킷 이름과 객체 키는 필수입니다.");
         }
 
         try {
-            s3Service.validateRequest("bucket", "   ");
+            s3Service.validateRequest("bucket");
         } catch (Exception e) {
             assertThat(e).isInstanceOf(ServiceException.class);
             assertThat(e.getMessage()).isEqualTo("400 : 버킷 이름과 객체 키는 필수입니다.");

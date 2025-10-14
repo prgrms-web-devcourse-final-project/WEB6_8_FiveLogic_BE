@@ -3,6 +3,7 @@ package com.back.domain.mentoring.slot.repository;
 import com.back.domain.mentoring.slot.dto.response.MentorSlotDto;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -21,6 +22,7 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
         SELECT new com.back.domain.mentoring.slot.dto.response.MentorSlotDto(
             ms.id,
             ms.mentor.id,
+            ms.mentor.member.id,
             ms.startDateTime,
             ms.endDateTime,
             ms.status,
@@ -45,6 +47,7 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
         SELECT new com.back.domain.mentoring.slot.dto.response.MentorSlotDto(
                 ms.id,
                 ms.mentor.id,
+                ms.mentor.member.id,
                 ms.startDateTime,
                 ms.endDateTime,
                 ms.status,
@@ -53,6 +56,7 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
         FROM MentorSlot ms
         WHERE ms.mentor.id = :mentorId
         AND ms.status = 'AVAILABLE'
+        AND ms.startDateTime >= :now
         AND ms.startDateTime < :end
         AND ms.endDateTime >= :start
         ORDER BY ms.startDateTime ASC
@@ -60,7 +64,8 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
     List<MentorSlotDto> findAvailableSlots(
         @Param("mentorId") Long mentorId,
         @Param("start") LocalDateTime start,
-        @Param("end") LocalDateTime end
+        @Param("end") LocalDateTime end,
+        @Param("now") LocalDateTime now
     );
 
     @Query("""
@@ -91,5 +96,16 @@ public interface MentorSlotRepository extends JpaRepository<MentorSlot, Long> {
         @Param("slotId") Long slotId,
         @Param("start") LocalDateTime start,
         @Param("end") LocalDateTime end
+    );
+
+    @Modifying
+    @Query("""
+        UPDATE MentorSlot  ms
+        SET ms.status = com.back.domain.mentoring.slot.constant.MentorSlotStatus.EXPIRED
+        WHERE ms.startDateTime < :now
+        AND ms.status = com.back.domain.mentoring.slot.constant.MentorSlotStatus.AVAILABLE
+        """)
+    int expirePassedSlots(
+        @Param("now") LocalDateTime now
     );
 }

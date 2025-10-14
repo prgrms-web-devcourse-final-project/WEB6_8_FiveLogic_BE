@@ -1,5 +1,7 @@
 package com.back.domain.member.member.service;
 
+import com.back.domain.job.job.entity.Job;
+import com.back.domain.job.job.repository.JobRepository;
 import com.back.domain.member.member.dto.*;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.repository.MemberRepository;
@@ -9,6 +11,9 @@ import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.member.mentor.repository.MentorRepository;
 import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +29,7 @@ public class MemberService {
     private final MentorRepository mentorRepository;
     private final MenteeRepository menteeRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JobRepository jobRepository;
 
     @Transactional
     public Member joinMentee(String email, String name, String nickname, String password, String interestedField) {
@@ -44,8 +50,11 @@ public class MemberService {
         Member member = new Member(email, passwordEncoder.encode(password), name, nickname, Member.Role.MENTEE);
         Member savedMember = memberRepository.save(member);
 
-        // TODO: interestedField를 jobId로 매핑하는 로직 필요
-        Mentee mentee = new Mentee(savedMember, null);
+        // interestedField로 Job 찾기 또는 생성
+        Job job = jobRepository.findByName(interestedField)
+                .orElseGet(() -> jobRepository.save(new Job(interestedField, null)));
+
+        Mentee mentee = new Mentee(savedMember, job);
         menteeRepository.save(mentee);
 
         return savedMember;
@@ -70,8 +79,11 @@ public class MemberService {
         Member member = new Member(email, passwordEncoder.encode(password), name, nickname, Member.Role.MENTOR);
         Member savedMember = memberRepository.save(member);
 
-        // TODO: career를 jobId로 매핑하는 로직 필요
-        Mentor mentor = new Mentor(savedMember, null, null, careerYears);
+        // career로 Job 찾기 또는 생성
+        Job job = jobRepository.findByName(career)
+                .orElseGet(() -> jobRepository.save(new Job(career, null)));
+
+        Mentor mentor = new Mentor(savedMember, job, null, careerYears);
         mentorRepository.save(mentor);
 
         return savedMember;
@@ -146,6 +158,32 @@ public class MemberService {
         return actor;
     }
 
+    public MemberMeResponse getMemberMe(Member actor) {
+        if (actor == null) {
+            throw new ServiceException("401-1", "로그인이 필요합니다.");
+        }
+
+        Long mentorId = null;
+        Long menteeId = null;
+        String job = null;
+
+        if (actor.getRole() == Member.Role.MENTOR) {
+            Mentor mentor = mentorRepository.findByMemberIdWithMember(actor.getId()).orElse(null);
+            if (mentor != null) {
+                mentorId = mentor.getId();
+                job = mentor.getJob() != null ? mentor.getJob().getName() : null;
+            }
+        } else if (actor.getRole() == Member.Role.MENTEE) {
+            Mentee mentee = menteeRepository.findByMemberId(actor.getId()).orElse(null);
+            if (mentee != null) {
+                menteeId = mentee.getId();
+                job = mentee.getJob() != null ? mentee.getJob().getName() : null;
+            }
+        }
+
+        return MemberMeResponse.of(actor, mentorId, menteeId, job);
+    }
+
     public Member refreshAccessToken(String refreshToken) {
         if (refreshToken.isBlank()) {
             throw new ServiceException("401-1", "Refresh token이 없습니다.");
@@ -173,7 +211,7 @@ public class MemberService {
     }
 
     public MenteeMyPageResponse getMenteeMyPage(Member currentUser) {
-        Mentee mentee = menteeRepository.findByMemberId(currentUser.getId())
+        Mentee mentee = menteeRepository.findByMemberIdWithMember(currentUser.getId())
                 .orElseThrow(() -> new ServiceException("404-2", "멘티 정보를 찾을 수 없습니다."));
 
         return MenteeMyPageResponse.from(currentUser, mentee);
@@ -191,11 +229,21 @@ public class MemberService {
         member.updateNickname(request.nickname());
         memberRepository.save(member);
 
-        // TODO: interestedField를 jobId로 매핑하는 로직 필요 (현재는 기존 jobId 유지)
+        // Mentee 정보 업데이트 (interestedField)
+        if (request.interestedField() != null) {
+            Mentee mentee = menteeRepository.findByMemberIdWithMember(currentUser.getId())
+                    .orElseThrow(() -> new ServiceException("404-2", "멘티 정보를 찾을 수 없습니다."));
+
+            Job job = jobRepository.findByName(request.interestedField())
+                    .orElseGet(() -> jobRepository.save(new Job(request.interestedField(), null)));
+
+            mentee.updateJob(job);
+            menteeRepository.save(mentee);
+        }
     }
 
     public MentorMyPageResponse getMentorMyPage(Member currentUser) {
-        Mentor mentor = mentorRepository.findByMemberId(currentUser.getId())
+        Mentor mentor = mentorRepository.findByMemberIdWithMember(currentUser.getId())
                 .orElseThrow(() -> new ServiceException("404-3", "멘토 정보를 찾을 수 없습니다."));
 
         return MentorMyPageResponse.from(currentUser, mentor);
@@ -216,13 +264,28 @@ public class MemberService {
         member.updateNickname(request.nickname());
         memberRepository.save(member);
 
-        // Mentor 정보 업데이트 (경력연수)
-        mentor.updateCareerYears(request.careerYears());
-        mentorRepository.save(mentor);
+        // Mentor 정보 업데이트 (경력연수, career)
+        if (request.careerYears() != null) {
+            mentor.updateCareerYears(request.careerYears());
+        }
 
-        // TODO: career를 jobId로 매핑하는 로직 필요 (현재는 기존 jobId 유지)
+        if (request.career() != null) {
+            Job job = jobRepository.findByName(request.career())
+                    .orElseGet(() -> jobRepository.save(new Job(request.career(), null)));
+            mentor.updateJob(job);
+        }
+
+        mentorRepository.save(mentor);
     }
 
+
+    public MemberPagingResponse getAllMembersForAdmin(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Member> members = memberRepository.findAllIncludingDeleted(pageable);
+
+        Page<MemberListResponse> memberPage = members.map(MemberListResponse::from);
+        return MemberPagingResponse.from(memberPage);
+    }
 
     public MemberSearchResponse getMemberForAdmin(Long memberId) {
         Member member = memberRepository.findByIdIncludingDeleted(memberId)
@@ -288,11 +351,25 @@ public class MemberService {
             Mentor mentor = mentorRepository.findByMemberIdIncludingDeleted(member.getId())
                     .orElse(null);
             if (mentor != null) {
-                if (careerYears != null) mentor.updateCareerYears(careerYears);
+                if (careerYears != null) {
+                    mentor.updateCareerYears(careerYears);
+                }
+                if (career != null) {
+                    Job job = jobRepository.findByName(career)
+                            .orElseGet(() -> jobRepository.save(new Job(career, null)));
+                    mentor.updateJob(job);
+                }
                 mentorRepository.save(mentor);
             }
         } else if (member.getRole() == Member.Role.MENTEE && interestedField != null) {
-            // TODO: interestedField 업데이트 로직 필요 (Mentee 엔티티에 업데이트 메서드가 있을 때)
+            Mentee mentee = menteeRepository.findByMemberIdIncludingDeleted(member.getId())
+                    .orElse(null);
+            if (mentee != null) {
+                Job job = jobRepository.findByName(interestedField)
+                        .orElseGet(() -> jobRepository.save(new Job(interestedField, null)));
+                mentee.updateJob(job);
+                menteeRepository.save(mentee);
+            }
         }
     }
 

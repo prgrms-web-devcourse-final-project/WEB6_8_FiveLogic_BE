@@ -89,9 +89,22 @@ jobs:
       - name: .env 파일 생성
         env:
           DOT_ENV: ${{ secrets.DOT_ENV }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          AI_BASE_URL: ${{ secrets.AI_BASE_URL }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
         run: |
           mkdir -p "${{ env.BACKEND_DIR }}"
           printf "%s" "${DOT_ENV}" > "${{ env.BACKEND_DIR }}/.env"
+          echo "" >> "${{ env.BACKEND_DIR }}/.env"
+          echo "AI_API_KEY=${AI_API_KEY}" >> "${{ env.BACKEND_DIR }}/.env"
+          echo "AI_BASE_URL=${AI_BASE_URL}" >> "${{ env.BACKEND_DIR }}/.env"
+          echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" >> "${{ env.BACKEND_DIR }}/.env"
+          echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" >> "${{ env.BACKEND_DIR }}/.env"
+          echo "MAIL_USERNAME=${MAIL_USERNAME}" >> "${{ env.BACKEND_DIR }}/.env"
+          echo "MAIL_PASSWORD=${MAIL_PASSWORD}" >> "${{ env.BACKEND_DIR }}/.env"
 
       - name: Docker Buildx 설치
         uses: docker/setup-buildx-action@v3
@@ -164,37 +177,29 @@ jobs:
             exec 2> >(awk '{ fflush(); print strftime("[%Y-%m-%d %H:%M:%S]"), $0 }' | tee -a "$LOG" >&2)
 
             echo "🚀 배포 시작..."
-
             source /etc/environment || true
 
             OWNER_LC="${{ github.repository_owner }}"
-            OWNER_LC="${OWNER_LC,,}"
             IMAGE_TAG='${{ needs.makeTagAndRelease.outputs.tag_name }}'
             IMAGE_REPOSITORY='${{ env.IMAGE_REPOSITORY }}'
-            IMAGE="ghcr.io/${OWNER_LC}/${IMAGE_REPOSITORY}:${IMAGE_TAG}"
-            CONTAINER_NAME="${{ env.CONTAINER_NAME }}"
-
-            echo "📦 이미지: ${IMAGE}"
-            echo "📦 컨테이너: ${CONTAINER_NAME}"
 
             cd /home/ssm-user/WEB6_8_FiveLogic_BE || exit 1
 
+            git pull origin main
+
             echo "📥 Docker 이미지 다운로드 중..."
-            docker pull $IMAGE
+            docker pull ghcr.io/${OWNER_LC}/${IMAGE_REPOSITORY}:latest
 
-            echo "🛑 기존 컨테이너 중지 중..."
-            docker-compose stop $CONTAINER_NAME || true
-            docker-compose rm -f $CONTAINER_NAME || true
+            echo "🛑 기존 컨테이너 중지 및 제거 중..."
+            docker-compose down || true
 
-            sed -i "s|image:.*${IMAGE_REPOSITORY}.*|image: ${IMAGE}|g" docker-compose.yml
+            echo "🚀 모든 컨테이너 시작 중..."
+            docker-compose up -d
 
-            echo "🚀 새 컨테이너 시작 중..."
-            docker-compose up -d $CONTAINER_NAME
-
-            echo "🏥 헬스체크 중..."
+            echo "🏥 spring-boot 헬스체크 중..."
             for i in {1..30}; do
-              if docker exec $CONTAINER_NAME curl -f http://localhost:8080/health > /dev/null 2>&1; then
-                echo "✅ 서버 정상 구동!"
+              if docker exec spring-boot curl -f http://localhost:8080/health > /dev/null 2>&1; then
+                echo "✅ spring-boot 서버 정상 구동!"
                 break
               fi
               echo "대기 중... ($i/30)"
@@ -202,10 +207,10 @@ jobs:
             done
 
             echo "📊 컨테이너 상태:"
-            docker-compose ps $CONTAINER_NAME
+            docker-compose ps
 
             echo "📋 최근 로그:"
-            docker-compose logs --tail=50 $CONTAINER_NAME
+            docker-compose logs --tail=50
 
             echo "🧹 오래된 이미지 정리 중..."
             {

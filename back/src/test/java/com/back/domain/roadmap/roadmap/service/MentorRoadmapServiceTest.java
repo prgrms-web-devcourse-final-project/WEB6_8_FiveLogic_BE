@@ -4,6 +4,7 @@ import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.roadmap.roadmap.dto.request.MentorRoadmapSaveRequest;
 import com.back.domain.roadmap.roadmap.dto.request.RoadmapNodeRequest;
+import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapListResponse;
 import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapResponse;
 import com.back.domain.roadmap.roadmap.dto.response.MentorRoadmapSaveResponse;
 import com.back.domain.roadmap.task.service.TaskService;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -410,6 +412,203 @@ class MentorRoadmapServiceTest {
         assertThatThrownBy(() -> mentorRoadmapService.update(created.id(), mentorId, updateRequest))
                 .isInstanceOf(ServiceException.class)
                 .hasMessageContaining("stepOrder는 1부터 2 사이의 값이어야 합니다.");
+    }
+
+    @Test
+    @DisplayName("멘토 로드맵 목록 조회 - 페이징 기본 동작")
+    void t18() {
+        // Given - 3개의 멘토 로드맵 생성
+        createRoadmapForMentor(mentorId, "첫 번째 로드맵", "첫 번째 설명");
+
+        Member mentor2Member = memberTestFixture.createMentorMember();
+        Mentor mentor2 = memberTestFixture.createMentor(mentor2Member);
+        createRoadmapForMentor(mentor2.getId(), "두 번째 로드맵", "두 번째 설명");
+
+        Member mentor3Member = memberTestFixture.createMentorMember();
+        Mentor mentor3 = memberTestFixture.createMentor(mentor3Member);
+        createRoadmapForMentor(mentor3.getId(), "세 번째 로드맵", "세 번째 설명");
+
+        // When - 첫 페이지 조회 (size=10)
+        Page<MentorRoadmapListResponse> page = mentorRoadmapService.getAllMentorRoadmaps(null, 0, 10);
+
+        // Then
+        assertThat(page.getContent()).hasSize(3);
+        assertThat(page.getTotalElements()).isEqualTo(3);
+        assertThat(page.getTotalPages()).isEqualTo(1);
+        assertThat(page.getNumber()).isEqualTo(0);
+        assertThat(page.hasNext()).isFalse();
+
+        // 최신순 정렬 확인 (ID 내림차순)
+        List<MentorRoadmapListResponse> content = page.getContent();
+        assertThat(content.get(0).title()).isEqualTo("세 번째 로드맵");
+        assertThat(content.get(1).title()).isEqualTo("두 번째 로드맵");
+        assertThat(content.get(2).title()).isEqualTo("첫 번째 로드맵");
+    }
+
+    @Test
+    @DisplayName("멘토 로드맵 목록 조회 - 페이징 크기 제한")
+    void t19() {
+        // Given - 5개의 멘토 로드맵 생성
+        for (int i = 1; i <= 5; i++) {
+            Member mentorMember = memberTestFixture.createMentorMember();
+            Mentor mentor = memberTestFixture.createMentor(mentorMember);
+            createRoadmapForMentor(mentor.getId(), "로드맵 " + i, "설명 " + i);
+        }
+
+        // When - 페이지 크기 2로 조회
+        Page<MentorRoadmapListResponse> page1 = mentorRoadmapService.getAllMentorRoadmaps(null, 0, 2);
+        Page<MentorRoadmapListResponse> page2 = mentorRoadmapService.getAllMentorRoadmaps(null, 1, 2);
+        Page<MentorRoadmapListResponse> page3 = mentorRoadmapService.getAllMentorRoadmaps(null, 2, 2);
+
+        // Then
+        assertThat(page1.getContent()).hasSize(2);
+        assertThat(page1.getTotalElements()).isEqualTo(5);
+        assertThat(page1.getTotalPages()).isEqualTo(3);
+        assertThat(page1.hasNext()).isTrue();
+
+        assertThat(page2.getContent()).hasSize(2);
+        assertThat(page2.hasNext()).isTrue();
+
+        assertThat(page3.getContent()).hasSize(1); // 마지막 페이지
+        assertThat(page3.hasNext()).isFalse();
+    }
+
+    @Test
+    @DisplayName("멘토 로드맵 목록 조회 - 제목으로 키워드 검색")
+    void t20() {
+        // Given
+        createRoadmapForMentor(mentorId, "Java 백엔드 로드맵", "Java 관련 설명");
+
+        Member mentor2Member = memberTestFixture.createMentorMember();
+        Mentor mentor2 = memberTestFixture.createMentor(mentor2Member);
+        createRoadmapForMentor(mentor2.getId(), "Python 백엔드 로드맵", "Python 관련 설명");
+
+        Member mentor3Member = memberTestFixture.createMentorMember();
+        Mentor mentor3 = memberTestFixture.createMentor(mentor3Member);
+        createRoadmapForMentor(mentor3.getId(), "React 프론트엔드", "리액트 관련 설명");
+
+        // When - "Java" 키워드로 검색
+        Page<MentorRoadmapListResponse> page = mentorRoadmapService.getAllMentorRoadmaps("Java", 0, 10);
+
+        // Then
+        assertThat(page.getContent()).hasSize(1);
+        assertThat(page.getContent().get(0).title()).contains("Java");
+    }
+
+    @Test
+    @DisplayName("멘토 로드맵 목록 조회 - 설명으로 키워드 검색")
+    void t21() {
+        // Given
+        createRoadmapForMentor(mentorId, "백엔드 로드맵 1", "Spring Boot를 사용한 백엔드 개발");
+
+        Member mentor2Member = memberTestFixture.createMentorMember();
+        Mentor mentor2 = memberTestFixture.createMentor(mentor2Member);
+        createRoadmapForMentor(mentor2.getId(), "백엔드 로드맵 2", "Django를 사용한 백엔드 개발");
+
+        // When - "Spring" 키워드로 검색
+        Page<MentorRoadmapListResponse> page = mentorRoadmapService.getAllMentorRoadmaps("Spring", 0, 10);
+
+        // Then
+        assertThat(page.getContent()).hasSize(1);
+        assertThat(page.getContent().get(0).description()).contains("Spring");
+    }
+
+    @Test
+    @DisplayName("멘토 로드맵 목록 조회 - 대소문자 무시 검색")
+    void t22() {
+        // Given
+        createRoadmapForMentor(mentorId, "JAVA Backend Roadmap", "자바 백엔드");
+
+        // When - 소문자로 검색
+        Page<MentorRoadmapListResponse> page = mentorRoadmapService.getAllMentorRoadmaps("java", 0, 10);
+
+        // Then
+        assertThat(page.getContent()).hasSize(1);
+        assertThat(page.getContent().get(0).title()).containsIgnoringCase("java");
+    }
+
+    @Test
+    @DisplayName("멘토 로드맵 목록 조회 - 키워드 없을 때 전체 조회")
+    void t23() {
+        // Given
+        createRoadmapForMentor(mentorId, "첫 번째 로드맵", "설명1");
+
+        Member mentor2Member = memberTestFixture.createMentorMember();
+        Mentor mentor2 = memberTestFixture.createMentor(mentor2Member);
+        createRoadmapForMentor(mentor2.getId(), "두 번째 로드맵", "설명2");
+
+        // When - 키워드 없이 조회
+        Page<MentorRoadmapListResponse> pageNull = mentorRoadmapService.getAllMentorRoadmaps(null, 0, 10);
+        Page<MentorRoadmapListResponse> pageEmpty = mentorRoadmapService.getAllMentorRoadmaps("", 0, 10);
+
+        // Then
+        assertThat(pageNull.getContent()).hasSize(2);
+        assertThat(pageEmpty.getContent()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("멘토 로드맵 목록 조회 - 검색 결과 없음")
+    void t24() {
+        // Given
+        createRoadmapForMentor(mentorId, "Java 로드맵", "자바 설명");
+
+        // When - 존재하지 않는 키워드로 검색
+        Page<MentorRoadmapListResponse> page = mentorRoadmapService.getAllMentorRoadmaps("존재하지않는키워드", 0, 10);
+
+        // Then
+        assertThat(page.getContent()).isEmpty();
+        assertThat(page.getTotalElements()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("멘토 로드맵 목록 조회 - 응답 필드 확인 (memberId, mentorId 포함)")
+    void t25() {
+        // Given
+        createRoadmapForMentor(mentorId, "테스트 로드맵", "테스트 설명");
+
+        // When
+        Page<MentorRoadmapListResponse> page = mentorRoadmapService.getAllMentorRoadmaps(null, 0, 10);
+
+        // Then
+        assertThat(page.getContent()).hasSize(1);
+        MentorRoadmapListResponse response = page.getContent().get(0);
+
+        assertThat(response.id()).isNotNull();
+        assertThat(response.title()).isEqualTo("테스트 로드맵");
+        assertThat(response.description()).isEqualTo("테스트 설명");
+        assertThat(response.mentorId()).isEqualTo(mentorId);
+        assertThat(response.memberId()).isNotNull(); // memberId 확인
+        assertThat(response.mentorNickname()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("멘토 로드맵 목록 조회 - description 150자 제한 확인")
+    void t26() {
+        // Given - 150자보다 긴 설명
+        String longDescription = "a".repeat(200); // 200자
+        createRoadmapForMentor(mentorId, "테스트 로드맵", longDescription);
+
+        // When
+        Page<MentorRoadmapListResponse> page = mentorRoadmapService.getAllMentorRoadmaps(null, 0, 10);
+
+        // Then
+        assertThat(page.getContent()).hasSize(1);
+        MentorRoadmapListResponse response = page.getContent().get(0);
+
+        assertThat(response.description()).hasSize(153); // 150 + "..." (3자)
+        assertThat(response.description()).endsWith("...");
+    }
+
+    // 헬퍼 메서드: 멘토 로드맵 생성
+    private void createRoadmapForMentor(Long mentorId, String title, String description) {
+        MentorRoadmapSaveRequest request = new MentorRoadmapSaveRequest(
+                title,
+                description,
+                List.of(
+                        new RoadmapNodeRequest(null, "Task 1", "설명 1", null, null, null, null, null, null, 1)
+                )
+        );
+        mentorRoadmapService.create(mentorId, request);
     }
 
     private MentorRoadmapSaveRequest createSampleRequest() {

@@ -50,7 +50,7 @@ public class JobRoadmapService {
         Map<Long, JobRoadmapNodeStat> statMap = stats.stream()
                 .collect(Collectors.toMap(stat -> stat.getNode().getId(), stat -> stat));
 
-        return JobRoadmapResponse.from(jobRoadmap, jobRoadmap.getJob().getName(), statMap);
+        return JobRoadmapResponse.from(jobRoadmap, jobRoadmap.getJob().getName(),jobRoadmap.getJob().getDescription(), statMap);
     }
 
     private JobRoadmapListResponse toListResponse(JobRoadmap jobRoadmap) {

@@ -46,6 +46,39 @@ public class ChatMessage extends BaseEntity {
     }
 
     public static ChatMessage create(MentoringSession mentoringSession, Member sender, SenderRole senderRole, String content, MessageType type) {
+        if (mentoringSession == null) {
+            throw new IllegalArgumentException("MentoringSession은 null일 수 없습니다.");
+        }
+        if (content == null || content.isBlank()) {
+            throw new IllegalArgumentException("Content는 null이거나 비어 있을 수 없습니다.");
+        }
+        if (type == null) {
+            throw new IllegalArgumentException("MessageType은 null일 수 없습니다.");
+        }
+
+        if (type == MessageType.SYSTEM) {
+            if (sender != null) {
+                throw new IllegalArgumentException("시스템 메시지의 sender는 null이어야 합니다.");
+            }
+            if (senderRole != SenderRole.SYSTEM) {
+                throw new IllegalArgumentException("시스템 메시지의 senderRole은 SYSTEM이어야 합니다.");
+            }
+        } else { // TEXT, IMAGE, FILE
+            if (sender == null) {
+                throw new IllegalArgumentException("일반 메시지의 sender는 null일 수 없습니다.");
+            }
+            if (senderRole != SenderRole.MENTOR && senderRole != SenderRole.MENTEE) {
+                throw new IllegalArgumentException("일반 메시지의 senderRole은 MENTOR 또는 MENTEE여야 합니다.");
+            }
+
+            boolean isParticipant = (mentoringSession.getReservation().getMentor().isMember(sender) ||
+                    mentoringSession.getReservation().getMentee().isMember(sender));
+
+            if (!isParticipant) {
+                throw new IllegalArgumentException("메시지 발신자는 해당 멘토링 세션의 참여자가 아닙니다.");
+            }
+        }
+
         return ChatMessage.builder()
                 .mentoringSession(mentoringSession)
                 .sender(sender)

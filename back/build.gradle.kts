@@ -3,6 +3,7 @@ plugins {
 	id("org.springframework.boot") version "3.5.5"
 	id("io.spring.dependency-management") version "1.1.7"
 }
+val springAiVersion by extra("1.0.3")
 
 group = "com"
 version = "0.0.1-SNAPSHOT"
@@ -38,7 +39,6 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-web")
-	implementation ("org.springframework.boot:spring-boot-starter-data-redis")
 	implementation("org.springframework.boot:spring-boot-starter-mail")
 
 	// QueryDSL
@@ -72,6 +72,14 @@ dependencies {
 
 	// Sentry
 	implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.19.1")
+
+	// AI
+	implementation("org.springframework.ai:spring-ai-starter-model-openai")
+}
+dependencyManagement {
+	imports {
+		mavenBom("org.springframework.ai:spring-ai-bom:$springAiVersion")
+	}
 }
 
 tasks.withType<Test> {

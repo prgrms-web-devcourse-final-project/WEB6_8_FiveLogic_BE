@@ -16,9 +16,6 @@ public record MentoringRequest(
 
     @Schema(description = "멘토링 소개", example = "bio")
     @NotNull
-    String bio,
-
-    @Schema(description = "멘토링 썸네일", example = "test.png")
-    String thumb
+    String bio
 ) {
 }

@@ -12,13 +12,13 @@ public interface MentorRepository extends JpaRepository<Mentor, Long> {
     @Query("SELECT m FROM Mentor m WHERE m.member.id = :memberId AND m.isDeleted = false")
     Optional<Mentor> findByMemberId(@Param("memberId") Long memberId);
 
-    @Query("SELECT m FROM Mentor m JOIN FETCH m.member WHERE m.member.id = :memberId AND m.isDeleted = false")
+    @Query("SELECT m FROM Mentor m JOIN FETCH m.member LEFT JOIN FETCH m.job WHERE m.member.id = :memberId AND m.isDeleted = false")
     Optional<Mentor> findByMemberIdWithMember(@Param("memberId") Long memberId);
 
     @Query("SELECT m FROM Mentor m WHERE m.id = :id AND m.isDeleted = false")
     Optional<Mentor> findById(@Param("id") Long id);
 
     // 삭제된 멘토 포함 조회 (관리자용)
-    @Query("SELECT m FROM Mentor m WHERE m.member.id = :memberId")
+    @Query("SELECT m FROM Mentor m LEFT JOIN FETCH m.job WHERE m.member.id = :memberId")
     Optional<Mentor> findByMemberIdIncludingDeleted(@Param("memberId") Long memberId);
 }

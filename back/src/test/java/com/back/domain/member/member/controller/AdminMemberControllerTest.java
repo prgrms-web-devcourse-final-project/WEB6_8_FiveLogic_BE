@@ -1,26 +1,25 @@
 package com.back.domain.member.member.controller;
 
+import com.back.domain.member.member.dto.MenteeUpdateRequest;
+import com.back.domain.member.member.dto.MentorUpdateRequest;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.http.MediaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.back.domain.member.member.dto.MentorUpdateRequest;
-import com.back.domain.member.member.dto.MenteeUpdateRequest;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -104,8 +103,10 @@ public class AdminMemberControllerTest {
         result
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.role").value("MENTEE"))
-                .andExpect(jsonPath("$.data.interestedField").exists()) // 희망직업 필드 존재 확인
-                .andExpect(jsonPath("$.data.careerYears").doesNotExist()); // 멘티는 연차 없음
+                .andExpect(jsonPath("$.data.job").value("Backend")) // 희망직업 확인
+                .andExpect(jsonPath("$.data.careerYears").doesNotExist()) // 멘티는 연차 없음
+                .andExpect(jsonPath("$.data.menteeId").exists()) // 멘티 ID 존재 확인
+                .andExpect(jsonPath("$.data.mentorId").doesNotExist()); // 멘토 ID는 없음
     }
 
     @Test
@@ -124,9 +125,10 @@ public class AdminMemberControllerTest {
         result
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.role").value("MENTOR"))
-                .andExpect(jsonPath("$.data.career").exists()) // 직업 필드 존재 확인
+                .andExpect(jsonPath("$.data.job").value("Backend")) // 직업 확인
                 .andExpect(jsonPath("$.data.careerYears").value(5)) // 연차 확인
-                .andExpect(jsonPath("$.data.interestedField").doesNotExist()); // 멘토는 희망직업 없음
+                .andExpect(jsonPath("$.data.mentorId").exists()) // 멘토 ID 존재 확인
+                .andExpect(jsonPath("$.data.menteeId").doesNotExist()); // 멘티 ID는 없음
     }
 
     @Test
@@ -292,5 +294,174 @@ public class AdminMemberControllerTest {
                 .andDo(print());
 
         result.andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    @DisplayName("관리자 회원 목록 조회 성공 - 기본 페이징")
+    @WithMockUser(roles = "ADMIN")
+    void t13() throws Exception {
+        // 테스트용 회원 3명 생성
+        memberService.joinMentee("mentee1@test.com", "멘티1", "멘티닉네임1", "password123", "Backend");
+        memberService.joinMentor("mentor1@test.com", "멘토1", "멘토닉네임1", "password123", "Frontend", 3);
+        memberService.joinMentee("mentee2@test.com", "멘티2", "멘티닉네임2", "password123", "AI/ML");
+
+        // 관리자가 회원 목록 조회 (기본값: page=0, size=10)
+        ResultActions result = mvc
+                .perform(get("/members"))
+                .andDo(print());
+
+        result
+                .andExpect(handler().handlerType(AdmMemberController.class))
+                .andExpect(handler().methodName("getAllMembers"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-18"))
+                .andExpect(jsonPath("$.msg").value("회원 목록 조회 성공"))
+                .andExpect(jsonPath("$.data.members").isArray())
+                .andExpect(jsonPath("$.data.totalElements").exists())
+                .andExpect(jsonPath("$.data.totalPage").exists())
+                .andExpect(jsonPath("$.data.currentPage").value(0))
+                .andExpect(jsonPath("$.data.hasNext").exists());
+    }
+
+    @Test
+    @DisplayName("관리자 회원 목록 조회 성공 - 커스텀 페이징")
+    @WithMockUser(roles = "ADMIN")
+    void t14() throws Exception {
+        // 테스트용 회원 5명 생성
+        memberService.joinMentee("user1@test.com", "유저1", "닉네임1", "password123", "Backend");
+        memberService.joinMentee("user2@test.com", "유저2", "닉네임2", "password123", "Frontend");
+        memberService.joinMentor("user3@test.com", "유저3", "닉네임3", "password123", "Backend", 2);
+        memberService.joinMentor("user4@test.com", "유저4", "닉네임4", "password123", "AI/ML", 5);
+        memberService.joinMentee("user5@test.com", "유저5", "닉네임5", "password123", "DevOps");
+
+        // 페이지 크기 2로 첫 페이지 조회
+        ResultActions result = mvc
+                .perform(get("/members")
+                        .param("page", "0")
+                        .param("size", "2"))
+                .andDo(print());
+
+        result
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-18"))
+                .andExpect(jsonPath("$.data.members").isArray())
+                .andExpect(jsonPath("$.data.currentPage").value(0))
+                .andExpect(jsonPath("$.data.members.length()").value(2));
+    }
+
+    @Test
+    @DisplayName("관리자 회원 목록 조회 - 두 번째 페이지")
+    @WithMockUser(roles = "ADMIN")
+    void t15() throws Exception {
+        // 테스트용 회원 5명 생성
+        memberService.joinMentee("page2user1@test.com", "페이지유저1", "페이지닉네임1", "password123", "Backend");
+        memberService.joinMentee("page2user2@test.com", "페이지유저2", "페이지닉네임2", "password123", "Frontend");
+        memberService.joinMentor("page2user3@test.com", "페이지유저3", "페이지닉네임3", "password123", "Backend", 3);
+        memberService.joinMentor("page2user4@test.com", "페이지유저4", "페이지닉네임4", "password123", "AI/ML", 4);
+        memberService.joinMentee("page2user5@test.com", "페이지유저5", "페이지닉네임5", "password123", "DevOps");
+
+        // 페이지 크기 2로 두 번째 페이지 조회
+        ResultActions result = mvc
+                .perform(get("/members")
+                        .param("page", "1")
+                        .param("size", "2"))
+                .andDo(print());
+
+        result
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-18"))
+                .andExpect(jsonPath("$.data.members").isArray())
+                .andExpect(jsonPath("$.data.currentPage").value(1));
+    }
+
+    @Test
+    @DisplayName("관리자 회원 목록 조회 - 기본 정보만 포함 확인")
+    @WithMockUser(roles = "ADMIN")
+    void t16() throws Exception {
+        // 멘토와 멘티 생성
+        memberService.joinMentor("mentor@list.com", "멘토유저", "멘토닉네임", "password123", "Backend", 5);
+        memberService.joinMentee("mentee@list.com", "멘티유저", "멘티닉네임", "password123", "Frontend");
+
+        // 회원 목록 조회
+        ResultActions result = mvc
+                .perform(get("/members")
+                        .param("size", "10"))
+                .andDo(print());
+
+        result
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.members").isArray())
+                // 기본 정보만 포함되어야 함
+                .andExpect(jsonPath("$.data.members[0].id").exists())
+                .andExpect(jsonPath("$.data.members[0].email").exists())
+                .andExpect(jsonPath("$.data.members[0].name").exists())
+                .andExpect(jsonPath("$.data.members[0].nickname").exists())
+                .andExpect(jsonPath("$.data.members[0].role").exists())
+                .andExpect(jsonPath("$.data.members[0].isDeleted").exists())
+                .andExpect(jsonPath("$.data.members[0].createdAt").exists());
+    }
+
+    @Test
+    @DisplayName("관리자 회원 목록 조회 - 삭제된 회원도 포함")
+    @WithMockUser(roles = "ADMIN")
+    void t17() throws Exception {
+        // 회원 생성 후 삭제
+        Member member = memberService.joinMentee("deleted@test.com", "삭제될유저", "삭제될닉네임", "password123", "Backend");
+        memberService.deleteMemberByAdmin(member.getId());
+
+        // 회원 목록 조회 (삭제된 회원도 포함되어야 함)
+        ResultActions result = mvc
+                .perform(get("/members"))
+                .andDo(print());
+
+        result
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-18"))
+                .andExpect(jsonPath("$.data.members").isArray())
+                .andExpect(jsonPath("$.data.members[?(@.email == 'deleted@test.com')].isDeleted").value(true));
+    }
+
+    @Test
+    @DisplayName("관리자가 아닌 사용자의 회원 목록 조회 시도 - 실패")
+    @WithMockUser(roles = "MENTEE")
+    void t18() throws Exception {
+        // 일반 사용자가 회원 목록 조회 시도
+        ResultActions result = mvc
+                .perform(get("/members"))
+                .andDo(print());
+
+        result.andExpect(status().isForbidden()); // 403 Forbidden 예상
+    }
+
+    @Test
+    @DisplayName("로그인하지 않은 상태에서 회원 목록 조회 시도 - 실패")
+    void t19() throws Exception {
+        // 인증 없이 회원 목록 조회 시도
+        ResultActions result = mvc
+                .perform(get("/members"))
+                .andDo(print());
+
+        result.andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    @DisplayName("관리자 회원 목록 조회 - 생성일 역순 정렬 확인")
+    @WithMockUser(roles = "ADMIN")
+    void t20() throws Exception {
+        // 시간 차이를 두고 회원 생성
+        Member member1 = memberService.joinMentee("first@test.com", "첫번째유저", "첫번째닉네임", "password123", "Backend");
+        Thread.sleep(100); // 시간 차이를 위한 대기
+        Member member2 = memberService.joinMentee("second@test.com", "두번째유저", "두번째닉네임", "password123", "Frontend");
+
+        // 회원 목록 조회 (최신순 정렬)
+        ResultActions result = mvc
+                .perform(get("/members")
+                        .param("size", "10"))
+                .andDo(print());
+
+        result
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.members").isArray());
+        // 최신 회원이 먼저 나와야 함 (createDate DESC)
     }
 }

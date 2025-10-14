@@ -6,6 +6,10 @@ from kafka import KafkaConsumer, KafkaProducer
 from kafka.errors import NoBrokersAvailable
 import boto3
 import urllib.parse
+from dotenv import load_dotenv
+
+# .env 파일로부터 환경변수 로드
+load_dotenv()
 
 # =========================
 # 환경 변수 설정
@@ -15,12 +19,11 @@ import urllib.parse
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "s3-events")
 KAFKA_TRANSCODING_STATUS_TOPIC = os.getenv("KAFKA_TRANSCODING_STATUS_TOPIC", "transcoding-status")
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP", "kafka:29092")  # Docker 내부 네트워크용
-GROUP_ID = os.getenv("GROUP_ID", "minio-consumer")
+GROUP_ID = os.getenv("GROUP_ID", "s3-consumer")
 
-# S3 / MinIO
-MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "http://minio:9000")
-MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
-MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
+# S3
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR", "/downloads")
 REUPLOAD_BUCKET = os.getenv("REUPLOAD_BUCKET", "transcoded-videos")
 
@@ -32,9 +35,8 @@ os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 # =========================
 s3 = boto3.client(
     "s3",
-    endpoint_url=MINIO_ENDPOINT,
-    aws_access_key_id=MINIO_ACCESS_KEY,
-    aws_secret_access_key=MINIO_SECRET_KEY
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY
 )
 
 # =========================
@@ -144,7 +146,7 @@ def encode_dash_multi_quality(input_file, output_dir, producer, topic, bucket, k
 # =========================
 # DASH 폴더 업로드 함수
 # =========================
-def upload_folder_to_minio(local_folder, bucket_name, s3_prefix=""):
+def upload_folder_to_s3(local_folder, bucket_name, s3_prefix=""):
     try:
         s3.head_bucket(Bucket=bucket_name)
     except:
@@ -217,7 +219,7 @@ for msg in consumer:
             )
             print(f"DASH 인코딩 완료: {dash_output_dir}")
 
-            upload_folder_to_minio(dash_output_dir, bucket, s3_prefix="transcoded/"+object_key_without_ext)
+            upload_folder_to_s3(dash_output_dir, bucket, s3_prefix="transcoded/"+object_key_without_ext)
         else:
             print(f"영상 아님, 인코딩 스킵: {download_path}")
 

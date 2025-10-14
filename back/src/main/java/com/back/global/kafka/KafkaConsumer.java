@@ -19,7 +19,9 @@ public class KafkaConsumer {
         try {
             JsonNode rootNode = mapper.readTree(transcodingStatusMessage);
 
-            String uuid = rootNode.get("key").asText();
+            String key = rootNode.get("key").asText();
+            String uuid = key.replaceFirst("^videos/", "");
+
             String status = rootNode.get("qualities").toString();
             //현재 duration이 0인 문제가 있음 영상 길이가 필요한게 아니라면 제거할 예정
             fileManager.updateVideoStatus(uuid, status);

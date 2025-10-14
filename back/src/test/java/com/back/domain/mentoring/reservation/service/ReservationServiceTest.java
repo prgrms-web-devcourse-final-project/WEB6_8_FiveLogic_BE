@@ -135,7 +135,7 @@ class ReservationServiceTest {
             when(reservationRepository.findByIdAndMember(reservationId, mentor.getMember().getId()))
                 .thenReturn(Optional.of(reservation));
             MentoringSession session = MentoringSessionFixture.create(reservation);
-            when(mentoringSessionService.getMentoringSessionByReservation(reservation)).thenReturn(session);
+            when(mentoringSessionService.findMentoringSessionByReservation(reservation)).thenReturn(Optional.ofNullable(session));
 
             // when
             ReservationResponse response = reservationService.getReservation(

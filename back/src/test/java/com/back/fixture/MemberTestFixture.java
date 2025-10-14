@@ -1,5 +1,7 @@
 package com.back.fixture;
 
+import com.back.domain.job.job.entity.Job;
+import com.back.domain.job.job.repository.JobRepository;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.repository.MemberRepository;
 import com.back.domain.member.mentee.entity.Mentee;
@@ -17,6 +19,7 @@ public class MemberTestFixture {
     @Autowired private MentorRepository mentorRepository;
     @Autowired private MenteeRepository menteeRepository;
     @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private JobRepository jobRepository;
 
     private int counter = 0;
 
@@ -50,12 +53,24 @@ public class MemberTestFixture {
     }
 
 
+    // ===== Job =====
+
+    public Job createJob(String name, String description) {
+        return jobRepository.findByName(name)
+            .orElseGet(() -> jobRepository.save(new Job(name, description)));
+    }
+
+    public Job createDefaultJob() {
+        return createJob("백엔드 개발자", "서버 사이드 로직 구현과 데이터베이스를 담당하는 개발자");
+    }
+
+
     // ===== Mentor =====
 
-    public Mentor createMentor(Member member, Long jobId, Double rate, Integer careerYears) {
+    public Mentor createMentor(Member member, Job job, Double rate, Integer careerYears) {
         Mentor mentor = Mentor.builder()
             .member(member)
-            .jobId(jobId)
+            .job(job)
             .rate(rate)
             .careerYears(careerYears)
             .build();
@@ -63,21 +78,23 @@ public class MemberTestFixture {
     }
 
     public Mentor createMentor(Member member) {
-        return createMentor(member, 1L, 4.5, 5);
+        Job job = createDefaultJob();
+        return createMentor(member, job, 4.5, 5);
     }
 
 
     // ===== Mentee =====
 
-    public Mentee createMentee(Member member, Long jobId) {
+    public Mentee createMentee(Member member, Job job) {
         Mentee mentee = Mentee.builder()
             .member(member)
-            .jobId(jobId)
+            .job(job)
             .build();
         return menteeRepository.save(mentee);
     }
 
     public Mentee createMentee(Member member) {
-        return createMentee(member, 1L);
+        Job job = createDefaultJob();
+        return createMentee(member, job);
     }
 }

@@ -4,6 +4,8 @@ package com.back.domain.member.member.controller;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
 import com.back.domain.member.member.verification.EmailVerificationService;
+import com.back.domain.member.mentee.entity.Mentee;
+import com.back.domain.member.mentee.repository.MenteeRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,33 +37,50 @@ public class MemberAuthControllerTest {
     @Autowired
     private EmailVerificationService emailVerificationService;
 
+    @Autowired
+    private MenteeRepository menteeRepository;
+
     @Test
-    @DisplayName("멘티 회원가입")
+    @DisplayName("멘티 회원가입 - Job이 정상적으로 저장되는지 확인")
     void t1() throws Exception {
+        String email = "user1@example.com";
+        String interestedField = "Backend";
+
         ResultActions resultActions = mvc
                 .perform(
                         post("/auth/signup/mentee")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content("""
+                                .content(String.format("""
                                         {
-                                            "email": "user1@example.com",
+                                            "email": "%s",
                                             "password": "password123",
                                             "name": "사용자1",
                                             "nickname": "유저1",
-                                            "interestedField": "Backend"
+                                            "interestedField": "%s"
                                         }
-                                        """.stripIndent())
+                                        """, email, interestedField).stripIndent())
 
                 )
                 .andDo(print());
-        Member member = memberService.findByEmail("user1@example.com").get();
 
+        // 회원가입 성공 확인
         resultActions
                 .andExpect(handler().handlerType(MemberAuthController.class))
                 .andExpect(handler().methodName("signupMentee"))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.resultCode").value("200-1"))
                 .andExpect(jsonPath("$.msg").value("멘티 회원가입 성공"));
+
+        // Member와 Mentee가 정상적으로 생성되었는지 확인
+        Member member = memberService.findByEmail(email).get();
+        assertThat(member).isNotNull();
+        assertThat(member.getRole()).isEqualTo(Member.Role.MENTEE);
+
+        // Mentee에 Job이 정상적으로 들어갔는지 확인
+        Mentee mentee = menteeRepository.findByMemberId(member.getId()).get();
+        assertThat(mentee).isNotNull();
+        assertThat(mentee.getJob()).isNotNull();
+        assertThat(mentee.getJob().getName()).isEqualTo(interestedField);
     }
 
     @Test
@@ -229,11 +248,11 @@ public class MemberAuthControllerTest {
     }
 
     @Test
-    @DisplayName("멘티 로그인 후 /auth/me로 정보 조회 - rq.getActor() role 확인")
+    @DisplayName("멘티 로그인 후 /auth/me로 정보 조회 - role 및 menteeId 확인")
     void t5() throws Exception {
         // 멘티 회원가입
         String email = "mentee@example.com";
-        memberService.joinMentee(email, "멘티사용자", "멘티닉네임", "password123", "Backend");
+        Member member = memberService.joinMentee(email, "멘티사용자", "멘티닉네임", "password123", "Backend");
 
         // 로그인하여 쿠키 받기
         ResultActions loginResult = mvc.perform(
@@ -250,7 +269,7 @@ public class MemberAuthControllerTest {
         // 로그인 응답에서 쿠키 추출
         Cookie accessToken = loginResult.andReturn().getResponse().getCookie("accessToken");
 
-        // /auth/me 호출하여 role 확인 (쿠키 포함)
+        // /auth/me 호출하여 role 및 menteeId 확인 (쿠키 포함)
         ResultActions result = mvc
                 .perform(get("/auth/me")
                         .cookie(accessToken))
@@ -258,7 +277,54 @@ public class MemberAuthControllerTest {
 
         result
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.data.role").value("MENTEE"));
+                .andExpect(jsonPath("$.data.role").value("MENTEE"))
+                .andExpect(jsonPath("$.data.memberId").value(member.getId()))
+                .andExpect(jsonPath("$.data.email").value(email))
+                .andExpect(jsonPath("$.data.nickname").value("멘티닉네임"))
+                .andExpect(jsonPath("$.data.mentorId").isEmpty())
+                .andExpect(jsonPath("$.data.menteeId").isNotEmpty())
+                .andExpect(jsonPath("$.data.job").isNotEmpty());
+
+    }
+
+    @Test
+    @DisplayName("멘토 로그인 후 /auth/me로 정보 조회 - role 및 mentorId 확인")
+    void t5_1() throws Exception {
+        // 멘토 회원가입
+        String email = "mentor@example.com";
+        Member member = memberService.joinMentor(email, "멘토사용자", "멘토닉네임", "password123", "Backend", 5);
+
+        // 로그인하여 쿠키 받기
+        ResultActions loginResult = mvc.perform(
+                post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(String.format("""
+                                {
+                                    "email": "%s",
+                                    "password": "password123"
+                                }
+                                """, email))
+        );
+
+        // 로그인 응답에서 쿠키 추출
+        Cookie accessToken = loginResult.andReturn().getResponse().getCookie("accessToken");
+
+        // /auth/me 호출하여 role 및 mentorId 확인 (쿠키 포함)
+        ResultActions result = mvc
+                .perform(get("/auth/me")
+                        .cookie(accessToken))
+                .andDo(print());
+
+        result
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.data.role").value("MENTOR"))
+                .andExpect(jsonPath("$.data.memberId").value(member.getId()))
+                .andExpect(jsonPath("$.data.email").value(email))
+                .andExpect(jsonPath("$.data.nickname").value("멘토닉네임"))
+                .andExpect(jsonPath("$.data.mentorId").isNotEmpty())
+                .andExpect(jsonPath("$.data.menteeId").isEmpty())
+                .andExpect(jsonPath("$.data.job").isNotEmpty());
+
     }
 
     @Test

@@ -19,6 +19,8 @@ public record ReviewResponse(
 
     @Schema(description = "멘티 ID")
     Long menteeId,
+    @Schema(description = "멘티 회원 ID")
+    Long menteeMemberId,
     @Schema(description = "멘티 닉네임")
     String menteeNickname
 ) {
@@ -30,6 +32,7 @@ public record ReviewResponse(
             review.getCreateDate(),
             review.getModifyDate(),
             review.getMentee().getId(),
+            review.getMentee().getMember().getId(),
             review.getMentee().getMember().getNickname()
         );
     }

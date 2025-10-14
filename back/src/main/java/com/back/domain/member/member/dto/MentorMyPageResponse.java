@@ -8,7 +8,7 @@ public record MentorMyPageResponse(
         String email,
         String name,
         String nickname,
-        Long jobId,
+        String job,
         Double rate,
         Integer careerYears
 ) {
@@ -18,7 +18,7 @@ public record MentorMyPageResponse(
                 member.getEmail(),
                 member.getName(),
                 member.getNickname(),
-                mentor.getJobId(),
+                mentor.getJob().getName(),
                 mentor.getRate(),
                 mentor.getCareerYears()
         );

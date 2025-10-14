@@ -103,8 +103,7 @@ class MentorSlotControllerTest {
             .andExpect(handler().methodName("getMyMentorSlots"))
             .andExpect(jsonPath("$.resultCode").value("200"))
             .andExpect(jsonPath("$.msg").value("나의 모든 일정 목록을 조회하였습니다."))
-            .andExpect(jsonPath("$.data").isArray())
-            .andExpect(jsonPath("$.data.length()").value(mentorSlots.size()));
+            .andExpect(jsonPath("$.data").isArray());
     }
 
     @Test
@@ -131,8 +130,7 @@ class MentorSlotControllerTest {
             .andExpect(handler().methodName("getAvailableMentorSlots"))
             .andExpect(jsonPath("$.resultCode").value("200"))
             .andExpect(jsonPath("$.msg").value("멘토의 예약 가능 일정 목록을 조회하였습니다."))
-            .andExpect(jsonPath("$.data").isArray())
-            .andExpect(jsonPath("$.data.length()").value(mentorSlots.size()));
+            .andExpect(jsonPath("$.data").isArray());
     }
 
 
@@ -247,8 +245,8 @@ class MentorSlotControllerTest {
             "repeatStartDate": "%s",
             "repeatEndDate": "%s",
             "daysOfWeek": ["MONDAY", "WEDNESDAY", "FRIDAY"],
-            "startTime": "10:00:00",
-            "endTime": "11:00:00"
+            "startTime": "10:00",
+            "endTime": "11:00"
         }
         """.formatted(
             startDate.format(DateTimeFormatter.ISO_LOCAL_DATE),

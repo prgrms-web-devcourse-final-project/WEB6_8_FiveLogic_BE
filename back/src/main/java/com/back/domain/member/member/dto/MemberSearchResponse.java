@@ -15,11 +15,19 @@ public record MemberSearchResponse(
         Boolean isDeleted,
         LocalDateTime createdAt,
         LocalDateTime modifiedAt,
-        String career,        // 멘토인 경우에만 값이 있음 (TODO: Job 연결 후 수정 예정)
+        String job,           // 멘토/멘티 모두: 직업명 또는 관심분야
         Integer careerYears,  // 멘토인 경우에만 값이 있음
-        String interestedField  // 멘티인 경우에만 값이 있음 (TODO: Job 연결 후 수정 예정)
+        Long mentorId,        // 멘토 ID (멘토인 경우에만 값이 있음)
+        Long menteeId         // 멘티 ID (멘티인 경우에만 값이 있음)
 ) {
     public static MemberSearchResponse from(Member member, Mentor mentor, Mentee mentee) {
+        String jobName = null;
+        if (mentor != null && mentor.getJob() != null) {
+            jobName = mentor.getJob().getName();
+        } else if (mentee != null && mentee.getJob() != null) {
+            jobName = mentee.getJob().getName();
+        }
+
         return new MemberSearchResponse(
                 member.getId(),
                 member.getEmail(),
@@ -29,9 +37,10 @@ public record MemberSearchResponse(
                 member.getIsDeleted(),
                 member.getCreateDate(),
                 member.getModifyDate(),
-                mentor != null ? "TODO: Job 연결 필요" : null,  // TODO: Job 연결 후 수정
+                jobName,
                 mentor != null ? mentor.getCareerYears() : null,
-                mentee != null ? "TODO: Job 연결 필요" : null   // TODO: Job 연결 후 수정
+                mentor != null ? mentor.getId() : null,
+                mentee != null ? mentee.getId() : null
         );
     }
 }

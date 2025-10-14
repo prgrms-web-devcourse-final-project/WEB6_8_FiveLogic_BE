@@ -14,6 +14,8 @@ public record MentoringWithTagsDto(
     List<String> tags,
     @Schema(description = "멘토 ID")
     Long mentorId,
+    @Schema(description = "멘토 회원 ID")
+    Long mentorMemberId,
     @Schema(description = "멘토 닉네임")
     String nickname
 ) {
@@ -23,6 +25,7 @@ public record MentoringWithTagsDto(
             mentoring.getTitle(),
             mentoring.getTagNames(),
             mentoring.getMentor().getId(),
+            mentoring.getMentor().getMember().getId(),
             mentoring.getMentor().getMember().getNickname()
         );
     }

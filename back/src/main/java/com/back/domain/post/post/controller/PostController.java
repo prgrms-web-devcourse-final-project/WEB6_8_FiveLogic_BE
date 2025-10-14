@@ -106,7 +106,7 @@ public class PostController {
 
     @Operation(summary = "게시글 싫어요")
     @PostMapping("/{post_id}/disliked")
-    public RsData<PostLikedResponse> disLikePost(@PathVariable(name = "post_id") Long postId) {
+    public RsData<PostDisLikedResponse> disLikePost(@PathVariable(name = "post_id") Long postId) {
         postLikeService.disLikePost(postId);
         PostLikedResponse postLikedResponse = postLikeService.getDisLikeCount(postId);
         return new RsData<>("200", "게시글 싫어요 성공", postLikedResponse);
