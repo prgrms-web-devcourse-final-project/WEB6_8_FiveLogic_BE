@@ -1,6 +1,5 @@
 package com.back.domain.member.member.controller;
 
-import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
@@ -64,7 +63,7 @@ public class MemberMyPageControllerTest {
                 .andExpect(jsonPath("$.data.email").value(email))
                 .andExpect(jsonPath("$.data.name").value("멘티유저"))
                 .andExpect(jsonPath("$.data.nickname").value("멘티닉네임"))
-                .andExpect(jsonPath("$.data.job").value("Backend")); // 희망직업 필드 확인
+                .andExpect(jsonPath("$.data.interestedField").value("Backend")); // 희망직업 필드 확인
     }
 
     @Test
@@ -121,7 +120,7 @@ public class MemberMyPageControllerTest {
         getResult
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.nickname").value("새로운닉네임"))
-                .andExpect(jsonPath("$.data.job").value("Mobile")); // job이 변경되었는지 확인
+                .andExpect(jsonPath("$.data.interestedField").value("Mobile")); // job이 변경되었는지 확인
     }
 
     @Test

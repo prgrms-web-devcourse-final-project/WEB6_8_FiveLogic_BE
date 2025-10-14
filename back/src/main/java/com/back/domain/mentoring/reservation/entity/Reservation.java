@@ -7,7 +7,6 @@ import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.reservation.constant.ReservationStatus;
 import com.back.domain.mentoring.reservation.error.ReservationErrorCode;
 import com.back.domain.mentoring.slot.entity.MentorSlot;
-import com.back.global.app.AppConfig;
 import com.back.global.exception.ServiceException;
 import com.back.global.jpa.BaseEntity;
 import jakarta.persistence.*;
@@ -132,14 +131,6 @@ public class Reservation extends BaseEntity {
     private void ensureCanComplete() {
         if(!this.status.canComplete()) {
             throw new ServiceException(ReservationErrorCode.CANNOT_COMPLETE);
-        }
-        // 개발·테스트 환경에서는 검증 스킵 (Swagger 테스트 허용)
-        if (AppConfig.isDev() || AppConfig.isTest()) {
-            return;
-        }
-        // 시작 이후 완료 가능 (조기 종료 허용)
-        if (!mentorSlot.isPast()) {
-            throw new ServiceException(ReservationErrorCode.MENTORING_NOT_STARTED);
         }
     }
 
