@@ -2,8 +2,10 @@ package com.back.global.globalExceptionHandler;
 
 import com.back.global.exception.ServiceException;
 import com.back.global.rsData.RsData;
+import io.sentry.Sentry;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.*;
 
+@Slf4j
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
@@ -129,6 +132,20 @@ public class GlobalExceptionHandler {
                         .status(rsData.statusCode())
                         .build()
                         .getStatusCode()
+        );
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<RsData<Void>> handle(Exception ex) {
+        log.error("Unhandled exception occurred", ex);
+        Sentry.captureException(ex);
+
+        return new ResponseEntity<>(
+            new RsData<>(
+                "500-1",
+                "서버 오류가 발생했습니다."
+            ),
+            INTERNAL_SERVER_ERROR
         );
     }
 }
