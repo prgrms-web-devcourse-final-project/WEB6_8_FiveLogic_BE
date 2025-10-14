@@ -3,9 +3,8 @@ package com.back.domain.member.member.email;
 import com.back.global.exception.ServiceException;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -14,15 +13,24 @@ import java.io.UnsupportedEncodingException;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
-@ConditionalOnBean(JavaMailSender.class)
 public class EmailService {
     private final JavaMailSender mailSender;
+
+    public EmailService(@Autowired(required = false) JavaMailSender mailSender) {
+        this.mailSender = mailSender;
+        if (mailSender == null) {
+            log.warn("JavaMailSender is not available. Email sending will be disabled.");
+        }
+    }
 
     /**
      * 간단한 텍스트 이메일 발송
      */
     public void sendSimpleEmail(String to, String subject, String text) {
+        if (mailSender == null) {
+            log.warn("JavaMailSender is not available. Skipping email to: {}", to);
+            return;
+        }
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -44,6 +52,10 @@ public class EmailService {
      * HTML 이메일 발송
      */
     public void sendHtmlEmail(String to, String subject, String htmlContent) {
+        if (mailSender == null) {
+            log.warn("JavaMailSender is not available. Skipping email to: {}", to);
+            return;
+        }
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
