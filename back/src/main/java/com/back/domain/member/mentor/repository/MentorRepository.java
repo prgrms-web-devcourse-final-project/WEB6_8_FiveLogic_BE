@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MentorRepository extends JpaRepository<Mentor, Long> {
@@ -21,4 +22,8 @@ public interface MentorRepository extends JpaRepository<Mentor, Long> {
     // 삭제된 멘토 포함 조회 (관리자용)
     @Query("SELECT m FROM Mentor m LEFT JOIN FETCH m.job WHERE m.member.id = :memberId")
     Optional<Mentor> findByMemberIdIncludingDeleted(@Param("memberId") Long memberId);
+
+    // 모든 활성 멘토 조회 (member, job fetch join)
+    @Query("SELECT m FROM Mentor m JOIN FETCH m.member LEFT JOIN FETCH m.job WHERE m.isDeleted = false ORDER BY m.id DESC")
+    List<Mentor> findAllActiveWithMemberAndJob();
 }
