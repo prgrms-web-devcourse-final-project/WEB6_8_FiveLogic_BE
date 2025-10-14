@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -15,6 +16,7 @@ import java.util.UUID;
 public class FileManager {
     private final VideoService videoService;
     private final S3Service s3Service;
+    private final Set<String> validResolutions = Set.of("480p", "720p", "1080p");
 
     public PresignedUrlResponse getUploadUrl(String filename) {
         String contentType = validateAndGetContentType(filename);
@@ -53,8 +55,11 @@ public class FileManager {
         }
     }
 
-    public PresignedUrlResponse getDownloadUrl(String objectKey) {
+    public PresignedUrlResponse getDownloadUrl(String uuid, String resolution) {
         Integer expires = 60;
+        validateResolution(resolution);
+        videoService.isExistByUuid(uuid);
+        String objectKey = "transcoded/videos/" + uuid + "/" + resolution + "/manifest.mpd";
         URL url = s3Service.generateDownloadUrl(objectKey, expires);
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(expires);
         return new PresignedUrlResponse(url, expiresAt);
@@ -66,6 +71,12 @@ public class FileManager {
             videoService.updateStatus(videoId, status);
         } catch (Exception e) {
             videoService.createVideo(videoId, status, "/", 0);
+        }
+    }
+
+    public void validateResolution(String resolution) {
+        if (!validResolutions.contains(resolution)) {
+            throw new ServiceException("400", "지원하지 않는 해상도입니다: " + resolution);
         }
     }
 }

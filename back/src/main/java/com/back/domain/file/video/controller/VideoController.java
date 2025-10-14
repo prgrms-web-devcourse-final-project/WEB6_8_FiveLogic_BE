@@ -37,8 +37,8 @@ public class VideoController {
 
     @GetMapping("/videos/download")
     @Operation(summary = "다운로드용 URL 요청", description = "파일 다운로드를 위한 Presigned URL을 발급받습니다.")
-    public RsData<DownLoadUrlGetResponse> getDownloadUrls(@RequestParam String objectKey) {
-        PresignedUrlResponse downloadUrl = fileManager.getDownloadUrl(objectKey);
+    public RsData<DownLoadUrlGetResponse> getDownloadUrls(@RequestParam String uuid, @RequestParam String resolution) {
+        PresignedUrlResponse downloadUrl = fileManager.getDownloadUrl(uuid, resolution);
         DownLoadUrlGetResponse response = new DownLoadUrlGetResponse(downloadUrl.url().toString(), downloadUrl.expiresAt());
         return new RsData<>("200", "다운로드용 URL 요청완료", response);
     }

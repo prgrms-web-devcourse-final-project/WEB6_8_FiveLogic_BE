@@ -50,8 +50,8 @@ public class PostController {
             @Valid @RequestBody PostCreateRequest postCreateRequest
             ) {
         Member member = rq.getActor();
-        Post post = postService.createPost(postCreateRequest, member);
-        PostCreateResponse postCreateResponse = PostCreateResponse.from(post);
+
+        PostCreateResponse postCreateResponse = postService.createPost(postCreateRequest, member);
 
         return new RsData<>("200", "게시글이 성공적으로 생성되었습니다.", postCreateResponse);
     }
@@ -67,8 +67,8 @@ public class PostController {
 
     @Operation(summary = "게시글 단건 조회", description = "백오피스에서 필요시 사용, content 내용 없음. 상세페이지 조회는 /post/detail/{post_id} 사용")
     @GetMapping("/{post_id}")
-    public RsData<PostSingleResponse> getSinglePost(@PathVariable Long post_id) {
-        PostSingleResponse postSingleResponse = postService.makePostSingleResponse(post_id);
+    public RsData<PostSingleResponse> getSinglePost(@PathVariable(name = "post_id") Long postId) {
+        PostSingleResponse postSingleResponse = postService.makePostSingleResponse(postId);
 
 
 
@@ -77,53 +77,46 @@ public class PostController {
 
     @Operation(summary = "게시글 삭제")
     @DeleteMapping("/{post_id}")
-    public RsData<Void> removePost(@PathVariable Long post_id) {
+    public RsData<Void> removePost(@PathVariable(name = "post_id") Long postId) {
         Member member = rq.getActor();
 
-        postService.removePost(post_id, member);
+        postService.removePost(postId, member);
 
         return new RsData<>("200", "게시글 삭제 성공", null);
     }
 
     @Operation(summary = "게시글 수정", description = "title, content은 공백이거나 null 일 수 없습니다. 글자수 제한은 없습니다. ")
     @PutMapping("/{post_id}")
-    public RsData<Void> updatePost(@PathVariable Long post_id
-            ,@Valid @RequestBody PostModifyRequest postModifyRequest) {
+    public RsData<Void> updatePost(
+            @PathVariable(name = "post_id") Long postId,
+            @Valid @RequestBody PostModifyRequest postModifyRequest) {
         Member member = rq.getActor();
-        postService.updatePost(post_id, member, postModifyRequest);
+        postService.updatePost(postId, member, postModifyRequest);
 
         return new RsData<>("200", "게시글 수정 성공", null);
     }
 
     @Operation(summary = "게시글 좋아요")
     @PostMapping("/{post_id}/liked")
-    public RsData<PostLikedResponse> likePost(@PathVariable Long post_id) {
-        postLikeService.likePost(post_id);
-
-        int likeCount = postLikeService.getLikeCount(post_id);
-        PostLikedResponse postLikedResponse = new PostLikedResponse(likeCount);
-
+    public RsData<PostLikedResponse> likePost(@PathVariable(name = "post_id") Long postId) {
+        postLikeService.likePost(postId);
+        PostLikedResponse postLikedResponse = postLikeService.getLikeCount(postId);
         return new RsData<>("200", "게시글 좋아요 성공", postLikedResponse);
     }
 
     @Operation(summary = "게시글 싫어요")
     @PostMapping("/{post_id}/disliked")
-    public RsData<PostDisLikedResponse> disLikePost(@PathVariable Long post_id) {
-        postLikeService.disLikePost(post_id);
-
-        int likeCount = postLikeService.getDisLikeCount(post_id);
-        PostDisLikedResponse postdisLikedResponse = new PostDisLikedResponse(likeCount);
-
-        return new RsData<>("200", "게시글 싫어요 성공", postdisLikedResponse);
+    public RsData<PostDisLikedResponse> disLikePost(@PathVariable(name = "post_id") Long postId) {
+        postLikeService.disLikePost(postId);
+        PostDisLikedResponse postDisLikedResponse = postLikeService.getDisLikeCount(postId);
+        return new RsData<>("200", "게시글 싫어요 성공", postDisLikedResponse);
     }
 
 
     @Operation(summary = "게시글 상세페이지", description = "사용자 단건 조회시 사용")
     @GetMapping("/detail/{post_id}")
-    public RsData<PostDetailResponse> getPostDetail(@PathVariable Long post_id) {
-
-        PostDetailResponse response = postDetailFacade.getDetailWithViewIncrement(post_id);
-
+    public RsData<PostDetailResponse> getPostDetail(@PathVariable(name = "post_id") Long postId) {
+        PostDetailResponse response = postDetailFacade.getDetailWithViewIncrement(postId);
         return new RsData<>("200", "게시글 상세 조회 성공", response);
     }
 }

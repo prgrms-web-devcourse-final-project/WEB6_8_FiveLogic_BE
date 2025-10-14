@@ -10,6 +10,8 @@ public record PostCreateResponse(
 
 
     public static PostCreateResponse from(Post post) {
-        return new PostCreateResponse(post.getId(), post.getTitle());
+        return new PostCreateResponse(
+                post.getId(),
+                post.getTitle());
     }
 }

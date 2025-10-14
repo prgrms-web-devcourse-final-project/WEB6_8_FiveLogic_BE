@@ -1,4 +1,4 @@
-package com.back.domain.file.service;
+package com.back.domain.file.video.service;
 
 import com.back.domain.file.video.service.S3Service;
 import com.back.global.exception.ServiceException;

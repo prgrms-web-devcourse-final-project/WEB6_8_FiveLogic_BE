@@ -29,4 +29,10 @@ public class VideoService {
         news.updateStatus(status);
         return videoRepository.save(news);
     }
+
+    public void isExistByUuid(String uuid) {
+        if (!videoRepository.existsByUuid(uuid)) {
+            throw new ServiceException("404", "Video not found");
+        }
+    }
 }
