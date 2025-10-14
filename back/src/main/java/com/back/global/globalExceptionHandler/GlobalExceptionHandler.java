@@ -2,14 +2,17 @@ package com.back.global.globalExceptionHandler;
 
 import com.back.global.exception.ServiceException;
 import com.back.global.rsData.RsData;
+import io.sentry.Sentry;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -20,6 +23,7 @@ import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.*;
 
+@Slf4j
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
@@ -106,6 +110,18 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<RsData<Void>> handle(MissingServletRequestParameterException ex) {
+        String message = String.format("필수 파라미터 '%s'(이)가 누락되었습니다.", ex.getParameterName());
+        return new ResponseEntity<>(
+                new RsData<>(
+                        "400-1",
+                        message
+                ),
+                BAD_REQUEST
+        );
+    }
+
     // @PreAuthorize 권한 에러
     @ExceptionHandler(AuthorizationDeniedException.class)
     public ResponseEntity<RsData<Void>> handle(AuthorizationDeniedException ex) {
@@ -129,6 +145,20 @@ public class GlobalExceptionHandler {
                         .status(rsData.statusCode())
                         .build()
                         .getStatusCode()
+        );
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<RsData<Void>> handle(Exception ex) {
+        log.error("Unhandled exception occurred", ex);
+        Sentry.captureException(ex);
+
+        return new ResponseEntity<>(
+            new RsData<>(
+                "500-1",
+                "서버 오류가 발생했습니다."
+            ),
+            INTERNAL_SERVER_ERROR
         );
     }
 }
