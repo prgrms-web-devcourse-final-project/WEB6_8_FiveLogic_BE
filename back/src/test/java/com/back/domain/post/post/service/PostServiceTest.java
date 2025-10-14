@@ -12,6 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -48,42 +49,48 @@ class PostServiceTest {
             Member member = MemberFixture.create(1L, "test@test.com", "Test User", "password", Member.Role.MENTEE);
             PostCreateRequest request = new PostCreateRequest("INFORMATIONPOST","제목","내용","");
 
-
-            Post expectedPost = createPost("제목", "내용", member, Post.PostType.INFORMATIONPOST);
-
-            when(postRepository.save(any(Post.class))).thenReturn(expectedPost);
-
             // when
-            Post result = postService.createPost(request, member);
+            postService.createPost(request, member);
+
+            ArgumentCaptor<Post> captor = ArgumentCaptor.forClass(Post.class);
+            verify(postRepository).save(captor.capture());
+
+            Post savedPost = captor.getValue();
 
             // then
-            assertThat(result.getTitle()).isEqualTo("제목");
-            assertThat(result.getContent()).isEqualTo("내용");
-            assertThat(result.getMember()).isEqualTo(member);
-            assertThat(result.getPostType()).isEqualTo(Post.PostType.INFORMATIONPOST);
-            verify(postRepository).save(any(Post.class));
+            assertThat(savedPost.getPostType()).isEqualTo(Post.PostType.INFORMATIONPOST);
+            assertThat(savedPost.getTitle()).isEqualTo("제목");
+            assertThat(savedPost.getContent()).isEqualTo("내용");
+            assertThat(savedPost.getJob()).isNull();
+            assertThat(savedPost.getMember()).isEqualTo(member);
         }
 
         @Test
-        @DisplayName("멘토가 실무 경험 공유 게시글 생성 성공")
+        @DisplayName("실무 경험 공유 게시글 생성 성공 - 멘토")
         void createPost_practicePost_mentor_success() {
             // given
             Member mentor = MemberFixture.create(1L, "mentor@test.com", "Mentor", "password", Member.Role.MENTOR);
-            PostCreateRequest request = new PostCreateRequest("PRACTICEPOST","실무경험","실무내용","123");
-            Post expectedPost = createPost("실무 경험", "실무 내용", mentor, Post.PostType.PRACTICEPOST);
-
-            when(postRepository.save(any(Post.class))).thenReturn(expectedPost);
+            PostCreateRequest request = new PostCreateRequest("PRACTICEPOST","실무경험","실무내용","백엔드");
 
             // when
-            Post result = postService.createPost(request, mentor);
+            postService.createPost(request, mentor);
+
 
             // then
-            assertThat(result.getPostType()).isEqualTo(Post.PostType.PRACTICEPOST);
-            verify(postRepository).save(any(Post.class));
+            ArgumentCaptor<Post> captor = ArgumentCaptor.forClass(Post.class);
+            verify(postRepository).save(captor.capture());
+
+            Post savedPost = captor.getValue();
+
+            assertThat(savedPost.getPostType()).isEqualTo(Post.PostType.PRACTICEPOST);
+            assertThat(savedPost.getTitle()).isEqualTo("실무경험");
+            assertThat(savedPost.getContent()).isEqualTo("실무내용");
+            assertThat(savedPost.getJob()).isEqualTo("백엔드");
+            assertThat(savedPost.getMember()).isEqualTo(mentor);
         }
 
         @Test
-        @DisplayName("멘티가 실무 경험 공유 게시글 생성 실패")
+        @DisplayName("실무 경험 공유 게시글 생성 실패 - 멘티")
         void createPost_practicePost_mentee_failure() {
             // given
             Member mentee = MemberFixture.create(1L, "mentee@test.com", "Mentee", "password", Member.Role.MENTEE);
@@ -104,18 +111,25 @@ class PostServiceTest {
             Member member = MemberFixture.create(1L, "test@test.com", "Test User", "password", Member.Role.MENTEE);
             PostCreateRequest request = new PostCreateRequest("QUESTIONPOST","질문경험","질문내용","");
 
-            Post expectedPost = createPost("질문", "질문 내용", member, Post.PostType.QUESTIONPOST);
-            expectedPost.updateResolveStatus(false);
-
-            when(postRepository.save(any(Post.class))).thenReturn(expectedPost);
 
             // when
-            Post result = postService.createPost(request, member);
+            postService.createPost(request, member);
 
             // then
-            assertThat(result.getPostType()).isEqualTo(Post.PostType.QUESTIONPOST);
-            assertThat(result.getIsResolve()).isFalse();
-            verify(postRepository).save(any(Post.class));
+
+            ArgumentCaptor<Post> captor = ArgumentCaptor.forClass(Post.class);
+            verify(postRepository).save(captor.capture());
+
+            Post savedPost = captor.getValue();
+
+            assertThat(savedPost.getPostType()).isEqualTo(Post.PostType.QUESTIONPOST);
+            assertThat(savedPost.getTitle()).isEqualTo("질문경험");
+            assertThat(savedPost.getContent()).isEqualTo("질문내용");
+            assertThat(savedPost.getMember()).isEqualTo(member);
+            assertThat(savedPost.getIsResolve()).isFalse();
+
+
+
         }
 
         @Test
@@ -169,7 +183,7 @@ class PostServiceTest {
             // when & then
             assertThatThrownBy(() -> postService.removePost(postId, otherUser))
                     .isInstanceOf(ServiceException.class)
-                    .hasMessage("400 : 삭제 권한이 없습니다.");
+                    .hasMessage("400 : 변경 권한이 없습니다.");
 
             verify(postRepository, never()).delete(any(Post.class));
         }
@@ -206,7 +220,6 @@ class PostServiceTest {
             PostModifyRequest updateRequest = new PostModifyRequest("새 제목","새 내용");
 
             when(postRepository.findById(postId)).thenReturn(Optional.of(post));
-            when(postRepository.save(any(Post.class))).thenReturn(post);
 
             // when
             postService.updatePost(postId, author, updateRequest);
@@ -233,7 +246,7 @@ class PostServiceTest {
             // when & then
             assertThatThrownBy(() -> postService.updatePost(postId, otherUser, updateRequest))
                     .isInstanceOf(ServiceException.class)
-                    .hasMessage("400 : 수정 권한이 없습니다.");
+                    .hasMessage("400 : 변경 권한이 없습니다.");
 
             verify(postRepository, never()).save(any(Post.class));
         }
@@ -282,7 +295,7 @@ class PostServiceTest {
     class GetPostTest {
 
         @Test
-        @DisplayName("모든 게시글 조회 성공")
+        @DisplayName("게시글 다건 조회 성공")
         void getAllPosts_success() {
             // given
             Member member1 = MemberFixture.create(1L, "user1@test.com", "User1", "password", Member.Role.MENTEE);
@@ -345,22 +358,42 @@ class PostServiceTest {
             int page = 0;
             int size = 10;
             Post.PostType postType = Post.PostType.INFORMATIONPOST;
-            Pageable pageable = PageRequest.of(page, size);
 
             Member member = MemberFixture.create(1L, "user@test.com", "User", "password", Member.Role.MENTEE);
-            Post post = createPost("테스트 제목", "테스트 내용", member, Post.PostType.INFORMATIONPOST);
-            List<Post> posts = Arrays.asList(post);
-            Page<Post> postPage = new PageImpl<>(posts, pageable, 1);
 
-            when(postRepository.searchPosts(keyword, pageable, postType)).thenReturn(postPage);
+            List<Post> posts = Arrays.asList(
+                    createPost("테스트 제목1", "테스트 내용1", member, Post.PostType.INFORMATIONPOST)
+            );
+
+            Pageable expectedPageable = PageRequest.of(page, size);
+            Page<Post> postPage = new PageImpl<>(posts, expectedPageable, 1);
+
+            when(postRepository.searchPosts(anyString(), any(Pageable.class), any(Post.PostType.class)))
+                    .thenReturn(postPage);
 
             // when
             Page<PostDto> result = postService.getPosts(keyword, page, size, postType);
 
-            // then
+            // then - ArgumentCaptor로 인자 캡처
+            ArgumentCaptor<String> keywordCaptor = ArgumentCaptor.forClass(String.class);
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            ArgumentCaptor<Post.PostType> postTypeCaptor = ArgumentCaptor.forClass(Post.PostType.class);
+
+            verify(postRepository).searchPosts(
+                    keywordCaptor.capture(),
+                    pageableCaptor.capture(),
+                    postTypeCaptor.capture()
+            );
+
+            // 전달된 인자 검증
+            assertThat(keywordCaptor.getValue()).isEqualTo("테스트");
+            assertThat(pageableCaptor.getValue().getPageNumber()).isEqualTo(0);
+            assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(10);
+            assertThat(postTypeCaptor.getValue()).isEqualTo(Post.PostType.INFORMATIONPOST);
+
+            // 결과 검증
             assertThat(result.getContent()).hasSize(1);
             assertThat(result.getTotalElements()).isEqualTo(1);
-            verify(postRepository).searchPosts(keyword, pageable, postType);
         }
 
         @Test
@@ -374,7 +407,7 @@ class PostServiceTest {
             when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
             // when
-            Post result = postService.findById(postId);
+            Post result = postService.findPostById(postId);
 
             // then
             assertThat(result).isEqualTo(post);
@@ -390,7 +423,7 @@ class PostServiceTest {
             when(postRepository.findById(postId)).thenReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> postService.findById(postId))
+            assertThatThrownBy(() -> postService.findPostById(postId))
                     .isInstanceOf(ServiceException.class)
                     .hasMessage("400 : 해당 Id의 게시글이 없습니다.");
         }
