@@ -41,7 +41,7 @@ public class NewsCommentService {
             throw new ServiceException("400","This comment does not belong to the given news.");
         }
         newsComment.update(content);
-        return newsComment;
+        return newsCommentRepository.save(newsComment);
     }
 
     public void deleteComment(Member member, News news, Long commentId) {
