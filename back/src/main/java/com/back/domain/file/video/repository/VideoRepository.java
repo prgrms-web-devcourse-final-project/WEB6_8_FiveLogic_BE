@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface VideoRepository extends JpaRepository<Video, Integer> {
     Optional<Video> findByUuid(String uuid);
+    boolean existsByUuid(String uuid);
 }
