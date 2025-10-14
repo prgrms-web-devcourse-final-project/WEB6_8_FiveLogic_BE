@@ -1,6 +1,8 @@
 package com.back.domain.member.member.repository;
 
 import com.back.domain.member.member.entity.Member;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -27,4 +29,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     @Query("SELECT m FROM Member m WHERE m.id = :id")
     Optional<Member> findByIdIncludingDeleted(@Param("id") Long id);
+
+    @Query("SELECT m FROM Member m ORDER BY m.createDate DESC")
+    Page<Member> findAllIncludingDeleted(Pageable pageable);
 }
