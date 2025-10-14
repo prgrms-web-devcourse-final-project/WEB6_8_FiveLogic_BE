@@ -8,7 +8,7 @@ public record MenteeMyPageResponse(
         String email,
         String name,
         String nickname,
-        String job
+        String interestedField
 ) {
     public static MenteeMyPageResponse from(Member member, Mentee mentee) {
         return new MenteeMyPageResponse(
