@@ -33,7 +33,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         SELECT r
         FROM Reservation r
         WHERE r.mentor.member.id = :memberId
-        ORDER BY r.mentorSlot.startDateTime DESC
         """)
     Page<Reservation> findAllByMentorMember(
         @Param("memberId") Long memberId,
@@ -44,7 +43,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         SELECT r
         FROM Reservation r
         WHERE r.mentee.member = :member
-        ORDER BY r.mentorSlot.startDateTime DESC
         """)
     Page<Reservation> findAllByMenteeMember(
         @Param("member") Member member,
