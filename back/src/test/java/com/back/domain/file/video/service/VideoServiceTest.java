@@ -1,4 +1,4 @@
-package com.back.domain.file.service;
+package com.back.domain.file.video.service;
 
 import com.back.domain.file.video.entity.Video;
 import com.back.domain.file.video.repository.VideoRepository;
