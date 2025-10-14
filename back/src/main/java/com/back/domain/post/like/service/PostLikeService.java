@@ -3,6 +3,7 @@ package com.back.domain.post.like.service;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.post.like.entity.PostLike;
 import com.back.domain.post.like.repository.PostLikeRepository;
+import com.back.domain.post.post.dto.PostDisLikedResponse;
 import com.back.domain.post.post.dto.PostLikedResponse;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.service.PostService;
@@ -75,9 +76,9 @@ public class PostLikeService {
         }
     }
 
-    public PostLikedResponse getDisLikeCount(Long postId) {
+    public PostDisLikedResponse getDisLikeCount(Long postId) {
         int disLikeCount = postLikeRepository.countDislikesByPostId(postId);
-        return new PostLikedResponse(disLikeCount);
+        return new PostDisLikedResponse(disLikeCount);
     }
 
 

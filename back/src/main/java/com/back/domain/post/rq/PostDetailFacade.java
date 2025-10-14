@@ -4,6 +4,7 @@ import com.back.domain.post.comment.dto.CommentAllResponse;
 import com.back.domain.post.comment.service.PostCommentService;
 import com.back.domain.post.like.service.PostLikeService;
 import com.back.domain.post.post.dto.PostDetailResponse;
+import com.back.domain.post.post.dto.PostDisLikedResponse;
 import com.back.domain.post.post.dto.PostLikedResponse;
 import com.back.domain.post.post.entity.Post;
 import com.back.domain.post.post.service.PostService;
@@ -28,10 +29,10 @@ public class PostDetailFacade {
 
         List<CommentAllResponse> comments = postCommentService.getAllPostCommentResponse(postId);
         PostLikedResponse postLikedResponse = postLikeService.getLikeCount(postId);
-        PostLikedResponse postDisLikedResponse = postLikeService.getDisLikeCount(postId);
+        PostDisLikedResponse postDisLikedResponse = postLikeService.getDisLikeCount(postId);
         String userStatus = postLikeService.getPresentStatus(postId);
 
-        return PostDetailResponse.from(post, comments, postLikedResponse.likeCount(), postDisLikedResponse.likeCount(), userStatus);
+        return PostDetailResponse.from(post, comments, postLikedResponse.likeCount(), postDisLikedResponse.disLikeCount(), userStatus);
     }
 
 
