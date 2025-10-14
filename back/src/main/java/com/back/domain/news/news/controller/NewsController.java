@@ -48,9 +48,6 @@ public class NewsController {
         if (member == null) {
             return new RsData<>("401", "로그인 후 이용해주세요.", null);
         }
-        if (member.getRole() != Member.Role.ADMIN) {
-            return new RsData<>("403", "권한이 없습니다.", null);
-        }
         boolean hasUserLikedNews = newsLikeService.hasUserLikedNews(member, newsId);
 
         News news = newsService.getNewsById(newsId);
