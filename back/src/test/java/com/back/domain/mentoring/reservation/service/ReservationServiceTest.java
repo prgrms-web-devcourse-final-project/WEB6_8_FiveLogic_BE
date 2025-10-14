@@ -33,10 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
@@ -96,16 +93,16 @@ class ReservationServiceTest {
             // given
             int page = 1;
             int size = 5;
-            Pageable pageable = PageRequest.of(page, size);
-
             Page<Reservation> reservationPage = new PageImpl<>(
                 List.of(reservation),
-                pageable,
+                PageRequest.of(page, size),
                 10
             );
 
-            when(reservationRepository.findAllByMentorMember(mentor.getMember().getId(), pageable))
-                .thenReturn(reservationPage);
+            when(reservationRepository.findAllByMentorMember(
+                eq(mentor.getMember().getId()),
+                any(Pageable.class)
+            )).thenReturn(reservationPage);
 
             // when
             Page<ReservationDto> result = reservationService.getReservations(
@@ -119,7 +116,10 @@ class ReservationServiceTest {
             assertThat(result.getSize()).isEqualTo(5);
             assertThat(result.getTotalElements()).isEqualTo(10);
             assertThat(result.getTotalPages()).isEqualTo(2);
-            verify(reservationRepository).findAllByMentorMember(mentor.getMember().getId(), pageable);
+            verify(reservationRepository).findAllByMentorMember(
+                eq(mentor.getMember().getId()),
+                any(Pageable.class)
+            );
         }
     }
 

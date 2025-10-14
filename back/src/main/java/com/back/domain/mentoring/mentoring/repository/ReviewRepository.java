@@ -34,7 +34,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
         SELECT r
         FROM Review r
         WHERE r.reservation.mentoring.id = :mentoringId
-        ORDER BY r.createDate DESC
         """)
     Page<Review> findAllByMentoringId(
         @Param("mentoringId") Long mentoringId,
