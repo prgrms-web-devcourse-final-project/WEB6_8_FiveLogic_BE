@@ -175,7 +175,7 @@ public class MemberService {
                 job = mentor.getJob() != null ? mentor.getJob().getName() : null;
             }
         } else if (actor.getRole() == Member.Role.MENTEE) {
-            Mentee mentee = menteeRepository.findByMemberId(actor.getId()).orElse(null);
+            Mentee mentee = menteeRepository.findByMemberIdWithMember(actor.getId()).orElse(null);
             if (mentee != null) {
                 menteeId = mentee.getId();
                 job = mentee.getJob() != null ? mentee.getJob().getName() : null;
