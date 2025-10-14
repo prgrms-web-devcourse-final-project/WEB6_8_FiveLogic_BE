@@ -43,10 +43,19 @@ public class NewsController {
 
     @GetMapping("{newsId}")
     @Operation(summary = "뉴스 단건 조회", description = "특정 ID의 뉴스를 읽어옵니다.")
-    public RsData<NewsGetResponse> getNews(@PathVariable("newsId") Long newsId) {
+    public RsData<NewsGetWithLikeResponse> getNews(@PathVariable("newsId") Long newsId) {
+        Member member = rq.getActorFromDb().get();
+        if (member == null) {
+            return new RsData<>("401", "로그인 후 이용해주세요.", null);
+        }
+        if (member.getRole() != Member.Role.ADMIN) {
+            return new RsData<>("403", "권한이 없습니다.", null);
+        }
+        boolean hasUserLikedNews = newsLikeService.hasUserLikedNews(member, newsId);
+
         News news = newsService.getNewsById(newsId);
         newsService.incrementViews(news);
-        NewsGetResponse response = new NewsGetResponse(news);
+        NewsGetWithLikeResponse response = new NewsGetWithLikeResponse(news, hasUserLikedNews);
         return new RsData<>("200", "뉴스 읽어오기 완료", response);
     }
 
@@ -55,6 +64,13 @@ public class NewsController {
     public RsData<List<NewsGetResponse>> getNewsList(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
+        Member member = rq.getActorFromDb().get();
+        if (member == null) {
+            return new RsData<>("401", "로그인 후 이용해주세요.", null);
+        }
+        if (member.getRole() != Member.Role.ADMIN) {
+            return new RsData<>("403", "권한이 없습니다.", null);
+        }
 
         Page<News> newsPage = newsService.getNewsByPage(page, size);
 
@@ -106,7 +122,7 @@ public class NewsController {
     @Operation(summary = "뉴스 삭제", description = "특정 ID의 뉴스를 삭제합니다. ADMIN 사용자만 접근할 수 있습니다.")
     public RsData<?> deleteNews(@PathVariable("newsId") Long newsId) {
         Member member = rq.getActorFromDb().get();
-        if (member == null){
+        if (member == null) {
             return new RsData<>("401", "로그인 후 이용해주세요.", null);
         }
         if (member.getRole() != Member.Role.ADMIN) {

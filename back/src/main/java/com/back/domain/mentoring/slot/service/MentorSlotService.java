@@ -157,15 +157,13 @@ public class MentorSlotService {
      * 매 시간 30분에 지난 슬롯 만기 처리
      * - AVAILABLE -> EXPIRED
      */
-    @Scheduled(cron = "0 */30 * * * *")
+    @Scheduled(cron = "0 */30 * * * *", zone = "Asia/Seoul")
     @Transactional
     public void expirePassedSlots() {
         LocalDateTime now = LocalDateTime.now();
-
         int updateCount = mentorSlotRepository.expirePassedSlots(now);
-        if (updateCount > 0) {
-            log.info("만료된 슬롯 {}개 업데이트 완료 at {}", updateCount, now);
-        }
+
+        log.info("만료된 슬롯 {}개 업데이트 완료 at {}", updateCount, now);
     }
 
 
