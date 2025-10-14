@@ -32,20 +32,28 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("""
         SELECT r
         FROM Reservation r
+        JOIN FETCH r.mentorSlot ms
+        JOIN FETCH r.mentoring
         WHERE r.mentor.member.id = :memberId
+        AND (:status IS NULL OR r.status = :status)
         """)
     Page<Reservation> findAllByMentorMember(
         @Param("memberId") Long memberId,
+        @Param("status") ReservationStatus status,
         Pageable pageable
     );
 
     @Query("""
         SELECT r
         FROM Reservation r
+        JOIN FETCH r.mentorSlot ms
+        JOIN FETCH r.mentoring
         WHERE r.mentee.member = :member
+        AND (:status IS NULL OR r.status = :status)
         """)
     Page<Reservation> findAllByMenteeMember(
         @Param("member") Member member,
+        @Param("status") ReservationStatus status,
         Pageable pageable
     );
 
