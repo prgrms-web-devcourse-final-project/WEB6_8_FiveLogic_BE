@@ -35,7 +35,7 @@ public class ReservationController {
     public RsData<ReservationPagingResponse> getReservations(
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size,
-        @RequestParam(required = false)ReservationStatus status
+        @RequestParam(required = false) ReservationStatus status
     ) {
         Member member = rq.getActor();
         Page<ReservationDto> reservationPage = reservationService.getReservations(member, page, size, status);
