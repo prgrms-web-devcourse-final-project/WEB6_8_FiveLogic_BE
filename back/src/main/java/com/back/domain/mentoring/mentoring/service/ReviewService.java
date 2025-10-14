@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +27,11 @@ public class ReviewService {
 
     @Transactional(readOnly = true)
     public Page<ReviewResponse> getReviews(Long mentoringId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(
+            page,
+            size,
+            Sort.by(Sort.Direction.DESC, "createDate")
+        );
 
         return reviewRepository.findAllByMentoringId(mentoringId, pageable)
             .map(ReviewResponse::from);
