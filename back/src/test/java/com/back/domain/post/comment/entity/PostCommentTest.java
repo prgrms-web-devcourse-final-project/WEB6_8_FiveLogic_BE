@@ -231,7 +231,7 @@ class PostCommentTest {
             String authorName = comment.getAuthorName();
 
             // then
-            assertThat(authorName).isEqualTo("Author Name");
+            assertThat(authorName).isEqualTo("Test Nickname");
         }
     }
 
