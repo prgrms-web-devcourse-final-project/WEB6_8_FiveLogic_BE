@@ -44,11 +44,6 @@ public class JobRoadmapIntegrationServiceV3 {
     private static final double QUALITY_NODE_COUNT_WEIGHT = 0.3; // 품질 점수: 노드 개수 가중치
     private static final double QUALITY_STANDARDIZATION_WEIGHT = 0.7; // 품질 점수: 표준화율 가중치
 
-
-    // ========================================
-    // Public API
-    // ========================================
-
     /**
      * 직업 로드맵 통합 (DB 커넥션 점유 시간 감소를 위해 AI 호출을 트랜잭션 밖에서 수행)
      *
@@ -67,7 +62,7 @@ public class JobRoadmapIntegrationServiceV3 {
         // 3. Task prefetch (트랜잭션 외부, 읽기만 수행)
         Map<Long, Task> taskMap = prefetchTasks(aggregation);
 
-        // 4. 트리 구성 및 AI 호출 (트랜잭션 외부, 6-10분 소요)
+        // 4. 트리 구성 및 AI 호출 (트랜잭션 외부)
         // 이 시간 동안 DB 커넥션은 사용하지 않음
         RoadmapTreeBuilder.TreeBuildResult treeResult = roadmapTreeBuilder.build(aggregation, taskMap);
 

@@ -149,8 +149,8 @@ public class RoadmapTreeBuilder {
                     .learningAdvice(integratedTexts != null ? integratedTexts.learningAdvice() : null)
                     .recommendedResources(integratedTexts != null ? integratedTexts.recommendedResources() : null)
                     .learningGoals(integratedTexts != null ? integratedTexts.learningGoals() : null)
-                    .difficulty(avgDifficulty != null ? avgDifficulty.intValue() : null)
-                    .importance(avgImportance != null ? avgImportance.intValue() : null)
+                    .difficulty(avgDifficulty != null ? (int) Math.round(avgDifficulty) : null)
+                    .importance(avgImportance != null ? (int) Math.round(avgImportance) : null)
                     .estimatedHours(avgEstimatedHours)
                     .task(aggNode.task != null ? taskMap.get(aggNode.task.getId()) : null)
                     .roadmapId(0L) // 임시 값
