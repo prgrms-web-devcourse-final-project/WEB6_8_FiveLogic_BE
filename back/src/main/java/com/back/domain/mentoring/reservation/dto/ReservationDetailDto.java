@@ -26,8 +26,13 @@ public record ReservationDetailDto(
         LocalDateTime createDate,
         @Schema(description = "수정일")
         LocalDateTime modifyDate,
+
         @Schema(description = "멘토링 세션 ID")
-        Long mentoringSessionId
+        Long mentoringSessionId,
+        @Schema(description = "리뷰 ID")
+        Long reviewId,
+        @Schema(description = "리뷰 가능 여부")
+        boolean canReview
 ) {
     public static ReservationDetailDto from(Reservation reservation) {
         return new ReservationDetailDto(
@@ -39,11 +44,13 @@ public record ReservationDetailDto(
                 reservation.getMentorSlot().getEndDateTime(),
                 reservation.getCreateDate(),
                 reservation.getModifyDate(),
-                null
+                null,
+            null,
+            false
         );
     }
 
-    public static ReservationDetailDto from(Reservation reservation, MentoringSession mentoringSession) {
+    public static ReservationDetailDto from(Reservation reservation, MentoringSession mentoringSession, Long reviewId) {
         return new ReservationDetailDto(
                 reservation.getId(),
                 reservation.getStatus(),
@@ -53,7 +60,9 @@ public record ReservationDetailDto(
                 reservation.getMentorSlot().getEndDateTime(),
                 reservation.getCreateDate(),
                 reservation.getModifyDate(),
-                mentoringSession.getId()
+                mentoringSession.getId(),
+                reviewId,
+                reservation.getStatus().canReview()
         );
     }
 }

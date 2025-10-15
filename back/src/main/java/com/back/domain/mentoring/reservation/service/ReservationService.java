@@ -62,9 +62,10 @@ public class ReservationService {
             .orElseThrow(() -> new ServiceException(ReservationErrorCode.RESERVATION_NOT_ACCESSIBLE));
 
         Optional<MentoringSession> mentoringSession = mentoringSessionService.findMentoringSessionByReservation(reservation);
+        Long reviewId = mentoringStorage.findReviewIdByReservationId(reservationId);
 
         return mentoringSession
-            .map(session -> ReservationResponse.from(reservation, session))
+            .map(session -> ReservationResponse.from(reservation, session, reviewId))
             .orElseGet(() -> ReservationResponse.from(reservation));
     }
 
@@ -100,7 +101,7 @@ public class ReservationService {
 
             MentoringSession mentoringSession = mentoringSessionService.create(reservation);
 
-            return ReservationResponse.from(reservation, mentoringSession);
+            return ReservationResponse.from(reservation, mentoringSession, null);
         } catch (OptimisticLockException e) {
             throw new ServiceException(ReservationErrorCode.CONCURRENT_APPROVAL_CONFLICT);
         }
