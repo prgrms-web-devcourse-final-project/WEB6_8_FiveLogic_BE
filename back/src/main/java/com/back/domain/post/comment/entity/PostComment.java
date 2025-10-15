@@ -34,7 +34,7 @@ public class PostComment extends BaseEntity {
     }
 
     public String getAuthorName() {
-        return member.getName();
+        return member.getNickname();
     }
 
     public Long getAuthorId() {
