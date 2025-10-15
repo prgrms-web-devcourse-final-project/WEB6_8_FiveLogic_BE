@@ -335,23 +335,26 @@ class PostCommentServiceTest {
                     .hasMessage("400 : 채택 권한이 없습니다.");
         }
 
-        @Test
-        @DisplayName("질문 게시글이 아닌 게시글의 댓글 채택 시도 시 실패")
-        void adoptComment_notQuestionPost_failure() {
-            // given
-            Member postAuthor = MemberFixture.create(1L, "author@test.com", "Author", "password", Member.Role.MENTEE);
-            Member commenter = MemberFixture.create(2L, "commenter@test.com", "Commenter", "password", Member.Role.MENTOR);
-            Post informationPost = createDefaultPost(postAuthor);
-            PostComment comment = createComment(commenter, informationPost, "일반 댓글");
-            Long commentId = 1L;
-
-            when(postCommentRepository.findById(commentId)).thenReturn(Optional.of(comment));
-
-            // when & then
-            assertThatThrownBy(() -> postCommentService.adoptComment(commentId, postAuthor))
-                    .isInstanceOf(ServiceException.class)
-                    .hasMessage("400 : 질문 게시글만 채택된 댓글을 가질 수 있습니다.");
-        }
+//        운영 정책상
+//        변경 질문게시글 에서만 채택 가능 -> 전체 게시글에서 채택 가능
+//
+//        @Test
+//        @DisplayName("질문 게시글이 아닌 게시글의 댓글 채택 시도 시 실패")
+//        void adoptComment_notQuestionPost_failure() {
+//            // given
+//            Member postAuthor = MemberFixture.create(1L, "author@test.com", "Author", "password", Member.Role.MENTEE);
+//            Member commenter = MemberFixture.create(2L, "commenter@test.com", "Commenter", "password", Member.Role.MENTOR);
+//            Post informationPost = createDefaultPost(postAuthor);
+//            PostComment comment = createComment(commenter, informationPost, "일반 댓글");
+//            Long commentId = 1L;
+//
+//            when(postCommentRepository.findById(commentId)).thenReturn(Optional.of(comment));
+//
+//            // when & then
+//            assertThatThrownBy(() -> postCommentService.adoptComment(commentId, postAuthor))
+//                    .isInstanceOf(ServiceException.class)
+//                    .hasMessage("400 : 질문 게시글만 채택된 댓글을 가질 수 있습니다.");
+//        }
 
         @Test
         @DisplayName("이미 채택된 댓글을 다시 채택 시도 시 실패")

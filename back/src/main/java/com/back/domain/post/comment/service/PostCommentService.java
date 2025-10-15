@@ -82,7 +82,7 @@ public class PostCommentService {
         Post post = postComment.getPost();
 
         validateIsPostAuthor(post, member);
-        validatePostType(post);
+        //validatePostType(post);
         validateAlreadyAdoptedComment(postComment);
         validateAlreadyExistsAdoptedComment(post);
 
