@@ -21,9 +21,9 @@ public record ReservationResponse(
             MenteeDto.from(reservation.getMentee())
         );
     }
-    public static ReservationResponse from(Reservation reservation, MentoringSession mentoringSession) {
+    public static ReservationResponse from(Reservation reservation, MentoringSession mentoringSession, Long reviewId) {
         return new ReservationResponse(
-                ReservationDetailDto.from(reservation, mentoringSession),
+                ReservationDetailDto.from(reservation, mentoringSession, reviewId),
                 MentoringDto.from(reservation.getMentoring()),
                 MentorDto.from(reservation.getMentor()),
                 MenteeDto.from(reservation.getMentee())

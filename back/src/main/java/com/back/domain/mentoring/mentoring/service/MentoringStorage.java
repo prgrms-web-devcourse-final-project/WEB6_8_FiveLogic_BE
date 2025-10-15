@@ -3,6 +3,7 @@ package com.back.domain.mentoring.mentoring.service;
 import com.back.domain.mentoring.mentoring.entity.Mentoring;
 import com.back.domain.mentoring.mentoring.error.MentoringErrorCode;
 import com.back.domain.mentoring.mentoring.repository.MentoringRepository;
+import com.back.domain.mentoring.mentoring.repository.ReviewRepository;
 import com.back.domain.mentoring.reservation.entity.Reservation;
 import com.back.domain.mentoring.reservation.error.ReservationErrorCode;
 import com.back.domain.mentoring.reservation.repository.ReservationRepository;
@@ -30,6 +31,7 @@ public class MentoringStorage {
     private final MentorSlotRepository mentorSlotRepository;
     private final ReservationRepository reservationRepository;
     private final MentoringSessionRepository mentoringSessionRepository;
+    private final ReviewRepository reviewRepository;
 
     // ===== find 메서드 =====
 
@@ -54,6 +56,11 @@ public class MentoringStorage {
     public Reservation findReservation(Long reservationId) {
         return reservationRepository.findById(reservationId)
             .orElseThrow(() -> new ServiceException(ReservationErrorCode.NOT_FOUND_RESERVATION));
+    }
+
+    public Long findReviewIdByReservationId(Long reservationId) {
+        return reviewRepository.findReviewIdByReservationId(reservationId)
+            .orElse(null);
     }
 
 
