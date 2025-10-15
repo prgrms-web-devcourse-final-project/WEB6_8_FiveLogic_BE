@@ -59,6 +59,104 @@ class RoadmapAggregatorTest {
         verifyDescriptionCollections(result.getDescriptions());
     }
 
+    @Test
+    @DisplayName("멘토 로드맵이 비어 있을 경우 빈 결과를 반환한다.")
+    void aggregate_emptyList_returnsEmptyResult() {
+        // when
+        RoadmapAggregator.AggregationResult result = roadmapAggregator.aggregate(List.of());
+
+        // then
+        assertThat(result.getTotalMentorCount()).isEqualTo(0);
+        assertThat(result.getAgg()).isEmpty();
+        assertThat(result.getRootCount()).isEmpty();
+        assertThat(result.getTransitions()).isEmpty();
+        assertThat(result.getMentorAppearSet()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("노드가 비어 있는 멘토 로드맵은 통계에 반영되지 않는다.")
+    void aggregate_emptyNodesInRoadmap_areIgnored() {
+        // given
+        MentorRoadmap emptyRoadmap = createMentorRoadmap(1L, mentor1, "빈 로드맵");
+        // 노드를 추가하지 않음
+
+        // when
+        RoadmapAggregator.AggregationResult result = roadmapAggregator.aggregate(List.of(emptyRoadmap));
+
+        // then
+        assertThat(result.getTotalMentorCount()).isEqualTo(1);
+        assertThat(result.getAgg()).isEmpty();
+        assertThat(result.getRootCount()).isEmpty();
+        assertThat(result.getTransitions()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Task와 TaskName이 모두 없는 노드를 처리할 수 있다.")
+    void aggregate_nodeWithNoTaskOrName_generatesUnknownKey() {
+        // given
+        MentorRoadmap roadmap = createMentorRoadmap(1L, mentor1, "멘토1 로드맵");
+        RoadmapNode unknownNode = RoadmapNode.builder()
+                .roadmapId(roadmap.getId())
+                .roadmapType(RoadmapNode.RoadmapType.MENTOR)
+                .stepOrder(1)
+                .task(null)
+                .taskName(null)
+                .build();
+        roadmap.addNodes(List.of(unknownNode));
+
+        // when
+        RoadmapAggregator.AggregationResult result = roadmapAggregator.aggregate(List.of(roadmap));
+
+        // then
+        assertThat(result.getAgg()).containsKey("N:__unknown__");
+        assertThat(result.getAgg().get("N:__unknown__").count).isEqualTo(1);
+        assertThat(result.getRootCount()).containsEntry("N:__unknown__", 1);
+    }
+
+    @Test
+    @DisplayName("하나의 로드맵에서 동일 Task가 여러 번 등장할 경우 누적되어야 한다.")
+    void aggregate_sameTaskMultipleTimes_inSingleRoadmap_countsAccumulated() {
+        // given
+        MentorRoadmap roadmap = createMentorRoadmap(1L, mentor1, "중복 Task 로드맵");
+        RoadmapNode node1 = createStandardNode(roadmap.getId(), 1, taskJava, null, null, null, null, null, null);
+        RoadmapNode node2 = createStandardNode(roadmap.getId(), 2, taskJava, null, null, null, null, null, null);
+        roadmap.addNodes(List.of(node1, node2));
+
+        // when
+        RoadmapAggregator.AggregationResult result = roadmapAggregator.aggregate(List.of(roadmap));
+
+        // then
+        assertThat(result.getAgg()).containsKey("T:1");
+        assertThat(result.getAgg().get("T:1").count).isEqualTo(2); // count 누적
+        assertThat(result.getPositions().get("T:1")).containsExactlyInAnyOrder(1, 2);
+        assertThat(result.getMentorAppearSet().get("T:1")).containsExactly(mentor1.getId());
+    }
+
+    @Test
+    @DisplayName("여러 멘토가 동일한 전이(Transition)를 가질 경우 카운트가 누적된다.")
+    void aggregate_duplicateTransitions_areCounted() {
+        // given: 두 멘토가 모두 Java -> Spring 로드맵을 가짐
+        MentorRoadmap roadmap1 = createMentorRoadmap(1L, mentor1, "로드맵1");
+        roadmap1.addNodes(List.of(
+                createStandardNode(roadmap1.getId(), 1, taskJava, null, null, null, null, null, null),
+                createStandardNode(roadmap1.getId(), 2, taskSpring, null, null, null, null, null, null)
+        ));
+
+        MentorRoadmap roadmap2 = createMentorRoadmap(2L, mentor2, "로드맵2");
+        roadmap2.addNodes(List.of(
+                createStandardNode(roadmap2.getId(), 1, taskJava, null, null, null, null, null, null),
+                createStandardNode(roadmap2.getId(), 2, taskSpring, null, null, null, null, null, null)
+        ));
+
+        // when
+        RoadmapAggregator.AggregationResult result = roadmapAggregator.aggregate(List.of(roadmap1, roadmap2));
+
+        // then
+        assertThat(result.getTransitions().get("T:1")).containsEntry("T:2", 2);
+        assertThat(result.getAgg().get("T:1").count).isEqualTo(2);
+        assertThat(result.getAgg().get("T:2").count).isEqualTo(2);
+    }
+
     private void verifyAggregatedNodes(Map<String, RoadmapAggregator.AggregatedNode> agg) {
         assertThat(agg).hasSize(5);
         assertThat(agg.get("T:1").count).isEqualTo(3);
@@ -198,8 +296,8 @@ class RoadmapAggregatorTest {
 
     private RoadmapNode createCustomNode(Long roadmapId, int order, String taskName, String advice, String resource, String goal, Integer difficulty, Integer importance, Integer estimatedHours) {
         return RoadmapNode.builder()
-                .roadmapId(roadmapId) // ★★★★★ FIX: 소속될 로드맵 ID 설정
-                .roadmapType(RoadmapNode.RoadmapType.MENTOR) // ★★★★★ FIX: 타입 명시
+                .roadmapId(roadmapId)
+                .roadmapType(RoadmapNode.RoadmapType.MENTOR)
                 .stepOrder(order)
                 .task(null)
                 .taskName(taskName)
