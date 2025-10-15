@@ -17,7 +17,7 @@ public class CommentResponse {
     public CommentResponse(NewsComment newsComment) {
         this.id = newsComment.getId();
         this.content = newsComment.getContent();
-        this.author = newsComment.getMember().getName();
+        this.author = newsComment.getMember().getNickname();
         this.memberId = newsComment.getMember().getId();
         this.createdDate = newsComment.getCreateDate();
         this.modifiedDate = newsComment.getModifyDate();
