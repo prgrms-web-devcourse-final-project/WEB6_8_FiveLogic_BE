@@ -22,16 +22,7 @@ public class VideoController {
     @Operation(summary = "업로드용 URL 요청", description = "파일 업로드를 위한 Presigned URL을 발급받습니다.")
     public RsData<UploadUrlGetResponse> getUploadUrl(@RequestParam String filename) {
         PresignedUrlResponse uploadUrl = fileManager.getUploadUrl(filename);
-        String urlString = uploadUrl.url().toString();
-        String uuid = "";
-        var matcher = java.util.regex.Pattern.compile(
-                "([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})"
-        ).matcher(urlString);
-        if (matcher.find()) {
-            uuid = matcher.group(1);
-        }
-
-        UploadUrlGetResponse response = new UploadUrlGetResponse(uploadUrl.url().toString(), uuid, uploadUrl.expiresAt());
+        UploadUrlGetResponse response = new UploadUrlGetResponse(uploadUrl);
         return new RsData<>("200", "업로드용 URL 요청완료", response);
     }
 

@@ -65,7 +65,6 @@ public class FileManager {
         return new PresignedUrlResponse(url, expiresAt);
     }
 
-    //TODO : 테스트 작성필요
     public void updateVideoStatus(String videoId, String status) {
         try {
             videoService.updateStatus(videoId, status);
