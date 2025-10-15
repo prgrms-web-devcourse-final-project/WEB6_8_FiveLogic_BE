@@ -52,7 +52,12 @@ public class Mentoring extends BaseEntity {
 
         if (tags != null) {
             tags.forEach(tag ->
-                this.mentoringTags.add(new MentoringTag(this, tag))
+                this.mentoringTags.add(
+                    MentoringTag.builder()
+                        .mentoring(this)
+                        .tag(tag)
+                        .build()
+                )
             );
         }
     }

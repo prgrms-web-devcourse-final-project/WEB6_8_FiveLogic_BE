@@ -71,24 +71,28 @@ public class ReservationService {
 
     @Transactional
     public ReservationResponse createReservation(Mentee mentee, ReservationRequest reqDto) {
-        Mentoring mentoring = mentoringStorage.findMentoring(reqDto.mentoringId());
-        MentorSlot mentorSlot = mentoringStorage.findMentorSlot(reqDto.mentorSlotId());
+        try {
+            Mentoring mentoring = mentoringStorage.findMentoring(reqDto.mentoringId());
+            MentorSlot mentorSlot = mentoringStorage.findMentorSlot(reqDto.mentorSlotId());
 
-        DateTimeValidator.validateStartTimeNotInPast(mentorSlot.getStartDateTime());
-        validateMentorSlotStatus(mentorSlot, mentee);
-        validateOverlappingTimeForMentee(mentee, mentorSlot);
+            DateTimeValidator.validateStartTimeNotInPast(mentorSlot.getStartDateTime());
+            validateMentorSlotStatus(mentorSlot, mentee);
+            validateOverlappingTimeForMentee(mentee, mentorSlot);
 
-        Reservation reservation = Reservation.builder()
-            .mentoring(mentoring)
-            .mentee(mentee)
-            .mentorSlot(mentorSlot)
-            .preQuestion(reqDto.preQuestion())
-            .build();
-        reservationRepository.save(reservation);
+            Reservation reservation = Reservation.builder()
+                .mentoring(mentoring)
+                .mentee(mentee)
+                .mentorSlot(mentorSlot)
+                .preQuestion(reqDto.preQuestion())
+                .build();
+            reservationRepository.save(reservation);
 
-        mentorSlot.updateStatus(MentorSlotStatus.PENDING);
+            mentorSlot.updateStatus(MentorSlotStatus.PENDING);
 
-        return ReservationResponse.from(reservation);
+            return ReservationResponse.from(reservation);
+        } catch (OptimisticLockException e) {
+            throw new ServiceException(ReservationErrorCode.CONCURRENT_RESERVATION_CONFLICT);
+        }
     }
 
     @Transactional
