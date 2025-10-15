@@ -24,7 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -123,33 +123,51 @@ public class MentoringService {
             return new ArrayList<>();
         }
 
-        // 기존 태그 조회
-        List<Tag> existingTags = tagRepository.findByNameIn(tagNames);
-
-        Set<String> existingNames = existingTags.stream()
-            .map(Tag::getName)
-            .collect(Collectors.toSet());
-
-        // 신규 태그 생성
-        List<Tag> newTags = createNewTags(tagNames, existingNames);
-
-        // 기존 태그 + 신규 태그
-        List<Tag> allTags = new ArrayList<>(existingTags);
-        allTags.addAll(newTags);
-
-        return allTags;
-    }
-
-    private List<Tag> createNewTags(List<String> tagNames, Set<String> existingNames) {
-        List<Tag> newTags = tagNames.stream()
-            .filter(name -> !existingNames.contains(name))
-            .map(name -> Tag.builder().name(name).build())
+        // 1. 동일한 사용자의 태그 중복 제거
+        List<String> distinctNames = tagNames.stream()
+            .map(String::trim)
+            .filter(name -> !name.isEmpty())
+            .distinct()
             .toList();
 
-        if (!newTags.isEmpty()) {
-            tagRepository.saveAll(newTags);
+        // 2. 기존 태그 조회 - MySQL collation에 의해 대소문자 무시
+        Map<String, Tag> tagMap = tagRepository.findByNameIn(distinctNames).stream()
+            .collect(Collectors.toMap(
+                Tag::getName,
+                tag -> tag, (t1, t2) -> t1)
+            );
+
+        return buildTagList(distinctNames, tagMap);
+    }
+
+    /**
+     * 기존 태그 + 신규 태그
+     * - 정확히 일치하는 건 재사용 (대소문자 구분)
+     * - 없을 경우 신규 태그 생성
+     */
+    private List<Tag> buildTagList(List<String> distinctNames, Map<String, Tag> tagMap) {
+        List<Tag> result = new ArrayList<>();
+        for (String name : distinctNames) {
+            Tag tag = tagMap.getOrDefault(name, createTagSafely(name));
+            if (tag != null) {
+                result.add(tag);
+            }
         }
-        return newTags;
+        return result;
+    }
+
+    private Tag createTagSafely(String name) {
+        // 생성 전 재조회로 중복 방지
+        Tag existing = tagRepository.findByNameIn(List.of(name)).stream()
+            .filter(tag -> tag.getName().equals(name))
+            .findFirst()
+            .orElse(null);
+
+        if (existing != null) {
+            return existing;
+        }
+
+        return tagRepository.save(Tag.builder().name(name).build());
     }
 
 
