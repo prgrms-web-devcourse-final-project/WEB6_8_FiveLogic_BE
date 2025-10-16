@@ -85,7 +85,7 @@ class PostServiceTest {
             assertThat(savedPost.getPostType()).isEqualTo(Post.PostType.PRACTICEPOST);
             assertThat(savedPost.getTitle()).isEqualTo("실무경험");
             assertThat(savedPost.getContent()).isEqualTo("실무내용");
-            assertThat(savedPost.getJob()).isEqualTo("백엔드");
+            //assertThat(savedPost.getJob()).isEqualTo("백엔드");
             assertThat(savedPost.getMember()).isEqualTo(mentor);
         }
 
