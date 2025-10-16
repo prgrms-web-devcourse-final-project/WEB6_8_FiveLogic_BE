@@ -148,17 +148,17 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<RsData<Void>> handle(Exception ex) {
-        log.error("Unhandled exception occurred", ex);
-        Sentry.captureException(ex);
-
-        return new ResponseEntity<>(
-            new RsData<>(
-                "500-1",
-                "서버 오류가 발생했습니다."
-            ),
-            INTERNAL_SERVER_ERROR
-        );
-    }
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<RsData<Void>> handle(Exception ex) {
+//        log.error("Unhandled exception occurred", ex);
+//        Sentry.captureException(ex);
+//
+//        return new ResponseEntity<>(
+//            new RsData<>(
+//                "500-1",
+//                "서버 오류가 발생했습니다."
+//            ),
+//            INTERNAL_SERVER_ERROR
+//        );
+//    }
 }
