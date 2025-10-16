@@ -48,9 +48,9 @@ public class PostService {
                 .build();
 
 
-        if(postType == Post.PostType.PRACTICEPOST) {
-            post.updateJob(postCreateRequest.job());
-        }
+//        if(postType == Post.PostType.PRACTICEPOST) {
+//            post.updateJob(postCreateRequest.job());
+//        }
 
         // PostType이 QUESTIONPOST인 경우 isResolve를 false로 초기화
         if(postType == Post.PostType.QUESTIONPOST) {
