@@ -6,6 +6,7 @@ import com.back.domain.member.mentor.entity.Mentor;
 import com.back.domain.roadmap.roadmap.service.MentorRoadmapService;
 import com.back.fixture.MemberTestFixture;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,6 +43,9 @@ class MentorRoadmapControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private EntityManager entityManager;
 
     private static final String TOKEN = "accessToken";
     private static final String MENTOR_ROADMAP_URL = "/mentor-roadmaps";
@@ -306,6 +310,9 @@ class MentorRoadmapControllerTest {
     void t10() throws Exception {
         Long roadmapId = createRoadmap();
 
+        // 영속성 컨텍스트 초기화
+        entityManager.clear();
+
         String updateRequest = """
             {
                 "title": "수정된 로드맵 제목",
@@ -341,6 +348,8 @@ class MentorRoadmapControllerTest {
     @DisplayName("멘토 로드맵 수정 - 성공 (기본 정보만 수정)")
     void t11() throws Exception {
         Long roadmapId = createRoadmap();
+
+        entityManager.clear();
 
         String updateRequest = """
             {
