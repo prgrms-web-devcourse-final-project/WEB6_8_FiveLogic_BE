@@ -3,7 +3,6 @@ package com.back.domain.roadmap.roadmap.controller;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.AuthTokenService;
 import com.back.domain.member.mentor.entity.Mentor;
-import com.back.domain.roadmap.roadmap.service.MentorRoadmapService;
 import com.back.fixture.MemberTestFixture;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
@@ -37,9 +36,6 @@ class MentorRoadmapControllerTest {
 
     @Autowired
     private AuthTokenService authTokenService;
-
-    @Autowired
-    private MentorRoadmapService mentorRoadmapService;
 
     @Autowired
     private ObjectMapper objectMapper;
